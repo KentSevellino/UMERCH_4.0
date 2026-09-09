@@ -1,17 +1,64 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import LandingNav from '../components/layouts/LandingNav';
+import Knowledge from '../components/ui/Knowledge';
+import Advertisement from '../components/ui/Advertisement';
+import DiscountedProduct from '../components/ui/DiscountedProduct';
+import FeatureProducts from '../components/ui/FeatureProducts';
+import LimitedOffer from '../components/ui/LimitedOffer';
+import FeatureSection from '../components/ui/FeatureSection';
+import Hero from '../components/ui/Hero';
 import Footer from '../components/layouts/Footer';
+import { useAuth } from '../contexts/AuthContext';
+import api from '../services/api';
 
 export default function LandingPage() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [showLogin, setShowLogin] = useState(false);
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('popup')) {
+        setShowLogin(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    const tryProcessPendingBuy = async () => {
+      try {
+        const pendingRaw = sessionStorage.getItem('pendingBuy');
+        if (!pendingRaw) return;
+        const pending = JSON.parse(pendingRaw);
+        if (!user) return;
+
+        await api.post('/add-to-cart', pending);
+        sessionStorage.removeItem('pendingBuy');
+        navigate('/Checkout');
+      } catch (e) {
+        console.error('Failed to process pending buy', e);
+      }
+    };
+
+    tryProcessPendingBuy();
+  }, [user, navigate]);
+
   return (
-    <div>
+    <>
       <LandingNav />
-      <div className="min-h-screen bg-[#F6F6F6]">
-        <div className="py-12 px-4 text-center">
-          <h1 className="text-3xl font-bold text-[#9C0306] mb-4">Welcome to UMerch</h1>
-          <p className="text-[#727272]">Your one-stop shop for university merchandise</p>
-        </div>
-      </div>
+      <Knowledge showLogin={showLogin} onCloseLogin={() => setShowLogin(false)} />
+      <Advertisement />
+      <DiscountedProduct />
+      <FeatureProducts />
+      <LimitedOffer />
+      <FeatureSection />
+      <Hero />
       <Footer />
-    </div>
+    </>
   );
 }
