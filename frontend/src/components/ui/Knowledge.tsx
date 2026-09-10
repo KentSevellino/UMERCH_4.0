@@ -130,7 +130,17 @@ export default function Knowledge({ showLogin, onCloseLogin }: KnowledgeProps) {
         device_fingerprint: data.device_fingerprint,
       });
 
-      window.location.href = response.data.redirect || '/authentication';
+      const { user, token, redirect } = response.data;
+
+      if (token) {
+        localStorage.setItem('auth_token', token);
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      }
+      if (user) {
+        localStorage.setItem('auth_user', JSON.stringify(user));
+      }
+
+      window.location.href = redirect || '/authentication';
     } catch (error: any) {
       if (error.response?.status === 429 && error.response?.data?.retry_after) {
         setLockoutCountdown(error.response.data.retry_after);

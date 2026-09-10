@@ -32,7 +32,8 @@ function ActivityLogsPage() {
       <div className="h-screen sticky top-0">
         <Sidebar />
       </div>
-      <main className="flex-1 px-10 py-10">
+      <main className="flex-1 px-10 py-10 flex flex-col">
+        <div className="flex-1">
         <h1 className="text-4xl font-extrabold tracking-[0.25em]">RECORD LOGS</h1>
         <p className="text-gray-500 mt-2">Welcome back Admin, everything looks great.</p>
 
@@ -138,6 +139,7 @@ function ActivityLogsPage() {
               </div>
             </>
           )}
+        </div>
         </div>
 
         <AdminFooter />

@@ -44,7 +44,8 @@ export default function AddProductsPage() {
           <Sidebar />
         </div>
 
-        <div className="flex-1 px-10 py-10">
+        <div className="flex-1 px-10 py-10 flex flex-col">
+          <div className="flex-1">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-4">
             <h1 className="text-4xl font-extrabold tracking-[0.25em]">INVENTORY</h1>
           </div>
@@ -200,6 +201,7 @@ export default function AddProductsPage() {
                 </>
               )}
             </div>
+          </div>
           </div>
 
           <AdminFooter />

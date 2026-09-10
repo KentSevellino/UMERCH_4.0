@@ -33,7 +33,8 @@ export default function StockOutPage() {
         <Sidebar />
       </div>
 
-      <div className="flex-1 px-10 py-10">
+      <div className="flex-1 px-10 py-10 flex flex-col">
+        <div className="flex-1">
         <h1 className="text-4xl font-extrabold tracking-[0.25em] mb-1">INVENTORY</h1>
         <p className="text-gray-500 mb-6">Welcome back Admin, everything looks great.</p>
 
@@ -135,6 +136,7 @@ export default function StockOutPage() {
               </div>
             </>
           )}
+        </div>
         </div>
 
         <AdminFooter />

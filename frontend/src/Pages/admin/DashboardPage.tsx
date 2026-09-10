@@ -150,7 +150,8 @@ export default function DashboardPage() {
         <Sidebar />
       </div>
 
-      <main className="flex-1 px-10 py-10">
+      <main className="flex-1 px-10 py-10 flex flex-col">
+        <div className="flex-1">
         <h1 className="text-4xl font-extrabold tracking-[0.25em]">DASHBOARD</h1>
         <p className="text-gray-500 mt-2">Welcome back Admin, everything looks great.</p>
 
@@ -213,6 +214,7 @@ export default function DashboardPage() {
           <TopProducts topProducts={topProducts} topProductsPeriod={topProductsPeriod} setTopProductsPeriod={setTopProductsPeriod} />
         </div>
 
+        </div>
         <AdminFooter />
       </main>
     </div>
