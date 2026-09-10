@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import BackgroundImage from '../../assets/images/um5.jpg';
 import LoginLogo from '../../assets/images/UMERCH-LOGIN-LOGO.svg';
@@ -7,15 +7,6 @@ import PasswordIcon from '../../assets/images/password-icon.svg';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { DeviceFingerprint } from '../../utils/DeviceFingerprint';
-
-declare global {
-  interface Window {
-    grecaptcha: {
-      render: (container: string, options: Record<string, unknown>) => number;
-    };
-    handleRecaptchaChange: (token: string) => void;
-  }
-}
 
 interface KnowledgeProps {
   showLogin: boolean;
@@ -26,7 +17,6 @@ interface LoginData {
   login: string;
   password: string;
   remember: boolean;
-  recaptcha_token: string | null;
   device_fingerprint: string | null;
 }
 
@@ -41,7 +31,6 @@ export default function Knowledge({ showLogin, onCloseLogin }: KnowledgeProps) {
     login: '',
     password: '',
     remember: false,
-    recaptcha_token: null,
     device_fingerprint: null,
   });
   const [errors, setErrors] = useState<LoginErrors>({});
@@ -92,69 +81,6 @@ export default function Knowledge({ showLogin, onCloseLogin }: KnowledgeProps) {
     initializeDeviceFingerprint();
   }, []);
 
-  const handleRecaptchaChange = useCallback((token: string) => {
-    setData(prev => ({
-      ...prev,
-      recaptcha_token: token
-    }));
-  }, []);
-
-  useEffect(() => {
-    window.handleRecaptchaChange = handleRecaptchaChange;
-  }, [handleRecaptchaChange]);
-
-  useEffect(() => {
-    if (!window.grecaptcha) {
-      const script = document.createElement('script');
-      script.src = 'https://www.google.com/recaptcha/api.js';
-      script.async = true;
-      script.defer = true;
-      script.onload = () => {
-        const recaptchaContainer = document.getElementById('recaptcha-container');
-        if (recaptchaContainer && window.grecaptcha) {
-          setTimeout(() => {
-            window.grecaptcha.render('recaptcha-container', {
-              sitekey: import.meta.env.VITE_RECAPTCHA_SITE_KEY || 'PLACEHOLDER_KEY',
-              callback: 'handleRecaptchaChange',
-              theme: 'dark'
-            });
-          }, 100);
-        }
-      };
-      document.body.appendChild(script);
-
-      return () => {
-        if (document.body.contains(script)) {
-          document.body.removeChild(script);
-        }
-      };
-    } else {
-      const recaptchaContainer = document.getElementById('recaptcha-container');
-      if (recaptchaContainer && window.grecaptcha && !recaptchaContainer.innerHTML) {
-        window.grecaptcha.render('recaptcha-container', {
-          sitekey: import.meta.env.VITE_RECAPTCHA_SITE_KEY || 'PLACEHOLDER_KEY',
-          callback: 'handleRecaptchaChange',
-          theme: 'dark'
-        });
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    if (showLogin && window.grecaptcha) {
-      setTimeout(() => {
-        const recaptchaContainer = document.getElementById('recaptcha-container');
-        if (recaptchaContainer && !recaptchaContainer.innerHTML) {
-          window.grecaptcha.render('recaptcha-container', {
-            sitekey: import.meta.env.VITE_RECAPTCHA_SITE_KEY || 'PLACEHOLDER_KEY',
-            callback: 'handleRecaptchaChange',
-            theme: 'dark'
-          });
-        }
-      }, 50);
-    }
-  }, [showLogin]);
-
   useEffect(() => {
     if (lockoutCountdown > 0 && !showError) {
       setShowError(true);
@@ -196,20 +122,11 @@ export default function Knowledge({ showLogin, onCloseLogin }: KnowledgeProps) {
     setProcessing(true);
     setErrors({});
 
-    if (!data.recaptcha_token) {
-      setErrors({ recaptcha: 'Please verify that you\'re not a robot.' });
-      setShowError(true);
-      setProcessing(false);
-      setTimeout(() => setShowError(false), 5000);
-      return;
-    }
-
     try {
       const response = await api.post('/login', {
         login: data.login,
         password: data.password,
         remember: data.remember,
-        recaptcha_token: data.recaptcha_token,
         device_fingerprint: data.device_fingerprint,
       });
 
@@ -342,11 +259,6 @@ export default function Knowledge({ showLogin, onCloseLogin }: KnowledgeProps) {
                         <label htmlFor="remember" className="ml-2 text-white select-none cursor-pointer text-[14px]">
                           Remember Me
                         </label>
-                      </div>
-
-                      {/* reCAPTCHA v2 Checkbox */}
-                      <div className='mt-6 flex justify-center'>
-                        <div id="recaptcha-container" />
                       </div>
 
                       <div className='mt-6 w-full'>

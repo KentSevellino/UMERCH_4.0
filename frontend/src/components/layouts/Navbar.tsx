@@ -14,7 +14,7 @@ export default function Navbar({ onSignInClick }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const isActive = (href: string) => {
-    if (href === '/login') return location.pathname === '/login';
+    if (href === '/Landing') return location.pathname === '/Landing';
     if (href === '/Products') return location.pathname === '/Products';
     return location.pathname.startsWith(href);
   };
@@ -25,7 +25,7 @@ export default function Navbar({ onSignInClick }: NavbarProps) {
     } else if (isAuthenticated) {
       navigate('/Landing');
     } else {
-      navigate('/login?popup=1');
+      navigate('/Landing?popup=1');
     }
   };
 
@@ -35,7 +35,7 @@ export default function Navbar({ onSignInClick }: NavbarProps) {
         <img src={Logo} alt="UMERCH LOGO" className="h-8 sm:h-10 w-auto" />
 
         <div className="hidden md:flex flex-row gap-6 px-8 text-white" style={{ fontFamily: 'Montserrat' }}>
-          <Link to="/login" className={`font-bold text-[16px] leading-tight ${isActive('/login') ? 'text-[#FFB600]' : ''}`}>HOME</Link>
+          <Link to="/Landing" className={`font-bold text-[16px] leading-tight ${isActive('/Landing') ? 'text-[#FFB600]' : ''}`}>HOME</Link>
           <Link to="/Products" className={`font-bold text-[16px] leading-tight ${isActive('/Products') ? 'text-[#FFB600]' : ''}`}>PRODUCTS</Link>
           <Link to="/AboutUs" className={`font-bold text-[16px] leading-tight ${isActive('/AboutUs') ? 'text-[#FFB600]' : ''}`}>ABOUT US</Link>
           <a
@@ -77,7 +77,7 @@ export default function Navbar({ onSignInClick }: NavbarProps) {
 
       {mobileOpen && (
         <div className="md:hidden flex flex-col bg-[#7a0205] text-white font-bold text-[15px]" style={{ fontFamily: 'Montserrat' }}>
-          <Link to="/login" className={`px-6 py-3 border-b border-[#9C0306] ${isActive('/login') ? 'text-[#FFB600]' : ''}`} onClick={() => setMobileOpen(false)}>HOME</Link>
+          <Link to="/Landing" className={`px-6 py-3 border-b border-[#9C0306] ${isActive('/Landing') ? 'text-[#FFB600]' : ''}`} onClick={() => setMobileOpen(false)}>HOME</Link>
           <Link to="/Products" className={`px-6 py-3 border-b border-[#9C0306] ${isActive('/Products') ? 'text-[#FFB600]' : ''}`} onClick={() => setMobileOpen(false)}>PRODUCTS</Link>
           <Link to="/AboutUs" className={`px-6 py-3 border-b border-[#9C0306] ${isActive('/AboutUs') ? 'text-[#FFB600]' : ''}`} onClick={() => setMobileOpen(false)}>ABOUT US</Link>
           <a

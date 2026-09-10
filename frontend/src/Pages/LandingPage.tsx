@@ -38,7 +38,7 @@ export default function LandingPage() {
         const pending = JSON.parse(pendingRaw);
         if (!user) return;
 
-        await api.post('/add-to-cart', pending);
+        await api.post('/cart/add', pending);
         sessionStorage.removeItem('pendingBuy');
         navigate('/Checkout');
       } catch (e) {
@@ -51,7 +51,7 @@ export default function LandingPage() {
 
   return (
     <>
-      <LandingNav />
+      <LandingNav onShowLogin={() => setShowLogin(true)} />
       <Knowledge showLogin={showLogin} onCloseLogin={() => setShowLogin(false)} />
       <Advertisement />
       <DiscountedProduct />
