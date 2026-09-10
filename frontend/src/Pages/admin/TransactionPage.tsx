@@ -3,6 +3,7 @@ import AdminFooter from '../../components/layouts/AdminFooter';
 import PrepareModal from '../../components/modals/PrepareModal';
 import DeclineModal from '../../components/modals/DeclineModal';
 import DeliverModal from '../../components/modals/DeliverModal';
+import { normalizeImageUrl } from '../../constants';
 import ReadyForPickupModal from '../../components/modals/ReadyForPickupModal';
 import ViewReceiptFormModal from '../../components/modals/ViewReceiptFormModal';
 import { useTransaction } from '../../hooks/useTransaction';
@@ -74,7 +75,7 @@ const OrderModal = ({ order, isOpen, onClose, onReceiptOpen, onPrepareOpen, onDe
           {order.order_items?.map((item: any, idx: number) => (
             <div key={idx} className="flex gap-4">
               {item.product?.product_image && (
-                <img src={item.product.product_image} alt={item.product.product_name} className="w-20 h-20 rounded object-cover" />
+                <img src={normalizeImageUrl(item.product.product_image)} alt={item.product.product_name} className="w-20 h-20 rounded object-cover" />
               )}
               <div className="flex-1">
                 <h3 className="font-semibold text-lg">{item.product?.product_name || 'Product'}</h3>

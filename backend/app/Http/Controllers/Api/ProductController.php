@@ -51,9 +51,13 @@ class ProductController extends Controller
             'product_price' => 'required|numeric',
             'variant' => 'required|string',
             'variant_type' => 'nullable|string',
-            'product_image' => 'nullable|string',
+            'product_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'product_description' => 'nullable|string',
         ]);
+
+        if ($request->hasFile('product_image')) {
+            $validated['product_image'] = $request->file('product_image')->store('products', 'public');
+        }
 
         $existing = Products::where('product_name', $validated['product_name'])
             ->where('variant', $validated['variant'])
@@ -96,9 +100,13 @@ class ProductController extends Controller
             'product_price' => 'sometimes|numeric',
             'variant' => 'sometimes|string',
             'variant_type' => 'nullable|string',
-            'product_image' => 'nullable|string',
+            'product_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'product_description' => 'nullable|string',
         ]);
+
+        if ($request->hasFile('product_image')) {
+            $validated['product_image'] = $request->file('product_image')->store('products', 'public');
+        }
 
         $product->update($validated);
 

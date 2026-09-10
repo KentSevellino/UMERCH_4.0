@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BackgroundModel from '../assets/images/BackgroundModel.png';
+import { normalizeImageUrl } from '../constants';
 import OrdersNav from '../components/layouts/OrdersNav';
 import Tshirt from '../assets/images/tshirt.jpg';
 import LeftArrow from '../assets/images/LeftArrow.svg';
@@ -182,7 +183,7 @@ export default function CompletedPage() {
                                 <div className="flex flex-col gap-4">
                                     {order.order_items?.map((item, idx) => (
                                         <div key={idx} className="flex flex-row items-center justify-center gap-2 w-full">
-                                            <img src={item.product?.product_image || Tshirt} alt={item.product?.product_name} className="w-20 h-20 rounded-[10px] object-cover" />
+                                            <img src={normalizeImageUrl(item.product?.product_image) || Tshirt} alt={item.product?.product_name} className="w-20 h-20 rounded-[10px] object-cover" />
                                             <div className="flex flex-col items-start justify-center gap-1">
                                                 <h1 className="text-[15px] font-semibold">{item.product?.product_name}</h1>
                                                 <span className="text-[10px]">{item.variant}</span>

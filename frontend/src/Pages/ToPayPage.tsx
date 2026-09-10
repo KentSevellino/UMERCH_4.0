@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import BackgroundModel from '../assets/images/BackgroundModel.png';
 import OrdersNav from '../components/layouts/OrdersNav';
+import { normalizeImageUrl } from '../constants';
 import Tshirt from '../assets/images/tshirt.jpg';
 import LeftArrow from '../assets/images/LeftArrow.svg';
 import RightArrow from '../assets/images/RightArrow.svg';
@@ -172,7 +173,7 @@ export default function ToPayPage() {
                                             order.order_items.map((item, index) => (
                                                 <div key={index} className="flex flex-row items-center justify-center gap-2 w-full border-b pb-4 last:border-b-0">
                                                     <img
-                                                        src={item.product?.product_image || Tshirt}
+                                                        src={normalizeImageUrl(item.product?.product_image) || Tshirt}
                                                         alt={item.product?.product_name || 'product'}
                                                         className="w-20 h-20 rounded-[10px] object-cover"
                                                     />

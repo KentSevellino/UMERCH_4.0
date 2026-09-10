@@ -29,7 +29,7 @@ export const useAddProducts = () => {
     if (!u) return PLACEHOLDER_IMG;
     if (u.startsWith("http")) return u;
     if (u.startsWith("/")) return u;
-    return "/" + u;
+    return "/storage/" + u;
   };
 
   const groupProductsByName = (productList: Product[]) => {

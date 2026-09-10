@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../../services/api";
+import { normalizeImageUrl } from "../../constants";
 
 interface Stock {
   stock_in_id: number | string;
@@ -64,7 +65,7 @@ export default function EditStocks({ open, onClose, stock, onSuccess }: EditStoc
 
           <div className="p-6 space-y-4">
             <div className="flex gap-4">
-              <img src={stock.product_image} alt="" className="w-28 h-28 object-cover rounded-lg border" />
+              <img src={normalizeImageUrl(stock.product_image)} alt="" className="w-28 h-28 object-cover rounded-lg border" />
               <div className="flex-1">
                 <h3 className="font-bold text-lg">{stock.product_name}</h3>
                 <p className="text-xs text-gray-500 mt-1">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>

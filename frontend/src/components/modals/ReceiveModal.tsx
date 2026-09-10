@@ -1,3 +1,5 @@
+import { normalizeImageUrl } from "../../constants";
+
 interface OrderItem {
   product?: {
     product_image?: string;
@@ -69,7 +71,7 @@ export default function ReceiveModal({ isOpen, onClose, order, onReceiptOpen, on
             <div key={idx} className="flex gap-4">
               {item.product?.product_image && (
                 <img
-                  src={item.product.product_image}
+                  src={normalizeImageUrl(item.product.product_image)}
                   alt={item.product.product_name}
                   className="w-20 h-20 rounded object-cover"
                 />

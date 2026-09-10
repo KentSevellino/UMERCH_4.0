@@ -3,6 +3,7 @@ import AdminFooter from '../../components/layouts/AdminFooter';
 import AddStock from '../../components/modals/AddStocksModal';
 import EditStock from '../../components/modals/EditStocks';
 import ReceiptForm from '../../components/modals/ReceiptFormModal';
+import { normalizeImageUrl } from '../../constants';
 import AddStockOut from '../../components/modals/AddStockOutModal';
 import { useStockIn } from '../../hooks/useStockIn';
 
@@ -105,7 +106,7 @@ export default function StockInPage() {
                   className="grid grid-cols-12 px-8 py-4 border-b border-gray-400/30 items-center text-sm"
                 >
                   <div className="col-span-4 flex items-center gap-3">
-                    <img src={stock.product_image} className="w-12 h-12 rounded object-cover" alt="" />
+                    <img src={normalizeImageUrl(stock.product_image)} className="w-12 h-12 rounded object-cover" alt="" />
                     <div>
                       <p className="font-semibold">{stock.product_name}</p>
                       <p className="text-xs text-red-600">{stock.variant}</p>

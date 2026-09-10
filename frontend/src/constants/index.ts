@@ -13,7 +13,7 @@ export const variantTypesMap: Record<string, string[]> = {
 export function normalizeImageUrl(url: string | null | undefined): string {
   if (!url) return '';
   if (url.startsWith('http') || url.startsWith('data:')) return url;
-  return url;
+  return `/storage/${url}`;
 }
 
 export function formatPrice(price: number): string {

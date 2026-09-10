@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import LandingNav from '../components/layouts/LandingNav';
 import CartsNav from '../components/layouts/CartsNav';
 import BackgroundModel from '../assets/images/BackgroundModel.png';
+import { normalizeImageUrl } from '../constants';
 import Footer from '../components/layouts/Footer';
 import PlaceOrderModal from '../components/modals/PlaceOrderModal';
 import ReceiptForm from '../components/modals/ReceiptFormModal';
@@ -196,7 +197,7 @@ export default function CheckoutPage() {
                 {cartItems.map(item => (
                   <div key={item.cart_item_id} className='flex flex-row bg-white w-263 h-30 p-6 gap-6 items-center'>
                     <img
-                      src={item.product?.product_image}
+                      src={normalizeImageUrl(item.product?.product_image)}
                       alt={item.product?.product_name}
                       className='w-20 h-20 rounded-[10px] object-cover flex-shrink-0'
                     />

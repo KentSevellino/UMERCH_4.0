@@ -141,7 +141,7 @@ export default function AddProductModal({ isOpen, open, onClose, onSuccess }: Ad
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white w-[720px] shadow-2xl rounded-xl overflow-hidden">
+      <div className="bg-white w-[540px] shadow-2xl rounded-xl overflow-hidden">
         <div className="bg-red-800 px-6 py-4 text-white font-bold text-lg">ADD PRODUCT</div>
 
         <form onSubmit={handleSubmit} className="p-6 grid grid-cols-2 gap-6">

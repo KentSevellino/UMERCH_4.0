@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import LandingNav from '../components/layouts/LandingNav';
 import BackgroundModel from '../assets/images/BackgroundModel.png';
 import CartsNav from '../components/layouts/CartsNav';
+import { normalizeImageUrl } from '../constants';
 import Footer from '../components/layouts/Footer';
 import RemoveCartModal from '../components/modals/RemoveCartModal';
 import ReceiptForm from '../components/modals/ReceiptFormModal';
@@ -236,7 +237,7 @@ export default function CartPage() {
                             onChange={() => handleSelectItem(item.cart_item_id)}
                           />
                           <img
-                            src={item.product?.product_image}
+                            src={normalizeImageUrl(item.product?.product_image)}
                             alt={item.product?.product_name}
                             className='w-20 h-20 object-cover rounded'
                           />
