@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import AuthGuard from '../components/guards/AuthGuard';
 import AdminGuard from '../components/guards/AdminGuard';
 
@@ -29,6 +29,9 @@ import ActivityLogsPage from '../Pages/admin/ActivityLogsPage';
 export default function AppRoutes() {
   return (
     <Routes>
+      {/* Root goes to Landing */}
+      <Route path="/" element={<Navigate to="/Landing" replace />} />
+
       {/* Public Routes */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/Products" element={<ProductsPage />} />
@@ -58,7 +61,7 @@ export default function AppRoutes() {
       <Route path="/admin/record-logs/activity" element={<AdminGuard><ActivityLogsPage /></AdminGuard>} />
 
       {/* Default redirect */}
-      <Route path="*" element={<LoginPage />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }

@@ -113,7 +113,7 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
 
     setLoading(true);
     try {
-      await api.post('/cart', {
+      await api.post('/cart/add', {
         product_id: product.product_id,
         variant: selectedVariant,
         quantity,
@@ -159,7 +159,7 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
 
     setLoading(true);
     try {
-      await api.post('/cart', {
+      await api.post('/cart/add', {
         product_id: product.product_id,
         variant: selectedVariant,
         quantity,

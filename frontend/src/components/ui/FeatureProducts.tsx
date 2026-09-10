@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
 import ProductCard from '../cards/ProductCards';
 import Placeholder from '../../assets/images/product-placeholder.svg';
-import { Link } from 'react-router-dom';
 
 interface Product {
   product_id: number;
@@ -33,11 +32,22 @@ export default function FeatureProducts() {
     return '/storage/' + s;
   };
 
+  const groupProductsByName = (productList: Product[]) => {
+    const grouped: Record<string, Product> = {};
+    productList.forEach((product) => {
+      if (!grouped[product.product_name]) {
+        grouped[product.product_name] = product;
+      }
+    });
+    return Object.values(grouped);
+  };
+
   useEffect(() => {
     api.get('/products')
       .then(res => {
         const list = Array.isArray(res.data) ? res.data : [];
-        setItems(list.slice(0, 4));
+        const grouped = groupProductsByName(list);
+        setItems(grouped.slice(0, 4));
       })
       .catch(() => setItems([]));
   }, []);
@@ -49,7 +59,7 @@ export default function FeatureProducts() {
         <div className="mx-auto w-40 sm:w-52 h-1 bg-[#FFB600]" />
       </div>
       {/* Feature Cards */}
-      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 justify-items-center gap-6 px-4 sm:px-6'>
+      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 justify-items-center gap-4 px-4 sm:px-6'>
         {items.map((p) => (
           <ProductCard
             key={p.product_id}
@@ -60,11 +70,6 @@ export default function FeatureProducts() {
             stock={p.product_stock}
           />
         ))}
-      </div>
-      <div className='mt-8 flex justify-center items-center'>
-        <div className='bg-[#9C0306] w-55 h-10 rounded-[20px] flex justify-center items-center hover:cursor-pointer'>
-          <Link to="/Products" className='text-white text-[16px] font-semibold hover:cursor-pointer'>SEE MORE PRODUCTS</Link>
-        </div>
       </div>
     </div>
   );

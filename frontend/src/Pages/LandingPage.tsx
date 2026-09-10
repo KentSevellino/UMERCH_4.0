@@ -6,6 +6,7 @@ import Advertisement from '../components/ui/Advertisement';
 import DiscountedProduct from '../components/ui/DiscountedProduct';
 import FeatureProducts from '../components/ui/FeatureProducts';
 import LimitedOffer from '../components/ui/LimitedOffer';
+import Accessories from '../components/ui/Accessories';
 import FeatureSection from '../components/ui/FeatureSection';
 import Hero from '../components/ui/Hero';
 import Footer from '../components/layouts/Footer';
@@ -56,6 +57,7 @@ export default function LandingPage() {
       <DiscountedProduct />
       <FeatureProducts />
       <LimitedOffer />
+      <Accessories />
       <FeatureSection />
       <Hero />
       <Footer />
