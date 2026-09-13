@@ -7,7 +7,7 @@ export default function AppTabs() {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
 
-  // TODO: Add a "Profile" tab once we have a profile page
+  
   return (
     <NativeTabs
       backgroundColor={colors.background}
