@@ -100,8 +100,11 @@ export default function AddStockOutModal({ open, onClose, onSuccess }: AddStockO
       return;
     }
 
+    const finalVariant = variantOptions.length === 0 ? selected.variant_type : variation;
+
     const submitData = {
       product_id: selected.product_id,
+      variant: finalVariant,
       quantity: Number(quantity),
       reason: reason,
       modified_by: "Admin",

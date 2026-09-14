@@ -23,6 +23,7 @@ export default function AddStocksModal({ open, onClose, onSuccess }: AddStocksMo
   const [variation, setVariation] = useState("");
   const [quantity, setQuantity] = useState("");
   const [quantityError, setQuantityError] = useState("");
+  const [stockInDate, setStockInDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [confirm, setConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -105,6 +106,7 @@ export default function AddStocksModal({ open, onClose, onSuccess }: AddStocksMo
       variant: finalVariant,
       stock_qty: Number(quantity),
       cost: derivedCost,
+      stock_in_date: stockInDate,
     };
 
     setIsSubmitting(true);
@@ -116,6 +118,7 @@ export default function AddStocksModal({ open, onClose, onSuccess }: AddStocksMo
       setProductId("");
       setVariation("");
       setQuantity("");
+      setStockInDate(new Date().toISOString().split("T")[0]);
     } catch (error: any) {
       alert("Error adding stock: " + (error.response?.data?.message || error.message));
     } finally {

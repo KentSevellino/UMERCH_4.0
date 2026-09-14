@@ -35,7 +35,7 @@ export const useStockOut = () => {
 
   const fetchLogs = async () => {
     try {
-      const res = await api.get("/admin/stock-out/logs");
+      const res = await api.get("/admin/stock-out");
       setLogs(res.data);
     } catch (err) {
       console.error("Failed to fetch stock-out logs", err);

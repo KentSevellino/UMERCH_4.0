@@ -9,6 +9,7 @@ interface Stock {
   cost: string | number;
   variant: string;
   stock_qty: string | number;
+  stock_in_date?: string;
 }
 
 interface EditStocksProps {
@@ -21,11 +22,13 @@ interface EditStocksProps {
 export default function EditStocks({ open, onClose, stock, onSuccess }: EditStocksProps) {
   const [quantity, setQuantity] = useState<string | number>(stock?.stock_qty || "");
   const [quantityError, setQuantityError] = useState("");
+  const [stockInDate, setStockInDate] = useState(() => stock?.stock_in_date || new Date().toISOString().split("T")[0]);
   const [confirm, setConfirm] = useState(false);
 
   useEffect(() => {
     if (open && stock) {
       setQuantity(stock.stock_qty);
+      setStockInDate(stock.stock_in_date || new Date().toISOString().split("T")[0]);
     }
   }, [open, stock]);
 
@@ -45,7 +48,8 @@ export default function EditStocks({ open, onClose, stock, onSuccess }: EditStoc
     try {
       await api.patch(`/admin/stock-in/${stock.stock_in_id}`, {
         stock_qty: Number(quantity),
-        variant: stock.variant,
+        cost: Number(stock.cost),
+        stock_in_date: stockInDate,
       });
       if (onSuccess) onSuccess();
       onClose();

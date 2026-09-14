@@ -54,6 +54,7 @@ class StockOutController extends Controller
 
         StockOut::create([
             'product_id' => $validated['product_id'],
+            'variant' => $validated['variant'],
             'quantity' => $validated['quantity'],
             'modified_by' => $modifiedBy,
             'reason' => $validated['reason'],

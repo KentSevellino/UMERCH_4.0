@@ -99,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setToken(null);
       handleSetUser(null);
-      window.location.href = '/login';
+      window.location.href = '/Landing';
     }
   }, [setToken, handleSetUser]);
 

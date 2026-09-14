@@ -12,6 +12,7 @@ class StockOut extends Model
 
     protected $fillable = [
         'product_id',
+        'variant',
         'order_id',
         'quantity',
         'modified_by',

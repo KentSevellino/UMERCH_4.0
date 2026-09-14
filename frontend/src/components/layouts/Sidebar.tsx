@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import Logo from '../../assets/images/UMERCH-LOGO.svg';
 import DashboardIcon from '../../assets/images/Dashboard-icon.svg';
 import TransactionIcon from '../../assets/images/Transaction-icon.svg';
@@ -6,8 +7,6 @@ import InventoryIcon from '../../assets/images/Inventory-icon.svg';
 import RecordLogsIcon from '../../assets/images/RecordLogs-icon.svg';
 import LogoutIcon from '../../assets/images/Logout-icon.svg';
 import { useAuth } from '../../contexts/AuthContext';
-import { useState } from 'react';
-
 const RED_FILTER = '[filter:brightness(0)_saturate(100%)_invert(11%)_sepia(90%)_saturate(5000%)_hue-rotate(-2deg)_brightness(95%)_contrast(105%)]';
 
 interface NavItemProps {
@@ -43,10 +42,17 @@ function NavItem({ href, icon, label, active = false, onClick, asButton }: NavIt
 export default function Sidebar() {
   const location = useLocation();
   const { logout } = useAuth();
-  const [inventoryOpen, setInventoryOpen] = useState(false);
-  const [recordLogsOpen, setRecordLogsOpen] = useState(false);
-
   const isActive = (path: string) => location.pathname.startsWith(path);
+  const [inventoryOpen, setInventoryOpen] = useState(() => isActive('/admin/inventory'));
+  const [recordLogsOpen, setRecordLogsOpen] = useState(() => isActive('/admin/record-logs'));
+
+  useEffect(() => {
+    if (isActive('/admin/inventory')) setInventoryOpen(true);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (isActive('/admin/record-logs')) setRecordLogsOpen(true);
+  }, [location.pathname]);
 
   return (
     <aside className="w-60 bg-[#9C0306] text-white min-h-screen flex flex-col">
