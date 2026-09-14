@@ -73,8 +73,11 @@ export const useAddProducts = () => {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try {
       await api.delete(`/admin/products/${id}`);
-      fetchProducts();
+      setProducts((prevProducts) =>
+        prevProducts.filter((product) => product.product_id !== id)
+      );
       showToast("Product deleted successfully!");
+      await fetchProducts();
     } catch (error) {
       console.error("Delete failed", error);
     }

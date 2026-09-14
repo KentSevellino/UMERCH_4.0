@@ -34,7 +34,7 @@ export default function AddProductsPage() {
     products, openAdd, setOpenAdd, openEdit, setOpenEdit, selectedProduct, setSelectedProduct,
     openDelete, setOpenDelete, toast, showingToast, searchQuery, setSearchQuery,
     currentPage, setCurrentPage, totalPages, normalizeImageUrl, groupProductsByName,
-    fetchProducts, showToast, getPaginatedProducts,
+    fetchProducts, showToast, getPaginatedProducts, handleArchive, handleRestore,
   } = useAddProducts();
 
   return (

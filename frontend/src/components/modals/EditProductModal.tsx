@@ -52,7 +52,7 @@ export default function EditProductModal({ open, onClose, product, onSuccess }: 
         product_image: null,
       });
       setSelectedVariantType(product.variant_type || "");
-      setPreview(product.product_image || null);
+      setPreview(product.product_image ? `/storage/${product.product_image}` : null);
     }
   }, [product]);
 
