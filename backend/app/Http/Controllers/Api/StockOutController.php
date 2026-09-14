@@ -15,7 +15,7 @@ class StockOutController extends Controller
     public function logs()
     {
         $stockOuts = StockOut::join('_products', 'stock_outs.product_id', '=', '_products.product_id')
-            ->select('stock_outs.*', '_products.product_name', '_products.variant')
+            ->select('stock_outs.*', '_products.product_name')
             ->orderBy('stock_outs.created_at', 'desc')
             ->get();
 

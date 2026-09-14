@@ -242,6 +242,7 @@ class OrderController extends Controller
                         StockOut::create([
                             'product_id' => $item->product_id,
                             'order_id' => $order->order_id,
+                            'variant' => $item->variant,
                             'quantity' => $item->quantity,
                             'modified_by' => $modifiedByUser,
                             'reason' => 'order',

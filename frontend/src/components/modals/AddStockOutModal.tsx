@@ -23,8 +23,15 @@ const reasonOptions = [
   { value: "adjustment", label: "Adjustment" },
 ];
 
+interface StockRecord {
+  product_id: number | string;
+  variant: string;
+  quantity: number;
+}
+
 export default function AddStockOutModal({ open, onClose, onSuccess }: AddStockOutModalProps) {
   const [products, setProducts] = useState<Product[]>([]);
+  const [stocks, setStocks] = useState<StockRecord[]>([]);
   const [productId, setProductId] = useState("");
   const [variantOptions, setVariantOptions] = useState<string[]>([]);
   const [variation, setVariation] = useState("");
@@ -39,6 +46,9 @@ export default function AddStockOutModal({ open, onClose, onSuccess }: AddStockO
       api.get("/admin/products").then((res) => {
         const activeProducts = (res.data.data || res.data).filter((p: Product) => p.status === "active");
         setProducts(activeProducts);
+      });
+      api.get("/inventory").then((res) => {
+        setStocks(res.data);
       });
     }
   }, [open]);
@@ -58,8 +68,12 @@ export default function AddStockOutModal({ open, onClose, onSuccess }: AddStockO
     if (productId) {
       const selectedProduct = products.find((p) => p.product_name === productId && p.status === "active");
       if (selectedProduct && selectedProduct.variant_type) {
-        const options = variantTypesMap[selectedProduct.variant_type] || [];
-        setVariantOptions(options);
+        const allOptions = variantTypesMap[selectedProduct.variant_type] || [];
+        const inStockVariants = stocks
+          .filter((s) => s.product_id == selectedProduct.product_id && s.quantity > 0)
+          .map((s) => s.variant);
+        const filtered = allOptions.filter((v) => inStockVariants.includes(v));
+        setVariantOptions(filtered);
       } else {
         setVariantOptions([]);
       }
@@ -68,7 +82,7 @@ export default function AddStockOutModal({ open, onClose, onSuccess }: AddStockO
       setVariantOptions([]);
       setVariation("");
     }
-  }, [productId, products]);
+  }, [productId, products, stocks]);
 
   const handleVariantChange = (selectedVariant: string) => {
     setVariation(selectedVariant);
@@ -102,6 +116,14 @@ export default function AddStockOutModal({ open, onClose, onSuccess }: AddStockO
 
     const finalVariant = variantOptions.length === 0 ? selected.variant_type : variation;
 
+    const availableStock = stocks.find(
+      (s) => s.product_id == selected.product_id && s.variant === finalVariant
+    );
+    if (!availableStock || availableStock.quantity <= 0) {
+      alert("This variant has no stock available.");
+      return;
+    }
+
     const submitData = {
       product_id: selected.product_id,
       variant: finalVariant,
@@ -120,6 +142,7 @@ export default function AddStockOutModal({ open, onClose, onSuccess }: AddStockO
       setVariation("");
       setQuantity("");
       setReason("defected");
+      setStocks([]);
     } catch (error: any) {
       alert("Error removing stock: " + (error.response?.data?.message || error.message));
     } finally {
