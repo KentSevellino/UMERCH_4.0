@@ -71,7 +71,7 @@ class InventoryReportController extends Controller
                 'sold_value' => $soldValue,
                 'purchased_qty' => $purchasedQty,
                 'purchased_value' => $purchasedValue,
-                'stock_decrease' => $purchasedQty - $soldQty,
+                'stock_decrease' => $soldQty - $purchasedQty,
                 'current_stock' => $currentStock,
                 'date_range' => [$startDate->toDateString(), $endDate->toDateString()],
             ];
@@ -82,6 +82,7 @@ class InventoryReportController extends Controller
             'total_purchased_qty' => collect($report)->sum('purchased_qty'),
             'total_purchased_value' => collect($report)->sum('purchased_value'),
             'total_sold_value' => collect($report)->sum('sold_value'),
+            'total_stock_decrease' => collect($report)->sum('stock_decrease'),
         ];
 
         return response()->json(['report' => $report, 'totals' => $totals]);

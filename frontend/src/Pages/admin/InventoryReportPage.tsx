@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Sidebar from '../../components/layouts/Sidebar';
 import AdminFooter from '../../components/layouts/AdminFooter';
 import api from '../../services/api';
 
 interface ReportRow {
-  date_range: { display: string };
+  date_range: string[];
   product_name: string;
   status: string;
   variant_type: string;
@@ -22,6 +22,7 @@ interface Totals {
   purchased_qty: number;
   sold_value: number;
   purchased_value: number;
+  stock_decrease: number;
 }
 
 export default function InventoryReportPage() {
@@ -33,25 +34,27 @@ export default function InventoryReportPage() {
     purchased_qty: 0,
     sold_value: 0,
     purchased_value: 0,
+    stock_decrease: 0,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const fetchReport = async () => {
+  const fetchReport = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
       const response = await api.get("/admin/inventory-report", {
         params: { filterType, filterDate },
       });
-      setReportData(response.data.data || []);
+      setReportData(response.data.report || []);
       setTotals({
-        sold_qty: response.data.total_sold_qty || 0,
-        purchased_qty: response.data.total_purchased_qty || 0,
-        sold_value: response.data.total_sold_value || 0,
-        purchased_value: response.data.total_purchased_value || 0,
+        sold_qty: response.data.totals?.total_sold_qty || 0,
+        purchased_qty: response.data.totals?.total_purchased_qty || 0,
+        sold_value: response.data.totals?.total_sold_value || 0,
+        purchased_value: response.data.totals?.total_purchased_value || 0,
+        stock_decrease: response.data.totals?.total_stock_decrease || 0,
       });
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || "Failed to fetch report data. Please try again.";
@@ -59,35 +62,17 @@ export default function InventoryReportPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterType, filterDate]);
 
   useEffect(() => {
     fetchReport();
     setCurrentPage(1);
-  }, [filterType, filterDate]);
+  }, [fetchReport]);
 
   const totalPages = Math.ceil(reportData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedData = reportData.slice(startIndex, endIndex);
-
-  const handleExportCSV = async () => {
-    try {
-      const response = await api.get("/admin/inventory-report/export-csv", {
-        params: { filterType, filterDate },
-        responseType: "blob",
-      });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `inventory-report-${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      link.parentElement?.removeChild(link);
-    } catch {
-      setError("Failed to export CSV. Please try again.");
-    }
-  };
 
   const handleExportExcel = async () => {
     try {
@@ -138,7 +123,7 @@ export default function InventoryReportPage() {
       addBanner("UMERCH — INVENTORY REPORT", 1, DARK_RED, WHITE_TEXT, 18);
 
       const periodLabel = reportData.length > 0
-        ? `Period: ${reportData[0].date_range.display}  |  Generated: ${new Date().toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })}`
+        ? `Period: ${reportData[0].date_range[0]} — ${reportData[0].date_range[1]}  |  Generated: ${new Date().toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })}`
         : `Generated: ${new Date().toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })}`;
       addBanner(periodLabel, 2, MID_RED, WHITE_TEXT, 11, false);
 
@@ -172,7 +157,7 @@ export default function InventoryReportPage() {
         };
 
         const r = sheet.addRow({
-          date: row.date_range.display,
+          date: `${row.date_range[0]} — ${row.date_range[1]}`,
           name: row.product_name,
           status: row.status === "active" ? "Active" : "Archived",
           variant: row.variant_type || "-",
@@ -218,7 +203,7 @@ export default function InventoryReportPage() {
         price: "",
         sold_qty: totals.sold_qty,
         sold_val: totals.sold_value,
-        decrease: totals.sold_qty,
+        decrease: totals.stock_decrease,
         purch_qty: totals.purchased_qty,
         purch_val: totals.purchased_value,
         stock: "",
@@ -366,7 +351,7 @@ export default function InventoryReportPage() {
                         key={idx}
                         className={`border-b border-gray-100 hover:bg-red-50 transition-colors text-xs ${idx % 2 === 1 ? 'bg-gray-50' : 'bg-white'}`}
                       >
-                        <td className="px-3 py-2 text-gray-500 whitespace-nowrap">{row.date_range.display}</td>
+                        <td className="px-3 py-2 text-gray-500 whitespace-nowrap">{row.date_range[0]} — {row.date_range[1]}</td>
                         <td className="px-3 py-2 font-semibold text-gray-900">{row.product_name}</td>
                         <td className="px-3 py-2">
                           <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${row.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
@@ -374,12 +359,12 @@ export default function InventoryReportPage() {
                           </span>
                         </td>
                         <td className="px-3 py-2 text-gray-500 capitalize">{row.variant_type}</td>
-                        <td className="px-3 py-2 text-right text-gray-700">₱{row.unit_price.toFixed(2)}</td>
+                        <td className="px-3 py-2 text-right text-gray-700">₱{Number(row.unit_price).toFixed(2)}</td>
                         <td className="px-3 py-2 text-right font-semibold text-gray-800">{row.sold_qty}</td>
-                        <td className="px-3 py-2 text-right font-semibold text-[#9C0306]">₱{row.sold_value.toFixed(2)}</td>
+                        <td className="px-3 py-2 text-right font-semibold text-[#9C0306]">₱{Number(row.sold_value).toFixed(2)}</td>
                         <td className="px-3 py-2 text-right text-gray-700">{row.stock_decrease}</td>
                         <td className="px-3 py-2 text-right font-semibold text-gray-800">{row.purchased_qty}</td>
-                        <td className="px-3 py-2 text-right font-semibold text-green-700">₱{row.purchased_value.toFixed(2)}</td>
+                        <td className="px-3 py-2 text-right font-semibold text-green-700">₱{Number(row.purchased_value).toFixed(2)}</td>
                         <td className="px-3 py-2 text-right font-bold text-[#9C0306]">{row.current_stock}</td>
                       </tr>
                     ))}
