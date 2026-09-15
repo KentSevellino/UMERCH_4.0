@@ -15,10 +15,10 @@ interface PasswordStrength {
 
 export default function AddUsersModals({ isOpen, onClose, onUserAdded }: AddUsersModalsProps) {
   const [data, setData] = useState({
-    name: '',
+    user_fullname: '',
     email: '',
-    userId: '',
-    password: ''
+    um_id: '',
+    user_password: ''
   });
   const [processing, setProcessing] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -67,7 +67,7 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }: AddUser
     const { name, value } = e.target;
     setData(prev => ({ ...prev, [name]: value }));
 
-    if (name === 'password') {
+    if (name === 'user_password') {
       const strength = calculatePasswordStrength(value);
       setPasswordStrength(strength);
     }
@@ -87,9 +87,9 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }: AddUser
     try {
       const response = await api.post('/admin/users', data);
       if (onUserAdded) {
-        onUserAdded(response.data.newUser || null);
+        onUserAdded(response.data.user || null);
       }
-      setData({ name: '', email: '', userId: '', password: '' });
+      setData({ user_fullname: '', email: '', um_id: '', user_password: '' });
       setPasswordStrength({ level: '', color: '', text: '' });
       onClose();
     } catch (error: any) {
@@ -130,16 +130,16 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }: AddUser
               </label>
               <input
                 type="text"
-                id="name"
-                name="name"
-                value={data.name}
+                id="user_fullname"
+                name="user_fullname"
+                value={data.user_fullname}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9C0306] focus:border-[#9C0306]"
                 placeholder="Enter full name"
                 required
               />
-              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-              {errors.name && errors.name.toLowerCase().includes('unique') && (
+              {errors.user_fullname && <p className="text-red-500 text-sm mt-1">{errors.user_fullname}</p>}
+              {errors.user_fullname && errors.user_fullname.toLowerCase().includes('unique') && (
                 <p className="text-red-500 text-sm mt-1">This name is already taken.</p>
               )}
             </div>
@@ -169,10 +169,10 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }: AddUser
                 User ID
               </label>
               <input
-                type="text"
-                id="userId"
-                name="userId"
-                value={data.userId}
+                type="number"
+                id="um_id"
+                name="um_id"
+                value={data.um_id}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9C0306] focus:border-[#9C0306]"
                 placeholder="Enter user ID"
@@ -186,9 +186,9 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }: AddUser
               </label>
               <input
                 type="password"
-                id="password"
-                name="password"
-                value={data.password}
+                id="user_password"
+                name="user_password"
+                value={data.user_password}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9C0306] focus:border-[#9C0306]"
                 placeholder="Enter password"
@@ -196,7 +196,7 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }: AddUser
               />
 
               {/* Password Strength Indicator */}
-              {data.password && (
+              {data.user_password && (
                 <div className="mt-2">
                   <div className="flex items-center gap-2">
                     <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -221,7 +221,7 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }: AddUser
                 </div>
               )}
 
-              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+              {errors.user_password && <p className="text-red-500 text-sm mt-1">{errors.user_password}</p>}
             </div>
           </div>
 

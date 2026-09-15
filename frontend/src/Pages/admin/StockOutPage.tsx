@@ -78,9 +78,9 @@ export default function StockOutPage() {
             {logs.length === 0 ? (
               <div className="text-center py-24 text-gray-400">No stock-out records found</div>
             ) : (
-              logs.map((log) => (
+              logs.map((log, index) => (
                 <div
-                  key={log.id}
+                  key={log.id ?? `stockout-${index}`}
                   className="grid gap-4 px-8 py-4 border-b text-sm items-center"
                   style={{ gridTemplateColumns: '1.5fr 2fr 1fr 0.7fr 1.2fr 1.5fr' }}
                 >
