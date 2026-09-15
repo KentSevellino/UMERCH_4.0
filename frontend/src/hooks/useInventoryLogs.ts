@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import api from "../services/api";
 
 interface InventoryLog {
@@ -19,19 +19,21 @@ export const useInventoryLogs = () => {
   const [typeFilter, setTypeFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [isPending, startTransition] = useTransition();
   const perPage = 10;
 
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/admin/inventory-logs", {
-        params: {
-          search: query,
-          type: typeFilter,
-          page: currentPage,
-          per_page: perPage,
-        },
-      });
+      const params: Record<string, string | number> = {
+        search: query,
+        page: currentPage,
+        per_page: perPage,
+      };
+      if (typeFilter !== "all") {
+        params.type = typeFilter;
+      }
+      const response = await api.get("/admin/inventory-logs", { params });
       const logData = response.data;
       setLogs(logData.data || []);
       setTotalPages(logData.last_page || 1);
@@ -49,10 +51,14 @@ export const useInventoryLogs = () => {
       const response = await api.get("/admin/inventory-logs", {
         params: { per_page: 10000 },
       });
-      setAllLogs(response.data.data || []);
+      startTransition(() => {
+        setAllLogs(response.data.data || []);
+      });
     } catch (error) {
       console.error("Error fetching all logs:", error);
-      setAllLogs([]);
+      startTransition(() => {
+        setAllLogs([]);
+      });
     }
   };
 
@@ -92,6 +98,7 @@ export const useInventoryLogs = () => {
     logs,
     allLogs,
     loading,
+    isPending,
     query,
     setQuery,
     typeFilter,

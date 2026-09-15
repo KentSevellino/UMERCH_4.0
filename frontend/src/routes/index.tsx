@@ -57,7 +57,7 @@ export default function AppRoutes() {
       <Route path="/admin/inventory/report" element={<AdminGuard><InventoryReportPage /></AdminGuard>} />
       <Route path="/admin/transaction" element={<AdminGuard><TransactionPage /></AdminGuard>} />
       <Route path="/admin/record-logs/user" element={<AdminGuard><UserLogsPage /></AdminGuard>} />
-      <Route path="/admin/record-logs/inventory" element={<AdminGuard><InventoryLogsPage /></AdminGuard>} />
+      <Route path="/admin/inventory/logs" element={<AdminGuard><InventoryLogsPage /></AdminGuard>} />
       <Route path="/admin/record-logs/activity" element={<AdminGuard><ActivityLogsPage /></AdminGuard>} />
 
       {/* Default redirect */}

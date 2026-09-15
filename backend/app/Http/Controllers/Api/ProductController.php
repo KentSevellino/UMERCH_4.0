@@ -108,11 +108,13 @@ class ProductController extends Controller
             $validated['product_image'] = $request->file('product_image')->store('products', 'public');
         }
 
+        $oldItemName = $product->product_name;
+
         $product->update($validated);
 
         InventoryLog::create([
             'product_id' => $product->product_id,
-            'item_name' => $product->product_name,
+            'item_name' => $oldItemName,
             'type' => 'Edit Product',
             'quantity' => 0,
             'total' => $product->product_stock,
@@ -142,7 +144,7 @@ class ProductController extends Controller
             'item_name' => $product->product_name,
             'type' => 'Delete Product',
             'quantity' => 0,
-            'total' => 0,
+            'total' => $product->product_stock,
             'admin_action' => Auth::user()->user_fullname ?? 'Admin',
         ]);
 

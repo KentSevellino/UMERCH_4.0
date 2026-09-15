@@ -8,6 +8,7 @@ use App\Models\Inventory;
 use App\Models\OrderItems;
 use App\Models\Orders;
 use App\Models\Products;
+use App\Models\InventoryLog;
 use App\Models\StockIn;
 use App\Models\StockOut;
 use Illuminate\Http\Request;
@@ -251,6 +252,16 @@ class OrderController extends Controller
                         Products::where('product_id', $item->product_id)->decrement('product_stock', $item->quantity);
                         Inventory::where('product_id', $item->product_id)->decrement('quantity', $item->quantity);
                         StockIn::where('product_id', $item->product_id)->decrement('stock_qty', $item->quantity);
+
+                        $product = Products::find($item->product_id);
+                        InventoryLog::create([
+                            'product_id' => $item->product_id,
+                            'item_name' => $product->product_name ?? 'Unknown',
+                            'type' => 'Stock Out',
+                            'quantity' => -$item->quantity,
+                            'total' => $product->product_stock ?? 0,
+                            'admin_action' => $modifiedByUser,
+                        ]);
                     }
                 });
             }

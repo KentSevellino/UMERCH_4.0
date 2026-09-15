@@ -101,6 +101,16 @@ class StockInController extends Controller
 
             $stockIn->update($validated);
 
+            $product = Products::find($stockIn->product_id);
+            InventoryLog::create([
+                'product_id' => $stockIn->product_id,
+                'item_name' => $product->product_name ?? 'Unknown',
+                'type' => 'Stock In',
+                'quantity' => $delta,
+                'total' => $product->product_stock ?? 0,
+                'admin_action' => Auth::user()->user_fullname ?? 'Admin',
+            ]);
+
             return response()->json(['message' => 'Stock-in updated successfully']);
         });
     }
@@ -117,6 +127,16 @@ class StockInController extends Controller
             Inventory::where('product_id', $stockIn->product_id)
                 ->where('variant', $stockIn->variant)
                 ->decrement('quantity', $stockIn->stock_qty);
+
+            $product = Products::find($stockIn->product_id);
+            InventoryLog::create([
+                'product_id' => $stockIn->product_id,
+                'item_name' => $product->product_name ?? 'Unknown',
+                'type' => 'Stock In',
+                'quantity' => -$stockIn->stock_qty,
+                'total' => $product->product_stock ?? 0,
+                'admin_action' => Auth::user()->user_fullname ?? 'Admin',
+            ]);
 
             $stockIn->delete();
 

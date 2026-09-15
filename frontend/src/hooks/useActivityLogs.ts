@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import api from "../services/api";
 
 interface ActivityLog {
@@ -16,19 +16,21 @@ export const useActivityLogs = () => {
   const [activityFilter, setActivityFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [isPending, startTransition] = useTransition();
   const perPage = 10;
 
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/admin/activity-logs", {
-        params: {
-          search: query,
-          activity: activityFilter,
-          page: currentPage,
-          per_page: perPage,
-        },
-      });
+      const params: Record<string, string | number> = {
+        search: query,
+        page: currentPage,
+        per_page: perPage,
+      };
+      if (activityFilter !== "all") {
+        params.activity = activityFilter;
+      }
+      const response = await api.get("/admin/activity-logs", { params });
       setLogs(response.data.data);
       setTotalPages(response.data.last_page);
     } catch (error) {
@@ -43,9 +45,14 @@ export const useActivityLogs = () => {
       const response = await api.get("/admin/activity-logs", {
         params: { per_page: 10000 },
       });
-      setAllLogs(response.data.data);
+      startTransition(() => {
+        setAllLogs(response.data.data);
+      });
     } catch (error) {
       console.error("Error fetching all logs:", error);
+      startTransition(() => {
+        setAllLogs([]);
+      });
     }
   };
 

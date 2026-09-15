@@ -88,6 +88,9 @@ export default function Sidebar() {
               <Link to="/admin/inventory/report" className={`block px-14 py-2 text-sm transition-all duration-200 ${isActive('/admin/inventory/report') ? 'bg-white text-red-700' : 'text-white'}`}>
                 Report
               </Link>
+              <Link to="/admin/inventory/logs" className={`block px-14 py-2 text-sm transition-all duration-200 ${isActive('/admin/inventory/logs') ? 'bg-white text-red-700' : 'text-white'}`}>
+                Inventory Logs
+              </Link>
             </div>
           )}
         </div>
@@ -107,9 +110,6 @@ export default function Sidebar() {
               </Link>
               <Link to="/admin/record-logs/user" className={`block px-14 py-2 text-sm transition-all duration-200 ${isActive('/admin/record-logs/user') ? 'bg-white text-red-700' : 'text-white'}`}>
                 User Logs
-              </Link>
-              <Link to="/admin/record-logs/inventory" className={`block px-14 py-2 text-sm transition-all duration-200 ${isActive('/admin/record-logs/inventory') ? 'bg-white text-red-700' : 'text-white'}`}>
-                Inventory Logs
               </Link>
             </div>
           )}
