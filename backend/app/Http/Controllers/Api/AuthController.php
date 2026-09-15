@@ -84,7 +84,7 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             if (file_exists($rateLimitFile)) @unlink($rateLimitFile);
-            ActivityLog::logLogin($adminUser);
+            ActivityLog::logLogin($adminUser, 'admin');
 
             return response()->json([
                 'user' => $adminUser,
@@ -113,7 +113,7 @@ class AuthController extends Controller
                 if (file_exists($rateLimitFile)) @unlink($rateLimitFile);
                 Auth::login($user, $credentials['remember'] ?? false);
                 $request->session()->regenerate();
-                ActivityLog::logLogin($user);
+                ActivityLog::logLogin($user, 'user');
 
                 $isTrustedDevice = false;
                 if ($credentials['device_fingerprint']) {
@@ -220,7 +220,7 @@ class AuthController extends Controller
     {
         $user = Auth::user();
         if ($user) {
-            ActivityLog::logLogout($user);
+            ActivityLog::logLogout($user, $user->role === 'Admin' ? 'admin' : 'user');
         }
 
         $request->user()->currentAccessToken()->delete();

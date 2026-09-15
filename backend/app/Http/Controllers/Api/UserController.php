@@ -87,7 +87,7 @@ class UserController extends Controller
         }
 
         $user->update(['status' => 'inactive']);
-        ActivityLog::logDeactivated($user);
+        ActivityLog::logDeactivated($user, 'user');
 
         return response()->json(['message' => 'User deactivated successfully']);
     }
@@ -100,7 +100,7 @@ class UserController extends Controller
         }
 
         $user->update(['status' => 'active']);
-        ActivityLog::logActivated($user);
+        ActivityLog::logActivated($user, 'user');
 
         return response()->json(['message' => 'User reactivated successfully']);
     }

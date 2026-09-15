@@ -14,41 +14,46 @@ class ActivityLog extends Model
     protected $fillable = [
         'action',
         'description',
+        'role',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
     ];
 
-    public static function logLogin($user)
+    public static function logLogin($user, $role = 'user')
     {
         return self::create([
             'action' => 'Login',
             'description' => "User {$user->user_fullname} (ID: {$user->um_id}) logged in",
+            'role' => $role,
         ]);
     }
 
-    public static function logLogout($user)
+    public static function logLogout($user, $role = 'user')
     {
         return self::create([
             'action' => 'Logout',
             'description' => "User {$user->user_fullname} (ID: {$user->um_id}) logged out",
+            'role' => $role,
         ]);
     }
 
-    public static function logDeactivated($user)
+    public static function logDeactivated($user, $role = 'user')
     {
         return self::create([
             'action' => 'Deactivated',
             'description' => "User {$user->user_fullname} (ID: {$user->um_id}) was deactivated",
+            'role' => $role,
         ]);
     }
 
-    public static function logActivated($user)
+    public static function logActivated($user, $role = 'user')
     {
         return self::create([
             'action' => 'Activated',
             'description' => "User {$user->user_fullname} (ID: {$user->um_id}) was activated",
+            'role' => $role,
         ]);
     }
 }

@@ -10,7 +10,8 @@ class ActivityLogController extends Controller
     public function getLogs(Request $request)
     {
         $query = ActivityLog::orderBy('created_at', 'desc')
-            ->where('activity_logs_id', '!=', 1);
+            ->where('activity_logs_id', '!=', 1)
+            ->where('role', '!=', 'admin');
 
         if ($request->has('search') && $request->search) {
             $search = $request->search;
@@ -32,9 +33,9 @@ class ActivityLogController extends Controller
 
     public function getStats()
     {
-        $totalActivities = ActivityLog::count();
-        $totalLogins = ActivityLog::where('action', 'Login')->count();
-        $totalLogouts = ActivityLog::where('action', 'Logout')->count();
+        $totalActivities = ActivityLog::where('role', '!=', 'admin')->count();
+        $totalLogins = ActivityLog::where('action', 'Login')->where('role', '!=', 'admin')->count();
+        $totalLogouts = ActivityLog::where('action', 'Logout')->where('role', '!=', 'admin')->count();
 
         return response()->json([
             'total_activities' => $totalActivities,
