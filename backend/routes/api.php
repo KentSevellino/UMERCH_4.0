@@ -57,6 +57,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders', [OrderController::class, 'getUserOrders']);
         Route::post('/orders/{orderId}/upload-receipt', [OrderController::class, 'uploadReceipt']);
         Route::post('/orders/{orderId}/buy-again', [OrderController::class, 'buyAgain']);
+        Route::patch('/orders/{orderId}/receive', [OrderController::class, 'markAsReceived']);
 
     });
 

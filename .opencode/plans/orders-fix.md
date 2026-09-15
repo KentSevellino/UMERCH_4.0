@@ -1,3 +1,15 @@
+# Fix: "All" Orders Tab Not Showing Orders
+
+## Problem
+`OrdersPage.tsx` was a layout wrapper using `<Outlet />` but routes are flat (not nested), so the "All" tab showed an empty page.
+
+## Solution
+Rewrite `frontend/src/Pages/OrdersPage.tsx` to be a standalone page that fetches and displays ALL orders.
+
+## Replacement Content for `frontend/src/Pages/OrdersPage.tsx`
+Replace the entire file with the content below:
+
+```tsx
 import { useState, useEffect } from 'react';
 import BackgroundModel from '../assets/images/BackgroundModel.png';
 import { normalizeImageUrl } from '../constants';
@@ -210,3 +222,4 @@ export default function OrdersPage() {
         </>
     );
 }
+```

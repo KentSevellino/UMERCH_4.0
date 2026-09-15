@@ -105,9 +105,7 @@ export default function ToReceivePage() {
 
     const handleOrderReceived = async (orderId: number) => {
         try {
-            await api.put(`/admin/orders/${orderId}/status`, {
-                status: 'Completed'
-            });
+            await api.patch(`/orders/${orderId}/receive`);
             showToast('Order Complete', 'success');
             await fetchOrders();
             setTimeout(() => {
