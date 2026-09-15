@@ -25,7 +25,7 @@ interface LoginErrors {
 }
 
 export default function Knowledge({ showLogin, onCloseLogin }: KnowledgeProps) {
-  const { user } = useAuth();
+  const { login } = useAuth();
 
   const [data, setData] = useState<LoginData>({
     login: '',
@@ -123,24 +123,8 @@ export default function Knowledge({ showLogin, onCloseLogin }: KnowledgeProps) {
     setErrors({});
 
     try {
-      const response = await api.post('/login', {
-        login: data.login,
-        password: data.password,
-        remember: data.remember,
-        device_fingerprint: data.device_fingerprint,
-      });
-
-      const { user, token, redirect } = response.data;
-
-      if (token) {
-        localStorage.setItem('auth_token', token);
-        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      }
-      if (user) {
-        localStorage.setItem('auth_user', JSON.stringify(user));
-      }
-
-      window.location.href = redirect || '/authentication';
+      const result = await login(data.login, data.password, data.device_fingerprint ?? undefined);
+      window.location.href = result.redirect || '/authentication';
     } catch (error: any) {
       if (error.response?.status === 429 && error.response?.data?.retry_after) {
         setLockoutCountdown(error.response.data.retry_after);

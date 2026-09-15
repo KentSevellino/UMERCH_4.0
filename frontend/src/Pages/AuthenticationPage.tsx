@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 
@@ -10,7 +11,8 @@ interface AuthenticationPageProps {
 }
 
 export default function AuthenticationPage({ email: initialEmail, flash }: AuthenticationPageProps) {
-    const { user } = useAuth();
+    const { user, setOtpVerified } = useAuth();
+    const navigate = useNavigate();
     const inputLength = 6;
     const [values, setValues] = useState<string[]>(Array(inputLength).fill(''));
     const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
@@ -110,6 +112,8 @@ export default function AuthenticationPage({ email: initialEmail, flash }: Authe
 
         try {
             await api.post('/verify-otp', { otp });
+            setOtpVerified(true);
+            navigate('/Landing');
         } catch (error: any) {
             const errorMsg = error.response?.data?.errors?.otp
                 ? Array.isArray(error.response.data.errors.otp)

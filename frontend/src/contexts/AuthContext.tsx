@@ -16,12 +16,14 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   isLoading: boolean;
+  otpVerified: boolean;
   login: (login: string, password: string, deviceFingerprint?: string) => Promise<LoginResponse>;
   logout: () => Promise<void>;
   verifyOtp: (otp: string) => Promise<void>;
   resendOtp: () => Promise<{ email: string }>;
   setUser: (user: User | null) => void;
   setToken: (token: string | null) => void;
+  setOtpVerified: (verified: boolean) => void;
 }
 
 interface LoginResponse {
@@ -43,6 +45,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
   const [token, setTokenState] = useState<string | null>(() => {
     return localStorage.getItem('auth_token');
+  });
+  const [otpVerified, setOtpVerifiedState] = useState<boolean>(() => {
+    return localStorage.getItem('otp_verified') === 'true';
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -73,6 +78,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const setOtpVerified = useCallback((verified: boolean) => {
+    setOtpVerifiedState(verified);
+    if (verified) {
+      localStorage.setItem('otp_verified', 'true');
+    } else {
+      localStorage.removeItem('otp_verified');
+    }
+  }, []);
+
   const login = useCallback(async (loginStr: string, password: string, deviceFingerprint?: string): Promise<LoginResponse> => {
     const response = await api.post('/login', {
       login: loginStr,
@@ -88,8 +102,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       handleSetUser(data.user);
     }
 
+    if (data.otp_required) {
+      setOtpVerified(false);
+    } else if (data.otp_verified || data.redirect) {
+      setOtpVerified(true);
+    }
+
     return data;
-  }, [setToken, handleSetUser]);
+  }, [setToken, handleSetUser, setOtpVerified]);
 
   const logout = useCallback(async () => {
     try {
@@ -99,9 +119,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setToken(null);
       handleSetUser(null);
+      setOtpVerified(false);
       window.location.href = '/Landing';
     }
-  }, [setToken, handleSetUser]);
+  }, [setToken, handleSetUser, setOtpVerified]);
 
   const verifyOtp = useCallback(async (otp: string) => {
     const response = await api.post('/verify-otp', { otp });
@@ -124,12 +145,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated,
         isAdmin,
         isLoading,
+        otpVerified,
         login,
         logout,
         verifyOtp,
         resendOtp,
         setUser: handleSetUser,
         setToken,
+        setOtpVerified,
       }}
     >
       {children}

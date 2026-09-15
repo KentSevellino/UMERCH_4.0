@@ -35,25 +35,30 @@ Route::get('/inventory/{productId}', [\App\Http\Controllers\Api\InventoryApiCont
 */
 Route::middleware('auth:sanctum')->group(function () {
 
-    // Auth
+    // Auth (no OTP required)
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
     Route::get('/trusted-devices', [AuthController::class, 'getTrustedDevices']);
     Route::delete('/trusted-devices/{deviceId}', [AuthController::class, 'forgetDevice']);
 
-    // Cart
-    Route::post('/cart/add', [CartController::class, 'addToCart']);
-    Route::get('/cart', [CartController::class, 'getCart']);
-    Route::delete('/cart/{cartItemId}', [CartController::class, 'removeFromCart']);
-    Route::put('/cart/{cartItemId}', [CartController::class, 'updateCartItem']);
-    Route::get('/check-inventory', [CartController::class, 'checkInventory']);
+    // User routes (OTP required)
+    Route::middleware('otp_verified')->group(function () {
 
-    // Orders
-    Route::post('/orders/place', [OrderController::class, 'placeOrder']);
-    Route::get('/orders', [OrderController::class, 'getUserOrders']);
-    Route::post('/orders/{orderId}/upload-receipt', [OrderController::class, 'uploadReceipt']);
-    Route::post('/orders/{orderId}/buy-again', [OrderController::class, 'buyAgain']);
+        // Cart
+        Route::post('/cart/add', [CartController::class, 'addToCart']);
+        Route::get('/cart', [CartController::class, 'getCart']);
+        Route::delete('/cart/{cartItemId}', [CartController::class, 'removeFromCart']);
+        Route::put('/cart/{cartItemId}', [CartController::class, 'updateCartItem']);
+        Route::get('/check-inventory', [CartController::class, 'checkInventory']);
+
+        // Orders
+        Route::post('/orders/place', [OrderController::class, 'placeOrder']);
+        Route::get('/orders', [OrderController::class, 'getUserOrders']);
+        Route::post('/orders/{orderId}/upload-receipt', [OrderController::class, 'uploadReceipt']);
+        Route::post('/orders/{orderId}/buy-again', [OrderController::class, 'buyAgain']);
+
+    });
 
     /*
     |--------------------------------------------------------------------------

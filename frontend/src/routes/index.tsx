@@ -38,7 +38,7 @@ export default function AppRoutes() {
       <Route path="/AboutUs" element={<AboutUsPage />} />
 
       {/* Auth Routes */}
-      <Route path="/authentication" element={<AuthGuard><AuthenticationPage /></AuthGuard>} />
+      <Route path="/authentication" element={<AuthenticationPage />} />
       <Route path="/Landing" element={<LandingPage />} />
       <Route path="/Shop" element={<AuthGuard><ShopPage /></AuthGuard>} />
       <Route path="/Cart" element={<AuthGuard><CartPage /></AuthGuard>} />

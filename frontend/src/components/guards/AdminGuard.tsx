@@ -2,7 +2,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function AdminGuard({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isAdmin, isLoading } = useAuth();
+  const { isAuthenticated, isAdmin, isLoading, otpVerified } = useAuth();
 
   if (isLoading) {
     return (
@@ -18,6 +18,10 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
 
   if (!isAdmin) {
     return <Navigate to="/Landing" replace />;
+  }
+
+  if (!otpVerified) {
+    return <Navigate to="/authentication" replace />;
   }
 
   return <>{children}</>;
