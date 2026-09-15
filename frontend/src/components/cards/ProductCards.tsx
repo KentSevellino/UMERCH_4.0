@@ -25,7 +25,7 @@ export default function ProductCard({
         if (s.startsWith('/')) return s;
         if (s.startsWith('storage/')) return '/' + s;
         if (s.startsWith('public/storage/')) return '/' + s.replace(/^public\//, '');
-        return '/' + s;
+        return '/storage/' + s;
     };
     const imgSrc = normalize(image);
     const formatPrice = (v: number | string | null | undefined): string => {

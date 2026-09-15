@@ -200,7 +200,7 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
       if (s.startsWith('/')) return s;
       if (s.startsWith('public/storage/')) return '/' + s.replace(/^public\//, '');
       if (s.startsWith('storage/')) return '/' + s;
-      return '/' + s;
+      return '/storage/' + s;
     };
 
     const imgSrc = normalize(product?.product_image);
