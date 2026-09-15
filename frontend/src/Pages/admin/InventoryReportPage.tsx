@@ -161,13 +161,13 @@ export default function InventoryReportPage() {
           name: row.product_name,
           status: row.status === "active" ? "Active" : "Archived",
           variant: row.variant_type || "-",
-          price: row.unit_price,
-          sold_qty: row.sold_qty,
-          sold_val: row.sold_value,
-          decrease: row.stock_decrease,
-          purch_qty: row.purchased_qty,
-          purch_val: row.purchased_value,
-          stock: row.current_stock,
+          price: Number(row.unit_price),
+          sold_qty: Number(row.sold_qty),
+          sold_val: Number(row.sold_value),
+          decrease: Number(row.stock_decrease),
+          purch_qty: Number(row.purchased_qty),
+          purch_val: Number(row.purchased_value),
+          stock: Number(row.current_stock),
         });
 
         r.eachCell((cell, colNum) => {

@@ -42,10 +42,15 @@ const MiniStatCard: React.FC<MiniStatCardProps> = ({ icon, label, value, change,
 interface SalesOverviewProps {
   salesOverview: SalesOverviewItem[];
   weeklyStats: WeeklyStats;
+  salesPeriod?: string;
 }
 
-export default function SalesOverview({ salesOverview, weeklyStats }: SalesOverviewProps) {
+export default function SalesOverview({ salesOverview, weeklyStats, salesPeriod = 'daily' }: SalesOverviewProps) {
   const maxSalesValue = Math.max(...salesOverview.map(s => s.value), 1);
+
+  const latestLabel = salesOverview.length > 0
+    ? salesPeriod === 'daily' ? 'Today' : salesPeriod === 'weekly' ? 'This Week' : 'This Month'
+    : '';
 
   return (
     <div className="flex-1 bg-white rounded-xl p-6 shadow-sm border border-gray-200">
@@ -53,7 +58,7 @@ export default function SalesOverview({ salesOverview, weeklyStats }: SalesOverv
         <h3 className="font-semibold text-lg">Sales Overview</h3>
         {salesOverview.length > 0 && (
           <div className="text-right">
-            <div className="text-xs text-gray-500">● Today</div>
+            <div className="text-xs text-gray-500">● {latestLabel}</div>
             <div className="text-xl font-bold text-[#8B6914]">
               ₱{salesOverview[salesOverview.length - 1]?.value?.toLocaleString() || 0}
             </div>
@@ -107,12 +112,6 @@ export default function SalesOverview({ salesOverview, weeklyStats }: SalesOverv
           value={weeklyStats.sales}
           change={weeklyStats.salesChange}
           iconBgColor="bg-blue-100"
-        />
-        <MiniStatCard
-          icon={<div className="w-3 h-3 bg-green-500 rounded-full" />}
-          label="Revenue"
-          value={weeklyStats.revenue}
-          iconBgColor="bg-green-100"
         />
       </div>
     </div>

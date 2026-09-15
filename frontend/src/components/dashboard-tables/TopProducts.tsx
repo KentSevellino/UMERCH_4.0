@@ -61,7 +61,7 @@ export default function TopProducts({ topProducts = [], topProductsPeriod, setTo
       <div className="space-y-4">
         {topProducts && topProducts.length > 0 ? (
           topProducts.map((product, index) => (
-            <div key={index} className="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-lg transition-colors">
+            <div key={product.rank || index} className="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-lg transition-colors">
               <span className="text-lg font-bold text-gray-400 w-6">{product.rank || index + 1}</span>
               <img
                 src={normalizeImageUrl(product.product_image || product.image)}

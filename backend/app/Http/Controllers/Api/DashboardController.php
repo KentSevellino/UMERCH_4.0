@@ -16,23 +16,26 @@ class DashboardController extends Controller
     public function getStats()
     {
         $today = Carbon::today();
-        $todaySales = Orders::whereDate('created_at', $today)
+        $todaySales = Orders::whereDate('updated_at', $today)
             ->where('status', 'Completed')
             ->count();
-        $todayEarnings = OrderItems::whereHas('order', fn ($q) => $q->whereDate('created_at', $today)->where('status', 'Completed'))
+        $todayEarnings = OrderItems::whereHas('order', fn ($q) => $q->whereDate('updated_at', $today)->where('status', 'Completed'))
             ->sum('subtotal');
-        $todayProducts = OrderItems::whereHas('order', fn ($q) => $q->whereDate('created_at', $today)->where('status', 'Completed'))
+        $todayProducts = OrderItems::whereHas('order', fn ($q) => $q->whereDate('updated_at', $today)->where('status', 'Completed'))
             ->sum('quantity');
         $activeProducts = Products::where('status', 'active')->count();
         $totalSalesAmount = OrderItems::whereHas('order', fn ($q) => $q->where('status', 'Completed'))->sum('subtotal');
         $totalUsers = User::where('role', '!=', 'Admin')->count();
+
+        $todaySalesAmount = OrderItems::whereHas('order', fn ($q) => $q->whereDate('updated_at', $today)->where('status', 'Completed'))
+            ->sum('subtotal');
 
         return response()->json([
             'todayEarnings' => $todayEarnings,
             'todayProducts' => $todayProducts,
             'activeProducts' => $activeProducts,
             'todaySales' => $todaySales,
-            'todaySalesAmount' => $todaySales,
+            'todaySalesAmount' => $todaySalesAmount,
             'totalSalesAmount' => $totalSalesAmount,
             'totalUsers' => $totalUsers,
         ]);
@@ -84,7 +87,7 @@ class DashboardController extends Controller
         $inStock = 0;
 
         foreach ($products as $product) {
-            $stock = $product->inventory->sum('quantity') ?? $product->product_stock;
+            $stock = $product->inventory->sum('quantity') || $product->product_stock;
             if ($stock <= 0) {
                 $outOfStock++;
             } elseif ($stock <= 10) {
@@ -102,7 +105,7 @@ class DashboardController extends Controller
             'total' => $total,
             'lowStockPercent' => $total > 0 ? round(($lowStock / $total) * 100, 1) : 0,
             'outOfStockPercent' => $total > 0 ? round(($outOfStock / $total) * 100, 1) : 0,
-            'inStockPercent' => $total > 0 ? round(($inStock / $total) * 100, 1) : 0,
+            'inStockPercent' => $total > 0 ? round(100 - round(($lowStock / $total) * 100, 1) - round(($outOfStock / $total) * 100, 1), 1) : 0,
         ]);
     }
 
@@ -121,6 +124,7 @@ class DashboardController extends Controller
                     'status' => $order->status,
                     'orderId' => str_pad('#' . $order->order_id, 8, '0', STR_PAD_LEFT),
                     'amount' => $total,
+                    'date' => $order->created_at->toDateString(),
                 ];
             });
 
@@ -168,8 +172,8 @@ class DashboardController extends Controller
             $q->where('created_at', '>=', $lastWeek)->where('created_at', '<', $thisWeek)->where('status', 'Completed');
         })->sum('subtotal');
 
-        $thisWeekOrders = Orders::where('created_at', '>=', $thisWeek)->count();
-        $lastWeekOrders = Orders::where('created_at', '>=', $lastWeek)->where('created_at', '<', $thisWeek)->count();
+        $thisWeekOrders = Orders::where('created_at', '>=', $thisWeek)->where('status', 'Completed')->count();
+        $lastWeekOrders = Orders::where('created_at', '>=', $lastWeek)->where('created_at', '<', $thisWeek)->where('status', 'Completed')->count();
 
         $thisWeekSales = OrderItems::whereHas('order', function ($q) use ($thisWeek) {
             $q->where('created_at', '>=', $thisWeek)->where('status', 'Completed');

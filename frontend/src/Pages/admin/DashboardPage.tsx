@@ -60,6 +60,28 @@ const StatCard = ({ title, value, subtitle, icon, bgColor }: StatCardProps) => (
   </div>
 );
 
+interface SalesOverviewItem {
+  label: string;
+  value: number;
+}
+
+interface Transaction {
+  customer: string;
+  status: string;
+  orderId: string;
+  amount: number;
+  date: string;
+}
+
+interface TopProduct {
+  rank?: number;
+  name: string;
+  category?: string;
+  quantity?: number;
+  sales?: number;
+  product_image?: string;
+}
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<Stats>({
     todayEarnings: 0,
@@ -68,7 +90,7 @@ export default function DashboardPage() {
     todaySalesAmount: 0,
     totalUsers: 0,
   });
-  const [salesOverview, setSalesOverview] = useState([]);
+  const [salesOverview, setSalesOverview] = useState<SalesOverviewItem[]>([]);
   const [inventoryStatus, setInventoryStatus] = useState<InventoryStatusData>({
     lowStock: 0,
     outOfStock: 0,
@@ -77,8 +99,8 @@ export default function DashboardPage() {
     outOfStockPercent: 0,
     inStockPercent: 0,
   });
-  const [recentTransactions, setRecentTransactions] = useState([]);
-  const [topProducts, setTopProducts] = useState([]);
+  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+  const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
   const [weeklyStats, setWeeklyStats] = useState<WeeklyStats>({
     revenue: 0,
     revenueChange: 0,
@@ -89,17 +111,22 @@ export default function DashboardPage() {
   });
   const [salesPeriod, setSalesPeriod] = useState('daily');
   const [topProductsPeriod, setTopProductsPeriod] = useState('weekly');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDashboardData();
+    fetchDashboardData().then(() => setLoading(false));
+    fetchSalesOverview();
+    fetchTopProducts();
   }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
       fetchDashboardData();
+      fetchSalesOverview();
+      fetchTopProducts();
     }, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [salesPeriod, topProductsPeriod]);
 
   useEffect(() => {
     fetchSalesOverview();
@@ -155,6 +182,13 @@ export default function DashboardPage() {
         <h1 className="text-4xl font-extrabold tracking-[0.25em]">DASHBOARD</h1>
         <p className="text-gray-500 mt-2">Welcome back Admin, everything looks great.</p>
 
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#9C0306]" />
+            <span className="ml-3 text-gray-500">Loading dashboard...</span>
+          </div>
+        ) : (
+        <>
         <div className="flex flex-wrap gap-5 mt-8">
           <StatCard
             title="Today Earnings"
@@ -166,7 +200,7 @@ export default function DashboardPage() {
           <StatCard
             title="Today Products"
             value={stats.todayProducts || 0}
-            subtitle="Active Inventory Items"
+            subtitle="Products Sold Today"
             icon={TodayProductsIcon}
             bgColor="bg-[#F7962A]"
           />
@@ -204,7 +238,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex gap-6">
-            <SalesOverview salesOverview={salesOverview} weeklyStats={weeklyStats} />
+            <SalesOverview salesOverview={salesOverview} weeklyStats={weeklyStats} salesPeriod={salesPeriod} />
             <InventoryStatus inventoryStatus={inventoryStatus} />
           </div>
         </div>
@@ -213,6 +247,8 @@ export default function DashboardPage() {
           <RecentTransaction recentTransactions={recentTransactions} />
           <TopProducts topProducts={topProducts} topProductsPeriod={topProductsPeriod} setTopProductsPeriod={setTopProductsPeriod} />
         </div>
+        </>
+        )}
 
         </div>
         <AdminFooter />
