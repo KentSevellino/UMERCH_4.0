@@ -7,7 +7,6 @@ export default function AppTabs() {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
 
-  
   return (
     <NativeTabs
       backgroundColor={colors.background}

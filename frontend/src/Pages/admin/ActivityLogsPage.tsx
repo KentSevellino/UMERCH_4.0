@@ -13,6 +13,7 @@ interface StatCardProps {
   icon?: React.ReactNode;
 }
 
+// fix: add a default icon if none is provided
 const StatCard = ({ title, value, className = "bg-green-700", icon }: StatCardProps) => (
   <div className={`w-[300px] h-[130px] rounded-xl px-6 py-4 text-white flex items-center justify-between ${className}`}>
     <div>
