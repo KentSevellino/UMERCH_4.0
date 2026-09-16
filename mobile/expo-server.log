@@ -1,0 +1,10 @@
+Starting project at C:\Users\Admin\Umerch-reimagined\UMERCH_4.0\mobile
+Using src/app as the root directory for Expo Router.
+React Compiler enabled
+Starting Metro Bundler
+
+warning: Bundler cache is empty, rebuilding (this may take a minute)
+Waiting on http://localhost:8081
+
+Logs for your project will appear below.
+Android Bundled 7577ms node_modules\expo-router\entry.js (1797 modules)

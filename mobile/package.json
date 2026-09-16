@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "dependencies": {
     "@expo/ui": "~57.0.17",
+    "@expo/vector-icons": "^15.0.2",
     "babel-preset-expo": "^57.0.11",
     "expo": "~57.0.21",
     "expo-constants": "~57.0.17",
@@ -32,11 +33,16 @@
     "tailwindcss": "^3.4.19"
   },
   "devDependencies": {
+    "@react-native-community/cli": "latest",
     "@types/react": "~19.2.2",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~57.0.2",
     "typescript": "~6.0.3"
   },
   "scripts": {
     "start": "expo start",
+    "start:lan": "set REACT_NATIVE_PACKAGER_HOSTNAME=172.16.7.74 && expo start --lan",
+    "kill:metro": "powershell -Command \"Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match 'expo.*start' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }\"",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
