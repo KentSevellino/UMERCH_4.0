@@ -1,16 +1,16 @@
-import { Ionicons } from "@expo/vector-icons";
-import {
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  useWindowDimensions,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { NavBar } from "@/components/nav-bar";
+import { ShopCategories } from "@/components/navigation/shop/ShopCategories";
+import ShopHeader from "@/components/navigation/shop/ShopHeader";
+import { ShopProductCard } from "@/components/navigation/shop/ShopProductCard";
+import { ShopSearch } from "@/components/navigation/shop/ShopSearch";
+import { BottomNavbar } from "@/components/navigation/BottomNavbar";
 import { TabContent } from "@/components/tab-content";
+import { useCart } from "@/context/CartContext";
+import { useFavorites } from "@/context/FavoritesContext";
+import type { Product } from "@/types/product";
+import { useState } from "react";
+import { ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import ProductDetailModal from "@/components/product/ProductDetailModal";
 
 /*
 |--------------------------------------------------------------------------
@@ -18,7 +18,9 @@ import { TabContent } from "@/components/tab-content";
 |--------------------------------------------------------------------------
 */
 
-const products = [
+const CATEGORIES = ["All", "Jersey", "Bags", "Drinkware", "School Supplies"];
+
+const products: Product[] = [
   {
     id: 1,
     name: "UM CCE Esports Jersey",
@@ -74,32 +76,32 @@ export default function Shop() {
 
   const styles = createStyles(scale, width);
 
-  const contentPadding = Math.max(12, Math.min(width * 0.04, 14));
+  const { addItem } = useCart();
 
-  const gridGap = Math.round(10 * scale);
+  const { isFavorite, toggleFavorite } = useFavorites();
 
-  const gridCardWidth = (width - contentPadding * 2 - gridGap) / 2;
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [productModalVisible, setProductModalVisible] = useState(false);
+
+  const filteredProducts = products.filter((product) => {
+    const matchesCategory =
+      selectedCategory === "All" || product.category === selectedCategory;
+
+    const matchesQuery = product.name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+
+    return matchesCategory && matchesQuery;
+  
+  });
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <View style={styles.screen}>
-        {/* =====================================================
-            HEADER
-        ====================================================== */}
-
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <View style={styles.logoContainer}>
-              <Ionicons
-                name="cart"
-                size={Math.round(26 * scale)}
-                color="#FFFFFF"
-              />
-            </View>
-
-            <Text style={styles.headerTitle}>Shop</Text>
-          </View>
-        </View>
+        <ShopHeader scale={scale} />
 
         {/* =====================================================
             CONTENT
@@ -110,59 +112,26 @@ export default function Shop() {
             contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}
           >
+            <ShopSearch value={searchQuery} onChangeText={setSearchQuery} />
+
+            <ShopCategories
+              categories={CATEGORIES}
+              selected={selectedCategory}
+              onSelect={setSelectedCategory}
+            />
+
             <View style={styles.productsGrid}>
-              {products.map((product) => (
-                <TouchableOpacity
+              {filteredProducts.map((product) => (
+                <ShopProductCard
                   key={product.id}
-                  style={[styles.productCard, { width: gridCardWidth }]}
-                  activeOpacity={0.85}
+                  product={product}
+                  isFavorite={isFavorite(product.id)}
+                  onFavorite={() => toggleFavorite(product)}
                   onPress={() => {
-                    console.log("Product:", product.name);
+                    setSelectedProduct(product);
+                    setProductModalVisible(true);
                   }}
-                >
-                  {/* Product image */}
-
-                  <View
-                    style={[
-                      styles.productImageContainer,
-                      { height: Math.round(gridCardWidth * 0.9) },
-                    ]}
-                  >
-                    <Image
-                      source={product.image}
-                      style={styles.productImage}
-                      resizeMode="cover"
-                    />
-
-                    {/* Favorite */}
-
-                    <TouchableOpacity style={styles.productHeart} activeOpacity={0.7}>
-                      <Ionicons
-                        name="heart-outline"
-                        size={Math.round(18 * scale)}
-                        color="#FFFFFF"
-                      />
-                    </TouchableOpacity>
-                  </View>
-
-                  {/* Product information */}
-
-                  <View style={styles.productInfo}>
-                    <Text style={styles.productName} numberOfLines={1}>
-                      {product.name}
-                    </Text>
-
-                    <Text style={styles.productCategory} numberOfLines={1}>
-                      {product.category}
-                    </Text>
-
-                    <View style={styles.priceRow}>
-                      <Text style={styles.productPrice}>{product.price}</Text>
-
-                      <Text style={styles.oldPrice}>{product.oldPrice}</Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
+                />
               ))}
             </View>
 
@@ -174,7 +143,28 @@ export default function Shop() {
             BOTTOM NAVIGATION
         ====================================================== */}
 
-        <NavBar activeTab="shop" />
+        <BottomNavbar activeTab="shop" />
+
+        <ProductDetailModal
+          key={selectedProduct?.id ?? "none"}
+          visible={productModalVisible}
+          product={selectedProduct}
+          onClose={() => {
+            setProductModalVisible(false);
+            setSelectedProduct(null);
+          }}
+          onAddToCart={(product, quantity, size) => {
+            addItem(product, quantity);
+            setProductModalVisible(false);
+          }}
+          onBuyNow={(product, quantity, size) => {
+            console.log("BUY NOW", {
+              product: product.name,
+              quantity,
+              size,
+            });
+          }}
+        />
       </View>
     </SafeAreaView>
   );
@@ -198,58 +188,7 @@ const createStyles = (scale: number, width: number) =>
       backgroundColor: "#F5F5F5",
     },
 
-    /* ========================================================
-       HEADER
-    ======================================================== */
-
-    header: {
-      height: Math.round(82 * scale),
-
-      backgroundColor: "#B00000",
-
-      paddingHorizontal: Math.max(20, Math.min(width * 0.06, 30)),
-
-      flexDirection: "row",
-
-      alignItems: "center",
-
-      borderBottomLeftRadius: Math.round(25 * scale),
-      borderBottomRightRadius: Math.round(25 * scale),
-    },
-
-    headerLeft: {
-      flexDirection: "row",
-
-      alignItems: "center",
-    },
-
-    logoContainer: {
-      width: Math.round(55 * scale),
-      height: Math.round(55 * scale),
-
-      justifyContent: "center",
-      alignItems: "center",
-
-      marginRight: Math.round(8 * scale),
-    },
-
-    headerTitle: {
-      color: "#FFFFFF",
-
-      fontSize: Math.round(27 * scale),
-
-      fontWeight: "700",
-    },
-
-    /* ========================================================
-       CONTENT
-    ======================================================== */
-
     content: {
-      paddingHorizontal: Math.max(12, Math.min(width * 0.04, 14)),
-
-      paddingTop: Math.round(10 * scale),
-
       paddingBottom: 20,
     },
 
@@ -259,102 +198,9 @@ const createStyles = (scale: number, width: number) =>
       flexWrap: "wrap",
 
       gap: Math.round(10 * scale),
-    },
 
-    productCard: {
-      backgroundColor: "#FFFFFF",
+      paddingHorizontal: Math.max(12, Math.min(width * 0.04, 14)),
 
-      borderRadius: Math.round(11 * scale),
-
-      overflow: "hidden",
-
-      elevation: 1,
-
-      shadowColor: "#000000",
-
-      shadowOffset: {
-        width: 0,
-        height: 1,
-      },
-
-      shadowOpacity: 0.08,
-
-      shadowRadius: 3,
-    },
-
-    productImageContainer: {
-      position: "relative",
-
-      backgroundColor: "#222222",
-    },
-
-    productImage: {
-      width: "100%",
-      height: "100%",
-    },
-
-    productHeart: {
-      position: "absolute",
-
-      top: Math.round(6 * scale),
-      right: Math.round(6 * scale),
-
-      width: Math.round(24 * scale),
-      height: Math.round(24 * scale),
-
-      justifyContent: "center",
-      alignItems: "center",
-    },
-
-    productInfo: {
-      paddingHorizontal: Math.round(7 * scale),
-
-      paddingTop: Math.round(6 * scale),
-
-      paddingBottom: Math.round(8 * scale),
-    },
-
-    productName: {
-      color: "#333333",
-
-      fontSize: Math.max(14, Math.round(14 * scale)),
-
-      fontWeight: "700",
-    },
-
-    productCategory: {
-      color: "#888888",
-
-      fontSize: Math.max(11, Math.round(11 * scale)),
-
-      marginTop: Math.round(2 * scale),
-    },
-
-    priceRow: {
-      flexDirection: "row",
-
-      alignItems: "center",
-
-      marginTop: Math.round(4 * scale),
-
-      gap: Math.round(5 * scale),
-
-      flexWrap: "wrap",
-    },
-
-    productPrice: {
-      color: "#B00000",
-
-      fontSize: Math.max(14, Math.round(15 * scale)),
-
-      fontWeight: "800",
-    },
-
-    oldPrice: {
-      color: "#A5A5A5",
-
-      fontSize: Math.max(11, Math.round(11 * scale)),
-
-      textDecorationLine: "line-through",
+      paddingTop: Math.round(8 * scale),
     },
   });

@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { NavBar } from "@/components/nav-bar";
+import { BottomNavbar } from "@/components/navigation/BottomNavbar";
 import { TabContent } from "@/components/tab-content";
 
 export default function Search() {
@@ -42,7 +42,7 @@ export default function Search() {
           </View>
         </TabContent>
 
-        <NavBar activeTab="search" />
+        <BottomNavbar activeTab="search" />
       </View>
     </SafeAreaView>
   );

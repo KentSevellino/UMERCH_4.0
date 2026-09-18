@@ -1,8 +1,21 @@
 import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { useState } from "react";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { NavBar } from "@/components/nav-bar";
+import FavoritesHeader from "@/components/navigation/favorites/FavoritesHeader";
+import { ShopProductCard } from "@/components/navigation/shop/ShopProductCard";
+import ProductDetailModal from "@/components/product/ProductDetailModal";
+import { BottomNavbar } from "@/components/navigation/BottomNavbar";
 import { TabContent } from "@/components/tab-content";
+import { useFavorites } from "@/context/FavoritesContext";
+import { useCart } from "@/context/CartContext";
+import type { Product } from "@/types/product";
 
 export default function Favorites() {
   const { width } = useWindowDimensions();
@@ -11,38 +24,78 @@ export default function Favorites() {
 
   const styles = createStyles(scale, width);
 
+  const { favorites, isFavorite, toggleFavorite } = useFavorites();
+  const { addItem } = useCart();
+
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [productModalVisible, setProductModalVisible] = useState(false);
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <View style={styles.screen}>
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <View style={styles.logoContainer}>
-              <Ionicons
-                name="heart"
-                size={Math.round(26 * scale)}
-                color="#FFFFFF"
-              />
-            </View>
-
-            <Text style={styles.headerTitle}>Favorites</Text>
-          </View>
-        </View>
+        <FavoritesHeader scale={scale} />
 
         <TabContent>
-          <View style={styles.emptyState}>
-            <Ionicons
-              name="heart-outline"
-              size={Math.round(64 * scale)}
-              color="#D5D5D5"
-            />
-            <Text style={styles.emptyTitle}>No favorites yet</Text>
-            <Text style={styles.emptySubtitle}>
-              Tap the heart on products you love.
-            </Text>
-          </View>
+          {favorites.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Ionicons
+                name="heart-outline"
+                size={Math.round(64 * scale)}
+                color="#D5D5D5"
+              />
+              <Text style={styles.emptyTitle}>No favorites yet</Text>
+              <Text style={styles.emptySubtitle}>
+                Tap the heart on products you love.
+              </Text>
+            </View>
+          ) : (
+            <ScrollView
+              style={styles.scrollView}
+              contentContainerStyle={styles.content}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.productsGrid}>
+                {favorites.map((product) => (
+                  <ShopProductCard
+                    key={product.id}
+                    product={product}
+                    isFavorite={isFavorite(product.id)}
+                    onFavorite={() => toggleFavorite(product)}
+                    onPress={() => {
+                      setSelectedProduct(product);
+                      setProductModalVisible(true);
+                    }}
+                  />
+                ))}
+              </View>
+
+              <View style={{ height: 100 }} />
+            </ScrollView>
+          )}
         </TabContent>
 
-        <NavBar activeTab="favorites" />
+        <BottomNavbar activeTab="favorites" />
+
+        <ProductDetailModal
+          key={selectedProduct?.id ?? "none"}
+          visible={productModalVisible}
+          product={selectedProduct}
+          onClose={() => {
+            setProductModalVisible(false);
+            setSelectedProduct(null);
+          }}
+          onAddToCart={(product, quantity, size) => {
+            addItem(product, quantity);
+            setProductModalVisible(false);
+          }}
+          onBuyNow={(product, quantity, size) => {
+            console.log("BUY NOW", {
+              product: product.name,
+              quantity,
+              size,
+            });
+          }}
+        />
       </View>
     </SafeAreaView>
   );
@@ -52,32 +105,6 @@ const createStyles = (scale: number, width: number) =>
   StyleSheet.create({
     safeArea: { flex: 1, backgroundColor: "#F7F7F7" },
     screen: { flex: 1, backgroundColor: "#F7F7F7" },
-
-    header: {
-      height: Math.round(82 * scale),
-      backgroundColor: "#B00000",
-      paddingHorizontal: Math.max(20, Math.min(width * 0.06, 30)),
-      flexDirection: "row",
-      alignItems: "center",
-      borderBottomLeftRadius: Math.round(25 * scale),
-      borderBottomRightRadius: Math.round(25 * scale),
-    },
-
-    headerLeft: { flexDirection: "row", alignItems: "center" },
-
-    logoContainer: {
-      width: Math.round(55 * scale),
-      height: Math.round(55 * scale),
-      justifyContent: "center",
-      alignItems: "center",
-      marginRight: Math.round(8 * scale),
-    },
-
-    headerTitle: {
-      color: "#FFFFFF",
-      fontSize: Math.round(27 * scale),
-      fontWeight: "700",
-    },
 
     emptyState: {
       flex: 1,
@@ -99,5 +126,21 @@ const createStyles = (scale: number, width: number) =>
       color: "#7A8494",
       marginTop: 6,
       textAlign: "center",
+    },
+
+    scrollView: {
+      flex: 1,
+    },
+
+    content: {
+      paddingBottom: 20,
+    },
+
+    productsGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: Math.round(10 * scale),
+      paddingHorizontal: Math.max(12, Math.min(width * 0.04, 14)),
+      paddingTop: Math.round(10 * scale),
     },
   });

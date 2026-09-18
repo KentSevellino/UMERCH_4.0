@@ -33,7 +33,9 @@
           "imageWidth": 76
         }
       ],
-      "expo-status-bar"
+      "expo-status-bar",
+      "expo-image",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

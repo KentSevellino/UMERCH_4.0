@@ -9,12 +9,24 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-export type NavTab = "home" | "search" | "shop" | "favorites" | "profile";
+export type NavTabId =
+  | "home"
+  | "search"
+  | "shop"
+  | "cart"
+  | "favorites"
+  | "profile";
 
-type TabRoute = "/tabs" | "/tabs/search" | "/tabs/favorites" | "/tabs/profile";
+type TabRoute =
+  | "/tabs"
+  | "/tabs/search"
+  | "/tabs/shop"
+  | "/tabs/cart"
+  | "/tabs/favorites"
+  | "/tabs/profile";
 
 type NavTabConfig = {
-  id: NavTab;
+  id: NavTabId;
   label: string;
   route: TabRoute;
   icon: keyof typeof Ionicons.glyphMap;
@@ -30,11 +42,11 @@ const TABS: NavTabConfig[] = [
     activeIcon: "home",
   },
   {
-    id: "search",
-    label: "Search",
-    route: "/tabs/search",
-    icon: "search-outline",
-    activeIcon: "search",
+    id: "shop",
+    label: "Shop",
+    route: "/tabs/shop",
+    icon: "bag-handle-outline",
+    activeIcon: "bag-handle",
   },
   {
     id: "favorites",
@@ -52,11 +64,11 @@ const TABS: NavTabConfig[] = [
   },
 ];
 
-type NavBarProps = {
-  activeTab: NavTab;
+type BottomNavbarProps = {
+  activeTab: NavTabId;
 };
 
-export function NavBar({ activeTab }: NavBarProps) {
+export function BottomNavbar({ activeTab }: BottomNavbarProps) {
   const { width } = useWindowDimensions();
 
   const insets = useSafeAreaInsets();
@@ -97,7 +109,7 @@ export function NavBar({ activeTab }: NavBarProps) {
         style={styles.cartButton}
         activeOpacity={0.8}
         onPress={() => {
-          router.push("/tabs/shop");
+          router.push("/tabs/cart");
         }}
       >
         <Ionicons
