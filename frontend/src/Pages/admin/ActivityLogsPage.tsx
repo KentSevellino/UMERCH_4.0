@@ -23,6 +23,7 @@ const StatCard = ({ title, value, className = "bg-green-700", icon }: StatCardPr
   </div>
 );
 
+// ActivityLogsPage Component
 function ActivityLogsPage() {
   const { logs, allLogs, loading, query, setQuery, activityFilter, setActivityFilter, currentPage,
     setCurrentPage, totalPages, formatDate, getActivityBadgeColor } = useActivityLogs();
