@@ -23,7 +23,6 @@ const StatCard = ({ title, value, className = "bg-green-700", icon }: StatCardPr
   </div>
 );
 
-// ActivityLogsPage component to display activity logs with search, filter, and pagination functionality
 function ActivityLogsPage() {
   const { logs, allLogs, loading, query, setQuery, activityFilter, setActivityFilter, currentPage,
     setCurrentPage, totalPages, formatDate, getActivityBadgeColor } = useActivityLogs();
