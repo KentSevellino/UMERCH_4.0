@@ -33,7 +33,7 @@ export default function ProfileHeader({
       <View style={styles.left}>
 
         <Image
-          source={require("../../../../assets/images/umerch-logo.png")}
+          source={require("../../../assets/images/umerch-logo.png")}
           style={[
             styles.logo,
             {

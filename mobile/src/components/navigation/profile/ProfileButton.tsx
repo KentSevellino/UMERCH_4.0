@@ -45,12 +45,6 @@ export function ProfileButton({ item, onPress }: ProfileButtonProps) {
 
         <Text style={styles.buttonSubtitle}>{item.subtitle}</Text>
       </View>
-
-      <Ionicons
-        name="chevron-forward"
-        size={Math.round(24 * scale)}
-        color="#7A8494"
-      />
     </TouchableOpacity>
   );
 }

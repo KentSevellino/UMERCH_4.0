@@ -36,7 +36,7 @@ const products: Product[] = [
     category: "Shirts",
     price: "₱500.00",
     oldPrice: "₱600.00",
-    image: require("../../../assets/images/product-image/cceshirt.jpg"),
+    image: require("../../assets/images/product-image/cceshirt.jpg"),
   },
   {
     id: 2,
@@ -44,7 +44,7 @@ const products: Product[] = [
     category: "Bottles",
     price: "₱515.00",
     oldPrice: "₱650.00",
-    image: require("../../../assets/images/product-image/wooden-tumbler.jpg"),
+    image: require("../../assets/images/product-image/wooden-tumbler.jpg"),
   },
   {
     id: 3,
@@ -52,7 +52,7 @@ const products: Product[] = [
     category: "Accessories",
     price: "₱180.00",
     oldPrice: "₱220.00",
-    image: require("../../../assets/images/product-image/tote-bag.jpg"),
+    image: require("../../assets/images/product-image/tote-bag.jpg"),
   },
   {
     id: 4,
@@ -60,7 +60,7 @@ const products: Product[] = [
     category: "Others",
     price: "₱85.00",
     oldPrice: "₱120.00",
-    image: require("../../../assets/images/product-image/notebook.png"),
+    image: require("../../assets/images/product-image/notebook.png"),
   },
   {
     id: 5,
@@ -68,7 +68,7 @@ const products: Product[] = [
     category: "Bottles",
     price: "₱250.00",
     oldPrice: "₱300.00",
-    image: require("../../../assets/images/product-image/mug.png"),
+    image: require("../../assets/images/product-image/mug.png"),
   },
 ];
 
@@ -139,7 +139,7 @@ export default function Home() {
 
             <View style={styles.trendingCard}>
               <Image
-                source={require("../../../assets/images/product-image/new-arrival.png")}
+                source={require("../../assets/images/product-image/new-arrival.png")}
                 style={styles.trendingImage}
                 resizeMode="cover"
               />
@@ -235,7 +235,7 @@ export default function Home() {
               {/* Background */}
 
               <Image
-                source={require("../../../assets/images/product-image/Campus-collection.png")}
+                source={require("../../assets/images/product-image/Campus-collection.png")}
                 style={styles.collectionImage}
                 resizeMode="contain"
               />

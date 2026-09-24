@@ -142,20 +142,7 @@ export default function ProductDetailModal({
                 />
               </TouchableOpacity>
 
-              {/* Image dots */}
-              <View style={styles.dotsContainer}>
-                <View
-                  style={[
-                    styles.dot,
-                    styles.activeDot,
-                  ]}
-                />
-                <View style={styles.dot} />
-                <View style={styles.dot} />
-                <View style={styles.dot} />
               </View>
-
-            </View>
 
             {/* ================= PRODUCT INFORMATION ================= */}
 
@@ -197,19 +184,8 @@ export default function ProductDetailModal({
                   ₱{price.toFixed(2)}
                 </Text>
 
-                {product.oldPrice && (
-                  <Text style={styles.oldPrice}>
-                    ₱{oldPrice.toFixed(2)}
-                  </Text>
-                )}
 
-                {discount !== null && (
-                  <View style={styles.discountBadge}>
-                    <Text style={styles.discountText}>
-                      {discount}% OFF
-                    </Text>
-                  </View>
-                )}
+                
 
               </View>
 
@@ -433,32 +409,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  dotsContainer: {
-    position: "absolute",
-    bottom: 9,
-    left: 0,
-    right: 0,
-
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-
-    gap: 5,
-  },
-
-  dot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: "#D0D0D0",
-  },
-
-  activeDot: {
-    width: 6,
-    height: 6,
-    backgroundColor: "#D60000",
-  },
-
   /* ================= INFORMATION ================= */
 
   productInfo: {
@@ -467,13 +417,13 @@ const styles = StyleSheet.create({
   },
 
   productName: {
-    fontSize: 22,
-    fontWeight: "700",
+    fontSize: 35,
+    fontWeight: "900",
     color: "#20242A",
   },
 
   productCategory: {
-    fontSize: 14,
+    fontSize: 20,
     color: "#8A929A",
     marginTop: 4,
   },
@@ -487,14 +437,14 @@ const styles = StyleSheet.create({
   },
 
   rating: {
-    fontSize: 14,
+    fontSize: 20,
     fontWeight: "700",
     color: "#4B5563",
     marginLeft: 4,
   },
 
   reviews: {
-    fontSize: 13,
+    fontSize: 20,
     color: "#8A929A",
     marginLeft: 4,
   },
@@ -508,36 +458,15 @@ const styles = StyleSheet.create({
   },
 
   price: {
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: "800",
     color: "#D60000",
-  },
-
-  oldPrice: {
-    fontSize: 13,
-    color: "#9CA3AF",
-    textDecorationLine: "line-through",
-    marginLeft: 8,
-  },
-
-  discountBadge: {
-    backgroundColor: "#FDE7E7",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 5,
-    marginLeft: 8,
-  },
-
-  discountText: {
-    color: "#D60000",
-    fontSize: 11,
-    fontWeight: "700",
   },
 
   /* ================= SECTION ================= */
 
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: "700",
     color: "#30363D",
     marginTop: 20,
@@ -552,8 +481,8 @@ const styles = StyleSheet.create({
   },
 
   sizeButton: {
-    width: 42,
-    height: 34,
+    width: 45,
+    height: 40,
 
     borderRadius: 6,
 
@@ -570,7 +499,7 @@ const styles = StyleSheet.create({
   },
 
   sizeText: {
-    fontSize: 13,
+    fontSize: 15,
     color: "#6B7280",
   },
 
@@ -595,8 +524,8 @@ const styles = StyleSheet.create({
   },
 
   quantityButton: {
-    width: 34,
-    height: 32,
+    width: 45,
+    height: 40,
 
     justifyContent: "center",
     alignItems: "center",
@@ -605,11 +534,11 @@ const styles = StyleSheet.create({
   },
 
   quantityText: {
-    width: 38,
+    width: 42,
 
     textAlign: "center",
 
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: "600",
     color: "#4B5563",
   },
@@ -640,7 +569,7 @@ const styles = StyleSheet.create({
   addToCartButton: {
     flex: 1,
 
-    height: 40,
+    height: 45,
 
     borderWidth: 1,
     borderColor: "#D60000",
@@ -654,7 +583,7 @@ const styles = StyleSheet.create({
 
   addToCartText: {
     color: "#D60000",
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: "700",
     marginLeft: 5,
   },
@@ -662,7 +591,7 @@ const styles = StyleSheet.create({
   buyNowButton: {
     flex: 1,
 
-    height: 40,
+    height: 45,
 
     backgroundColor: "#C90000",
 
@@ -675,7 +604,7 @@ const styles = StyleSheet.create({
 
   buyNowText: {
     color: "#FFFFFF",
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: "700",
     marginLeft: 5,
   },

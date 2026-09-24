@@ -42,11 +42,11 @@ const TABS: NavTabConfig[] = [
     activeIcon: "home",
   },
   {
-    id: "shop",
-    label: "Shop",
-    route: "/tabs/shop",
-    icon: "bag-handle-outline",
-    activeIcon: "bag-handle",
+    id: "cart",
+    label: "Cart",
+    route: "/tabs/cart",
+    icon: "cart-outline",
+    activeIcon: "cart",
   },
   {
     id: "favorites",
@@ -103,17 +103,17 @@ export function BottomNavbar({ activeTab }: BottomNavbarProps) {
         </TouchableOpacity>
       ))}
 
-      {/* CART */}
+      {/* SHOP */}
 
       <TouchableOpacity
         style={styles.cartButton}
         activeOpacity={0.8}
         onPress={() => {
-          router.push("/tabs/cart");
+          router.push("/tabs/shop");
         }}
       >
         <Ionicons
-          name="cart-outline"
+          name="bag-handle"
           size={Math.round(30 * scale)}
           color="#FFFFFF"
         />

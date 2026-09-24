@@ -239,7 +239,7 @@ export default function UmerchAnimation() {
         pointerEvents="none"
       >
         <ImageBackground
-          source={require("../../../assets/images/umerch-pattern1.png")}
+          source={require("../../assets/images/umerch-pattern1.png")}
           style={coreStyles.patternImage}
           resizeMode="repeat"
         />
@@ -270,7 +270,7 @@ export default function UmerchAnimation() {
             pointerEvents="none"
           >
             <Image
-              source={require("../../../assets/images/umerch-logo.png")}
+              source={require("../../assets/images/umerch-logo.png")}
               style={styles.logo}
               resizeMode="contain"
             />
@@ -280,7 +280,7 @@ export default function UmerchAnimation() {
         {/* Slide 1 — No more going to store */}
         <View style={[coreStyles.slide, styles.slide]}>
           <Image
-            source={require("../../../assets/images/model.jpg")}
+            source={require("../../assets/images/model.jpg")}
             style={styles.coverImage}
             resizeMode="cover"
           />
@@ -289,7 +289,7 @@ export default function UmerchAnimation() {
         {/* Slide 2 — Product variety */}
         <View style={[coreStyles.slide, styles.slide]}>
           <Image
-            source={require("../../../assets/images/ambassadors.jpg")}
+            source={require("../../assets/images/ambassadors.jpg")}
             style={styles.coverImage}
             resizeMode="cover"
           />
@@ -299,7 +299,7 @@ export default function UmerchAnimation() {
         <View style={[coreStyles.slide, coreStyles.finalSlide, styles.slide]}>
           <View style={[coreStyles.finalBody, { paddingBottom: cardHeight }]}>
             <Image
-              source={require("../../../assets/images/um-umerch.png")}
+              source={require("../../assets/images/um-umerch.png")}
               style={styles.finalLogo}
               resizeMode="contain"
             />

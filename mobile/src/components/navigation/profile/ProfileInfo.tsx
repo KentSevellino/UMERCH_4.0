@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import {
+  Image,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -11,14 +12,16 @@ type ProfileInfoProps = {
   name: string;
   role: string;
   university: string;
-  onPress?: () => void;
+  avatarUri?: string | null;
+  onChangeAvatar?: () => void;
 };
 
 export function ProfileInfo({
   name,
   role,
   university,
-  onPress,
+  avatarUri,
+  onChangeAvatar,
 }: ProfileInfoProps) {
   const { width } = useWindowDimensions();
 
@@ -27,12 +30,37 @@ export function ProfileInfo({
   const styles = createStyles(scale);
 
   return (
-    <TouchableOpacity style={styles.profileCard} activeOpacity={0.85} onPress={onPress}>
-      {/* Avatar */}
+    <View style={styles.profileCard}>
+      {/* Avatar (tap to change) */}
 
-      <View style={styles.avatar}>
-        <Ionicons name="person" size={Math.round(52 * scale)} color="#FFFFFF" />
-      </View>
+      <TouchableOpacity
+        style={styles.avatarButton}
+        activeOpacity={0.8}
+        onPress={onChangeAvatar}
+        disabled={!onChangeAvatar}
+      >
+        <View style={styles.avatar}>
+          {avatarUri ? (
+            <Image
+              source={{ uri: avatarUri }}
+              style={styles.avatarImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <Ionicons name="person" size={Math.round(52 * scale)} color="#FFFFFF" />
+          )}
+
+          {/* Camera badge hint */}
+
+          <View style={styles.cameraBadge}>
+            <Ionicons
+              name="camera"
+              size={Math.round(15 * scale)}
+              color="#FFFFFF"
+            />
+          </View>
+        </View>
+      </TouchableOpacity>
 
       {/* User information */}
 
@@ -51,15 +79,7 @@ export function ProfileInfo({
           <Text style={styles.universityText}>{university}</Text>
         </View>
       </View>
-
-      {/* Arrow */}
-
-      <Ionicons
-        name="chevron-forward"
-        size={Math.round(25 * scale)}
-        color="#7A8494"
-      />
-    </TouchableOpacity>
+    </View>
   );
 }
 
@@ -96,6 +116,10 @@ const createStyles = (scale: number) =>
       elevation: 2,
     },
 
+    avatarButton: {
+      marginRight: Math.round(17 * scale),
+    },
+
     avatar: {
       width: Math.round(88 * scale),
       height: Math.round(88 * scale),
@@ -107,7 +131,34 @@ const createStyles = (scale: number) =>
       justifyContent: "center",
       alignItems: "center",
 
-      marginRight: Math.round(17 * scale),
+      overflow: "hidden",
+
+      position: "relative",
+    },
+
+    avatarImage: {
+      width: "100%",
+      height: "100%",
+    },
+
+    cameraBadge: {
+      position: "absolute",
+
+      right: 0,
+      bottom: 0,
+
+      width: Math.round(28 * scale),
+      height: Math.round(28 * scale),
+
+      borderRadius: Math.round(14 * scale),
+
+      backgroundColor: "#B00000",
+
+      borderWidth: 2,
+      borderColor: "#FFFFFF",
+
+      justifyContent: "center",
+      alignItems: "center",
     },
 
     userInformation: {

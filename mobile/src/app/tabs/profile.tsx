@@ -2,6 +2,7 @@ import { LogoutButton } from "@/components/navigation/profile/LogoutButton";
 import ProfileHeader from "@/components/navigation/profile/ProfileHeader";
 import { ProfileInfo } from "@/components/navigation/profile/ProfileInfo";
 import { ProfileDetails } from "@/components/navigation/profile/ProfileDetails";
+import { useProfileImage } from "@/hooks/use-profile-image";
 import { BottomNavbar } from "@/components/navigation/BottomNavbar";
 import { TabContent } from "@/components/tab-content";
 import { router } from "expo-router";
@@ -14,6 +15,8 @@ export default function Profile() {
   const scale = Math.min(Math.max(width / 390, 0.9), 1.12);
 
   const styles = createStyles(scale, width);
+
+  const { avatarUri, changeProfileImage } = useProfileImage();
 
   const handleMenuPress = (id: string) => {
     switch (id) {
@@ -43,11 +46,7 @@ export default function Profile() {
   };
 
   const handleLogout = () => {
-    console.log("Log out");
-
-    // Later:
-    // Clear authentication/session here
-    // router.replace("/login");
+    router.replace("/login");
   };
 
   return (
@@ -77,9 +76,8 @@ export default function Profile() {
               name="Kenny"
               role="STUDENT"
               university="University of Mindanao"
-              onPress={() => {
-                handleMenuPress("personal");
-              }}
+              avatarUri={avatarUri}
+              onChangeAvatar={changeProfileImage}
             />
 
             {/* ==================================================

@@ -60,7 +60,7 @@ export default function HomeHeader({ scale = 1 }: Props) {
 
         <View style={styles.brandContainer}>
           <Image
-            source={require("../../../../assets/images/UMERCH.png")}
+            source={require("../../../assets/images/UMERCH.png")}
             style={styles.logo}
             resizeMode="contain"
           />
@@ -150,8 +150,8 @@ const createStyles = (scale: number) =>
     },
 
     logo: {
-      width: Math.round(46 * scale),
-      height: Math.round(46 * scale),
+      width: Math.round(100 * scale),
+      height: Math.round(100 * scale),
     },
 
     headerActions: {
