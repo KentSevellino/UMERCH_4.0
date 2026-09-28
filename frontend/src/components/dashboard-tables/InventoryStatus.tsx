@@ -54,21 +54,21 @@ export default function InventoryStatus({ inventoryStatus }: InventoryStatusProp
             <div className="w-3 h-3 bg-yellow-500 rounded-full" />
             <span className="text-sm">Low Stock</span>
           </div>
-          <span className="text-sm font-semibold">{lowStock} Products</span>
+          <span className="text-sm font-semibold">{lowStock} Products · {lowStockPercent}%</span>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-red-500 rounded-full" />
             <span className="text-sm">Out of Stock</span>
           </div>
-          <span className="text-sm font-semibold">{outOfStock} Products</span>
+          <span className="text-sm font-semibold">{outOfStock} Products · {outOfStockPercent}%</span>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-green-500 rounded-full" />
             <span className="text-sm">In Stock</span>
           </div>
-          <span className="text-sm font-semibold">{inStock} Products</span>
+          <span className="text-sm font-semibold">{inStock} Products · {inStockPercent}%</span>
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import api from "../../services/api";
 
 interface DeleteProductModalProps {
@@ -18,14 +18,13 @@ export default function DeleteProductModal({ open, onClose, product, onDeleted, 
     setIsLoading(true);
 
     try {
-      const response = await api.delete(`/admin/products/${product.product_id}`);
-      if (response.data?.success) {
-        if (onDeleted) onDeleted();
-      } else {
-        if (onShowToast) onShowToast(response.data?.message || "Failed to delete product", "error");
-      }
-    } catch (error: any) {
-      if (onShowToast) onShowToast("An error occurred while deleting the product", "error");
+      await api.delete(`/admin/products/${product.product_id}`);
+      if (onDeleted) onDeleted();
+    } catch (error) {
+      const message =
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "An error occurred while deleting the product";
+      if (onShowToast) onShowToast(message, "error");
     } finally {
       setIsLoading(false);
       onClose();
