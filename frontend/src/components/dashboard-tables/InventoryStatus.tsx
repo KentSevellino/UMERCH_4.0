@@ -26,6 +26,18 @@ export default function InventoryStatus({ inventoryStatus }: InventoryStatusProp
     inStockPercent = 0,
   } = inventoryStatus || {};
 
+  const total = lowStock + outOfStock + inStock;
+  const statuses = [
+    { label: 'Out of Stock', count: outOfStock, percent: outOfStockPercent, color: 'text-red-500' },
+    { label: 'Low Stock', count: lowStock, percent: lowStockPercent, color: 'text-yellow-500' },
+    { label: 'In Stock', count: inStock, percent: inStockPercent, color: 'text-green-500' },
+  ];
+  const dominant =
+    total > 0
+      ? statuses.reduce((best, s) => (s.count > best.count ? s : best), statuses[0])
+      : null;
+  const unit = (n: number) => `${n} ${n === 1 ? 'Product' : 'Products'}`;
+
   return (
     <div className="w-[280px] bg-white rounded-xl p-6 shadow-sm border border-gray-200">
       <div className="flex items-center justify-between mb-4">
@@ -42,8 +54,10 @@ export default function InventoryStatus({ inventoryStatus }: InventoryStatusProp
             <circle cx="50" cy="50" r="40" fill="none" stroke="#22C55E" strokeWidth="12" strokeDasharray={`${arc(inStockPercent)} ${CIRCUMFERENCE}`} strokeDashoffset={-arc(lowStockPercent + outOfStockPercent)} />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-2xl font-bold">{inStockPercent}%</span>
-            <span className="text-xs text-gray-500">In Stock</span>
+            <span className={`text-2xl font-bold ${dominant ? dominant.color : 'text-gray-400'}`}>
+              {dominant ? dominant.percent : 0}%
+            </span>
+            <span className="text-xs text-gray-500">{dominant ? dominant.label : 'No Products'}</span>
           </div>
         </div>
       </div>
@@ -54,21 +68,21 @@ export default function InventoryStatus({ inventoryStatus }: InventoryStatusProp
             <div className="w-3 h-3 bg-yellow-500 rounded-full" />
             <span className="text-sm">Low Stock</span>
           </div>
-          <span className="text-sm font-semibold">{lowStock} Products · {lowStockPercent}%</span>
+          <span className="text-sm font-semibold">{unit(lowStock)} · {lowStockPercent}%</span>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-red-500 rounded-full" />
             <span className="text-sm">Out of Stock</span>
           </div>
-          <span className="text-sm font-semibold">{outOfStock} Products · {outOfStockPercent}%</span>
+          <span className="text-sm font-semibold">{unit(outOfStock)} · {outOfStockPercent}%</span>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-green-500 rounded-full" />
             <span className="text-sm">In Stock</span>
           </div>
-          <span className="text-sm font-semibold">{inStock} Products · {inStockPercent}%</span>
+          <span className="text-sm font-semibold">{unit(inStock)} · {inStockPercent}%</span>
         </div>
       </div>
     </div>
