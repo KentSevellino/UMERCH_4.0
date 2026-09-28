@@ -1,8 +1,6 @@
-import React from 'react';
-
 interface Transaction {
   customer: string;
-  status: 'Completed' | 'Pending' | 'Cancelled';
+  status: string;
   orderId: string;
   amount: number;
 }

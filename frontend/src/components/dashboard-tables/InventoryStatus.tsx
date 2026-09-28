@@ -1,5 +1,7 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
+
+const CIRCUMFERENCE = 2 * Math.PI * 40;
+const arc = (percent: number) => (percent / 100) * CIRCUMFERENCE;
 
 interface InventoryStatusData {
   lowStock: number;
@@ -35,12 +37,13 @@ export default function InventoryStatus({ inventoryStatus }: InventoryStatusProp
         <div className="relative w-40 h-40">
           <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
             <circle cx="50" cy="50" r="40" fill="none" stroke="#e5e7eb" strokeWidth="12" />
-            <circle cx="50" cy="50" r="40" fill="none" stroke="#EAB308" strokeWidth="12" strokeDasharray={`${lowStockPercent * 2.51} 251`} strokeDashoffset="0" />
-            <circle cx="50" cy="50" r="40" fill="none" stroke="#DC2626" strokeWidth="12" strokeDasharray={`${outOfStockPercent * 2.51} 251`} strokeDashoffset={`-${lowStockPercent * 2.51}`} />
-            <circle cx="50" cy="50" r="40" fill="none" stroke="#22C55E" strokeWidth="12" strokeDasharray={`${inStockPercent * 2.51} 251`} strokeDashoffset={`-${(lowStockPercent + outOfStockPercent) * 2.51}`} />
+            <circle cx="50" cy="50" r="40" fill="none" stroke="#EAB308" strokeWidth="12" strokeDasharray={`${arc(lowStockPercent)} ${CIRCUMFERENCE}`} strokeDashoffset="0" />
+            <circle cx="50" cy="50" r="40" fill="none" stroke="#DC2626" strokeWidth="12" strokeDasharray={`${arc(outOfStockPercent)} ${CIRCUMFERENCE}`} strokeDashoffset={-arc(lowStockPercent)} />
+            <circle cx="50" cy="50" r="40" fill="none" stroke="#22C55E" strokeWidth="12" strokeDasharray={`${arc(inStockPercent)} ${CIRCUMFERENCE}`} strokeDashoffset={-arc(lowStockPercent + outOfStockPercent)} />
           </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-2xl font-bold">{inStockPercent}%</span>
+            <span className="text-xs text-gray-500">In Stock</span>
           </div>
         </div>
       </div>

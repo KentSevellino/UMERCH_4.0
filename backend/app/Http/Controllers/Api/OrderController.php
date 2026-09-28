@@ -250,8 +250,12 @@ class OrderController extends Controller
                             'date_time' => now(),
                         ]);
                         Products::where('product_id', $item->product_id)->decrement('product_stock', $item->quantity);
-                        Inventory::where('product_id', $item->product_id)->decrement('quantity', $item->quantity);
-                        StockIn::where('product_id', $item->product_id)->decrement('stock_qty', $item->quantity);
+                        Inventory::where('product_id', $item->product_id)
+                            ->where('variant', $item->variant)
+                            ->decrement('quantity', $item->quantity);
+                        StockIn::where('product_id', $item->product_id)
+                            ->where('variant', $item->variant)
+                            ->decrement('stock_qty', $item->quantity);
 
                         $product = Products::find($item->product_id);
                         InventoryLog::create([
@@ -378,8 +382,12 @@ class OrderController extends Controller
                         'date_time' => now(),
                     ]);
                     Products::where('product_id', $item->product_id)->decrement('product_stock', $item->quantity);
-                    Inventory::where('product_id', $item->product_id)->decrement('quantity', $item->quantity);
-                    StockIn::where('product_id', $item->product_id)->decrement('stock_qty', $item->quantity);
+                    Inventory::where('product_id', $item->product_id)
+                        ->where('variant', $item->variant)
+                        ->decrement('quantity', $item->quantity);
+                    StockIn::where('product_id', $item->product_id)
+                        ->where('variant', $item->variant)
+                        ->decrement('stock_qty', $item->quantity);
 
                     $product = Products::find($item->product_id);
                     InventoryLog::create([

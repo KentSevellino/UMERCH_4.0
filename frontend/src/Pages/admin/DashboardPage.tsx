@@ -18,6 +18,7 @@ interface Stats {
   todayProducts: number;
   todaySales: number;
   todaySalesAmount: number;
+  totalSalesAmount: number;
   totalUsers: number;
 }
 
@@ -88,6 +89,7 @@ export default function DashboardPage() {
     todayProducts: 0,
     todaySales: 0,
     todaySalesAmount: 0,
+    totalSalesAmount: 0,
     totalUsers: 0,
   });
   const [salesOverview, setSalesOverview] = useState<SalesOverviewItem[]>([]);
@@ -112,6 +114,7 @@ export default function DashboardPage() {
   const [salesPeriod, setSalesPeriod] = useState('daily');
   const [topProductsPeriod, setTopProductsPeriod] = useState('weekly');
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
   useEffect(() => {
     fetchDashboardData().then(() => setLoading(false));
@@ -148,8 +151,10 @@ export default function DashboardPage() {
       setInventoryStatus(inventoryRes.data);
       setRecentTransactions(transactionsRes.data);
       setWeeklyStats(weeklyRes.data);
+      setFetchError(false);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      setFetchError(true);
     }
   };
 
@@ -189,6 +194,18 @@ export default function DashboardPage() {
           </div>
         ) : (
         <>
+        {fetchError && (
+          <div className="mt-6 flex items-center justify-between gap-4 rounded-lg border border-red-200 bg-red-50 px-5 py-3 text-sm text-red-700">
+            <span>Failed to load dashboard data. The stats below may be out of date.</span>
+            <button
+              onClick={() => fetchDashboardData()}
+              className="rounded-lg bg-red-600 px-4 py-1.5 font-semibold text-white hover:bg-red-700"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         <div className="flex flex-wrap gap-5 mt-8">
           <StatCard
             title="Today Earnings"

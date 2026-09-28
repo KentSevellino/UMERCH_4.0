@@ -81,16 +81,27 @@ class DashboardController extends Controller
 
     public function getInventoryStatus()
     {
-        $products = Products::where('status', 'active')->get();
+        $products = Products::where('status', 'active')
+            ->with('inventory')
+            ->withSum('stockIns as stockInTotal', 'stock_qty')
+            ->get();
         $lowStock = 0;
         $outOfStock = 0;
         $inStock = 0;
 
         foreach ($products as $product) {
-            $stock = $product->inventory->sum('quantity') || $product->product_stock;
+            $stockInTotal = $product->getAttribute('stockInTotal');
+            if ($stockInTotal !== null) {
+                $stock = max((int) $stockInTotal, 0);
+            } elseif ($product->inventory->isNotEmpty()) {
+                $stock = (int) $product->inventory->sum(fn ($row) => max((int) $row->quantity, 0));
+            } else {
+                $stock = (int) ($product->product_stock ?? 0);
+            }
+
             if ($stock <= 0) {
                 $outOfStock++;
-            } elseif ($stock <= 10) {
+            } elseif ($stock <= 20) {
                 $lowStock++;
             } else {
                 $inStock++;
@@ -98,14 +109,29 @@ class DashboardController extends Controller
         }
 
         $total = $lowStock + $outOfStock + $inStock;
+        $percents = [
+            'lowStockPercent' => $total > 0 ? round(($lowStock / $total) * 100, 1) : 0,
+            'outOfStockPercent' => $total > 0 ? round(($outOfStock / $total) * 100, 1) : 0,
+            'inStockPercent' => $total > 0 ? round(($inStock / $total) * 100, 1) : 0,
+        ];
+
+        if ($total > 0) {
+            $delta = round(100 - array_sum($percents), 1);
+            if ($delta != 0) {
+                arsort($percents);
+                $largest = array_key_first($percents);
+                $percents[$largest] = round($percents[$largest] + $delta, 1);
+            }
+        }
+
         return response()->json([
             'lowStock' => $lowStock,
             'outOfStock' => $outOfStock,
             'inStock' => $inStock,
             'total' => $total,
-            'lowStockPercent' => $total > 0 ? round(($lowStock / $total) * 100, 1) : 0,
-            'outOfStockPercent' => $total > 0 ? round(($outOfStock / $total) * 100, 1) : 0,
-            'inStockPercent' => $total > 0 ? round(100 - round(($lowStock / $total) * 100, 1) - round(($outOfStock / $total) * 100, 1), 1) : 0,
+            'lowStockPercent' => $percents['lowStockPercent'],
+            'outOfStockPercent' => $percents['outOfStockPercent'],
+            'inStockPercent' => $percents['inStockPercent'],
         ]);
     }
 

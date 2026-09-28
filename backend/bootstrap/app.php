@@ -27,6 +27,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'otp_verified' => VerifyOtp::class,
         ]);
 
+        $middleware->redirectGuestsTo(null);
+
         $middleware->statefulApi();
     })
     ->withExceptions(function (Exceptions $exceptions): void {

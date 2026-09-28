@@ -2,6 +2,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Products extends Model
 {
@@ -21,9 +22,20 @@ class Products extends Model
         'status',
     ];
 
-    public function inventory()
+    /**
+     * @return HasMany<Inventory, $this>
+     */
+    public function inventory(): HasMany
     {
         return $this->hasMany(Inventory::class, 'product_id', 'product_id');
+    }
+
+    /**
+     * @return HasMany<StockIn, $this>
+     */
+    public function stockIns(): HasMany
+    {
+        return $this->hasMany(StockIn::class, 'product_id', 'product_id');
     }
 
     public function getTotalStockAttribute()
