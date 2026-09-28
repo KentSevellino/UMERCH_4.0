@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { takeOauthOrigin } from '../utils/oauthErrors';
@@ -7,8 +7,12 @@ export default function AuthCallbackPage() {
   const [searchParams] = useSearchParams();
   const { loginWithGoogleCode } = useAuth();
   const navigate = useNavigate();
+  const started = useRef(false);
 
   useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+
     const error = searchParams.get('error');
     const code = searchParams.get('code');
     const origin = takeOauthOrigin();
