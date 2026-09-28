@@ -3,13 +3,28 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/layouts/Navbar';
 import Footer from '../components/layouts/Footer';
+import GoogleGIcon from '../components/ui/GoogleGIcon';
+
+const GOOGLE_ERRORS: Record<string, string> = {
+  no_account: 'No account found for this email. Please contact your admin.',
+  inactive: 'Your account has been deactivated. Please contact an administrator.',
+  google_failed: 'Google sign-in failed. Please try again.',
+  google_email: 'Your Google account did not provide an email address.',
+};
+
+const googleAuthUrl = `${import.meta.env.VITE_API_URL || '/api'}/auth/google`;
+
+function oauthErrorFromUrl(): string {
+  const oauthError = new URLSearchParams(window.location.search).get('error');
+  return oauthError ? (GOOGLE_ERRORS[oauthError] ?? oauthError) : '';
+}
 
 export default function LoginPage() {
   const { login, isAuthenticated, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [loginValue, setLoginValue] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState(oauthErrorFromUrl);
   const [loading, setLoading] = useState(false);
 
   if (isAuthenticated) {
@@ -83,6 +98,18 @@ export default function LoginPage() {
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
+          <div className="flex items-center gap-3 my-4 text-sm text-gray-400">
+            <div className="flex-1 border-t border-gray-200" />
+            <span>or</span>
+            <div className="flex-1 border-t border-gray-200" />
+          </div>
+          <a
+            href={googleAuthUrl}
+            className="w-full flex items-center justify-center gap-2 border border-gray-300 py-3 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            <GoogleGIcon />
+            Sign in with Google
+          </a>
         </div>
       </div>
       <Footer />

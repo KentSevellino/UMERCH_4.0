@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -6,11 +7,16 @@ use App\Mail\OtpMail;
 use App\Models\ActivityLog;
 use App\Models\TrustedDevice;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\AbstractProvider;
 
 class AuthController extends Controller
 {
@@ -25,9 +31,9 @@ class AuthController extends Controller
 
         $rateLimitDecay = 60;
         $rateLimitLockout = 10;
-        $rateLimitKey = 'login-attempts:' . Str::lower($credentials['login']);
+        $rateLimitKey = 'login-attempts:'.Str::lower($credentials['login']);
         $rateLimitDir = storage_path('framework/cache/rate-limit');
-        $rateLimitFile = $rateLimitDir . '/' . md5($rateLimitKey) . '.json';
+        $rateLimitFile = $rateLimitDir.'/'.md5($rateLimitKey).'.json';
         $rateLimitData = ['attempts' => [], 'locked_until' => 0];
 
         if (file_exists($rateLimitFile)) {
@@ -39,6 +45,7 @@ class AuthController extends Controller
 
         if ($rateLimitData['locked_until'] > time()) {
             $remaining = $rateLimitData['locked_until'] - time();
+
             return response()->json([
                 'message' => "Account temporarily locked. Too many failed attempts. Please try again in {$remaining} second(s).",
                 'retry_after' => $remaining,
@@ -57,6 +64,7 @@ class AuthController extends Controller
         if ($attempts->count() >= 5) {
             $rateLimitData['locked_until'] = time() + $rateLimitLockout;
             @file_put_contents($rateLimitFile, json_encode($rateLimitData), LOCK_EX);
+
             return response()->json([
                 'message' => "Account temporarily locked. Too many failed attempts. Please try again in {$rateLimitLockout} second(s).",
                 'retry_after' => $rateLimitLockout,
@@ -65,7 +73,7 @@ class AuthController extends Controller
 
         if ($credentials['login'] === 'admin' && $credentials['password'] === 'umerch2026') {
             $adminUser = User::where('email', 'admin@umerch.com')->first();
-            if (!$adminUser) {
+            if (! $adminUser) {
                 $adminUser = User::create([
                     'user_fullname' => 'Admin',
                     'email' => 'admin@umerch.com',
@@ -83,7 +91,9 @@ class AuthController extends Controller
             Auth::login($adminUser, $credentials['remember'] ?? false);
             $request->session()->regenerate();
 
-            if (file_exists($rateLimitFile)) @unlink($rateLimitFile);
+            if (file_exists($rateLimitFile)) {
+                @unlink($rateLimitFile);
+            }
             ActivityLog::logLogin($adminUser, 'admin');
 
             return response()->json([
@@ -99,6 +109,7 @@ class AuthController extends Controller
         if ($user) {
             if (isset($user->status) && $user->status === 'inactive') {
                 $this->recordFailedAttempt($rateLimitKey, $rateLimitDecay);
+
                 return response()->json([
                     'message' => 'Your account has been deactivated. Please contact an administrator.',
                 ], 422);
@@ -110,7 +121,9 @@ class AuthController extends Controller
             $valid = $isHashed ? Hash::check($inputPassword, $dbPassword) : $inputPassword === $dbPassword;
 
             if ($valid) {
-                if (file_exists($rateLimitFile)) @unlink($rateLimitFile);
+                if (file_exists($rateLimitFile)) {
+                    @unlink($rateLimitFile);
+                }
                 Auth::login($user, $credentials['remember'] ?? false);
                 $request->session()->regenerate();
                 ActivityLog::logLogin($user, 'user');
@@ -140,6 +153,7 @@ class AuthController extends Controller
                 if ($isTrustedDevice) {
                     session(['otp_verified' => true]);
                     $token = $user->createToken('auth-token')->plainTextToken;
+
                     return response()->json([
                         'user' => $user,
                         'token' => $token,
@@ -154,6 +168,7 @@ class AuthController extends Controller
                     } catch (\Exception $e) {
                     }
                     $token = $user->createToken('auth-token')->plainTextToken;
+
                     return response()->json([
                         'user' => $user,
                         'token' => $token,
@@ -166,6 +181,7 @@ class AuthController extends Controller
         }
 
         $this->recordFailedAttempt($rateLimitKey, $rateLimitDecay);
+
         return response()->json([
             'message' => 'The provided credentials do not match our records.',
         ], 422);
@@ -178,30 +194,34 @@ class AuthController extends Controller
         $expires = session('otp_expires');
         $attempts = session('otp_attempts', 0);
 
-        if (!$sessionOtp || !$expires || now()->greaterThan($expires)) {
+        if (! $sessionOtp || ! $expires || now()->greaterThan($expires)) {
             session()->forget(['otp', 'otp_expires', 'otp_attempts']);
+
             return response()->json(['message' => 'The OTP has expired. Please request a new one.'], 422);
         }
 
         if ($attempts >= 5) {
             session()->forget(['otp', 'otp_expires', 'otp_attempts']);
+
             return response()->json(['message' => 'Too many failed attempts. Please request a new OTP.'], 422);
         }
 
         if ((string) $request->otp === (string) $sessionOtp) {
             session()->forget(['otp', 'otp_expires', 'otp_attempts']);
             session(['otp_verified' => true]);
+
             return response()->json(['message' => 'OTP verified successfully', 'redirect' => '/Landing']);
         }
 
         session(['otp_attempts' => $attempts + 1]);
+
         return response()->json(['message' => 'Invalid OTP.'], 422);
     }
 
     public function resendOtp(Request $request)
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
@@ -267,19 +287,119 @@ class AuthController extends Controller
         $user = Auth::user();
         $device = TrustedDevice::where('id', $deviceId)->where('user_id', $user->id)->first();
 
-        if (!$device) {
+        if (! $device) {
             return response()->json(['message' => 'Device not found'], 404);
         }
 
         $device->delete();
+
         return response()->json(['message' => 'Device removed successfully', 'device_name' => $device->device_name]);
+    }
+
+    public function redirectToGoogle(): RedirectResponse
+    {
+        return $this->googleProvider()->redirect();
+    }
+
+    public function handleGoogleCallback(Request $request): RedirectResponse
+    {
+        try {
+            $googleUser = $this->googleProvider()->user();
+        } catch (\Exception $e) {
+            return $this->googleRedirectError('google_failed');
+        }
+
+        $email = $googleUser->getEmail();
+        if (! $email) {
+            return $this->googleRedirectError('google_email');
+        }
+
+        $user = User::where('email', $email)->first();
+        if (! $user) {
+            return $this->googleRedirectError('no_account');
+        }
+
+        if (isset($user->status) && $user->status === 'inactive') {
+            return $this->googleRedirectError('inactive');
+        }
+
+        $code = Str::random(40);
+        $redirect = $user->role === 'Admin' ? '/admin' : '/Landing';
+        Cache::put("google_login:{$code}", [
+            'user_id' => $user->id,
+            'redirect' => $redirect,
+        ], now()->addMinutes(1));
+
+        return redirect()->away(
+            rtrim(config('services.frontend_url'), '/').'/auth/callback?code='.$code
+        );
+    }
+
+    public function exchangeGoogleCode(Request $request): JsonResponse
+    {
+        $request->validate(['code' => 'required|string']);
+
+        $payload = Cache::pull('google_login:'.$request->code);
+        if (! is_array($payload) || ! isset($payload['user_id'], $payload['redirect'])) {
+            return response()->json([
+                'message' => 'This sign-in link is invalid or has expired. Please try again.',
+            ], 422);
+        }
+
+        $userId = $payload['user_id'];
+        if (! is_int($userId)) {
+            return response()->json([
+                'message' => 'This sign-in link is invalid or has expired. Please try again.',
+            ], 422);
+        }
+
+        $user = User::find($userId);
+        if (! $user || (isset($user->status) && $user->status === 'inactive')) {
+            return response()->json([
+                'message' => 'Your account is not available. Please contact an administrator.',
+            ], 422);
+        }
+
+        if ($request->hasSession()) {
+            Auth::login($user);
+            $request->session()->regenerate();
+            $request->session()->put('otp_verified', true);
+        }
+
+        $token = $user->createToken('auth-token')->plainTextToken;
+        ActivityLog::logLogin($user, $user->role === 'Admin' ? 'admin' : 'user');
+
+        return response()->json([
+            'user' => $user,
+            'token' => $token,
+            'otp_verified' => true,
+            'redirect' => $payload['redirect'],
+        ]);
+    }
+
+    private function googleProvider(): AbstractProvider
+    {
+        $provider = Socialite::driver('google');
+        if (! $provider instanceof AbstractProvider) {
+            throw new \RuntimeException('Unsupported Google OAuth provider.');
+        }
+        $provider->stateless();
+
+        return $provider;
+    }
+
+    private function googleRedirectError(string $error): RedirectResponse
+    {
+        return redirect()->away(
+            rtrim(config('services.frontend_url'), '/').'/login?error='.$error
+        );
     }
 
     private function recordFailedAttempt($key, $decay)
     {
-        $file = storage_path('framework/cache/rate-limit/' . md5($key) . '.json');
+        $file = storage_path('framework/cache/rate-limit/'.md5($key).'.json');
         $dir = dirname($file);
-        if (!is_dir($dir)) {
+        if (! is_dir($dir)) {
             @mkdir($dir, 0755, true);
         }
         $data = ['attempts' => [], 'locked_until' => 0];
@@ -303,10 +423,11 @@ class AuthController extends Controller
         $name = $parts[0];
         $domain = $parts[1] ?? '';
         if (strlen($name) <= 2) {
-            $censoredName = substr($name, 0, 1) . str_repeat('*', max(strlen($name) - 1, 0));
+            $censoredName = substr($name, 0, 1).str_repeat('*', max(strlen($name) - 1, 0));
         } else {
-            $censoredName = substr($name, 0, 1) . str_repeat('*', strlen($name) - 2) . substr($name, -1);
+            $censoredName = substr($name, 0, 1).str_repeat('*', strlen($name) - 2).substr($name, -1);
         }
-        return $censoredName . '@' . $domain;
+
+        return $censoredName.'@'.$domain;
     }
 }

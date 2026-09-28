@@ -18,6 +18,7 @@ interface AuthContextType {
   isLoading: boolean;
   otpVerified: boolean;
   login: (login: string, password: string, deviceFingerprint?: string) => Promise<LoginResponse>;
+  loginWithGoogleCode: (code: string) => Promise<LoginResponse>;
   logout: () => Promise<void>;
   verifyOtp: (otp: string) => Promise<void>;
   resendOtp: () => Promise<{ email: string }>;
@@ -111,6 +112,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return data;
   }, [setToken, handleSetUser, setOtpVerified]);
 
+  const loginWithGoogleCode = useCallback(async (code: string): Promise<LoginResponse> => {
+    const response = await api.post('/auth/exchange', { code });
+    const data = response.data;
+
+    if (data.token) {
+      setToken(data.token);
+    }
+    if (data.user) {
+      handleSetUser(data.user);
+    }
+    if (data.otp_verified || data.redirect) {
+      setOtpVerified(true);
+    }
+
+    return data;
+  }, [setToken, handleSetUser, setOtpVerified]);
+
   const logout = useCallback(async () => {
     try {
       await api.post('/logout');
@@ -147,6 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         otpVerified,
         login,
+        loginWithGoogleCode,
         logout,
         verifyOtp,
         resendOtp,

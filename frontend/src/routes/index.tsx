@@ -4,6 +4,7 @@ import AdminGuard from '../components/guards/AdminGuard';
 
 // Lazy load pages
 import LoginPage from '../Pages/LoginPage';
+import AuthCallbackPage from '../Pages/AuthCallbackPage';
 import ProductsPage from '../Pages/ProductsPage';
 import AboutUsPage from '../Pages/AboutUsPage';
 import AuthenticationPage from '../Pages/AuthenticationPage';
@@ -38,6 +39,7 @@ export default function AppRoutes() {
       <Route path="/AboutUs" element={<AboutUsPage />} />
 
       {/* Auth Routes */}
+      <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route path="/authentication" element={<AuthenticationPage />} />
       <Route path="/Landing" element={<LandingPage />} />
       <Route path="/Shop" element={<AuthGuard><ShopPage /></AuthGuard>} />

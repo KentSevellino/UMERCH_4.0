@@ -1,17 +1,18 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\InventoryApiController;
+use App\Http\Controllers\Api\InventoryLogController;
+use App\Http\Controllers\Api\InventoryReportController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\StockInController;
 use App\Http\Controllers\Api\StockOutController;
-use App\Http\Controllers\Api\DashboardController;
-use App\Http\Controllers\Api\InventoryReportController;
 use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Api\ActivityLogController;
-use App\Http\Controllers\Api\InventoryLogController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,12 +22,17 @@ use App\Http\Controllers\Api\InventoryLogController;
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/check-trusted-device', [AuthController::class, 'checkTrustedDevice']);
 
+// Google OAuth
+Route::get('/auth/google', [AuthController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
+Route::post('/auth/exchange', [AuthController::class, 'exchangeGoogleCode']);
+
 // Public product listing
 Route::get('/products', [ProductController::class, 'userProducts']);
 
 // Public inventory API
-Route::get('/inventory', [\App\Http\Controllers\Api\InventoryApiController::class, 'index']);
-Route::get('/inventory/{productId}', [\App\Http\Controllers\Api\InventoryApiController::class, 'getByProduct']);
+Route::get('/inventory', [InventoryApiController::class, 'index']);
+Route::get('/inventory/{productId}', [InventoryApiController::class, 'getByProduct']);
 
 /*
 |--------------------------------------------------------------------------
