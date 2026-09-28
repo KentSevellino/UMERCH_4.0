@@ -21,7 +21,7 @@ export default function LandingPage() {
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
-      if (params.has('popup')) {
+      if (params.has('popup') || params.has('error')) {
         setShowLogin(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }

@@ -7,6 +7,7 @@ import PasswordIcon from '../../assets/images/password-icon.svg';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { DeviceFingerprint } from '../../utils/DeviceFingerprint';
+import { oauthErrorFromUrl, rememberOauthOrigin } from '../../utils/oauthErrors';
 import GoogleGIcon from './GoogleGIcon';
 
 const googleAuthUrl = `${import.meta.env.VITE_API_URL || '/api'}/auth/google`;
@@ -36,9 +37,12 @@ export default function Knowledge({ showLogin, onCloseLogin }: KnowledgeProps) {
     remember: false,
     device_fingerprint: null,
   });
-  const [errors, setErrors] = useState<LoginErrors>({});
+  const [errors, setErrors] = useState<LoginErrors>(() => {
+    const initialError = oauthErrorFromUrl();
+    return initialError ? { general: initialError } : {};
+  });
   const [processing, setProcessing] = useState(false);
-  const [showError, setShowError] = useState(false);
+  const [showError, setShowError] = useState(() => oauthErrorFromUrl() !== '');
   const [checkingDevice, setCheckingDevice] = useState(false);
   const [lockoutCountdown, setLockoutCountdown] = useState(0);
 
@@ -277,6 +281,7 @@ export default function Knowledge({ showLogin, onCloseLogin }: KnowledgeProps) {
                       <div className='mt-4 w-full'>
                         <a
                           href={googleAuthUrl}
+                          onClick={() => rememberOauthOrigin('landing')}
                           className="w-full h-10 flex items-center justify-center gap-2 border border-white/40 rounded-[15px] text-white text-[14px] hover:bg-white/10 transition-colors"
                         >
                           <GoogleGIcon size={18} />

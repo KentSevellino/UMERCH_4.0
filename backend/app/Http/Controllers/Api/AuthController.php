@@ -391,7 +391,7 @@ class AuthController extends Controller
     private function googleRedirectError(string $error): RedirectResponse
     {
         return redirect()->away(
-            rtrim(config('services.frontend_url'), '/').'/login?error='.$error
+            rtrim(config('services.frontend_url'), '/').'/auth/callback?error='.$error
         );
     }
 

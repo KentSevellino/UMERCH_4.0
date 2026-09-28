@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { takeOauthOrigin } from '../utils/oauthErrors';
 
 export default function AuthCallbackPage() {
   const [searchParams] = useSearchParams();
@@ -10,13 +11,15 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     const error = searchParams.get('error');
     const code = searchParams.get('code');
+    const origin = takeOauthOrigin();
+    const home = origin === 'landing' ? '/Landing' : '/login';
 
     if (error) {
-      navigate(`/login?error=${encodeURIComponent(error)}`, { replace: true });
+      navigate(`${home}?error=${encodeURIComponent(error)}`, { replace: true });
       return;
     }
     if (!code) {
-      navigate('/login', { replace: true });
+      navigate(home, { replace: true });
       return;
     }
 
@@ -25,7 +28,7 @@ export default function AuthCallbackPage() {
       .catch((err: unknown) => {
         const data = (err as { response?: { data?: { message?: string } } })?.response?.data;
         const message = data?.message || 'Google sign-in failed. Please try again.';
-        navigate(`/login?error=${encodeURIComponent(message)}`, { replace: true });
+        navigate(`${home}?error=${encodeURIComponent(message)}`, { replace: true });
       });
   }, [searchParams, loginWithGoogleCode, navigate]);
 

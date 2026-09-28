@@ -47,7 +47,7 @@ it('rejects a google email that is not in the users table', function () {
     $response = $this->get('/api/auth/google/callback');
 
     expect(googleCallbackLocation($response))
-        ->toContain('/login?error=no_account');
+        ->toContain('/auth/callback?error=no_account');
 });
 
 it('rejects an inactive user', function () {
@@ -57,7 +57,7 @@ it('rejects an inactive user', function () {
     $response = $this->get('/api/auth/google/callback');
 
     expect(googleCallbackLocation($response))
-        ->toContain('/login?error=inactive');
+        ->toContain('/auth/callback?error=inactive');
 });
 
 it('issues a one-time code for an existing active user', function () {
