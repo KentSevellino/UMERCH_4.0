@@ -82,7 +82,7 @@ interface TopProduct {
   sales?: number;
   product_image?: string;
 }
-
+// 
 export default function DashboardPage() {
   const [stats, setStats] = useState<Stats>({
     todayEarnings: 0,
