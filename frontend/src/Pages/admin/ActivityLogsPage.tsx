@@ -53,7 +53,7 @@ function ActivityLogsPage() {
         </div>
 
         <h2 className="text-2xl font-bold mt-10">Activity Logs</h2>
-{/* asdada */}
+
         <div className="mt-4 flex items-center justify-between gap-6">
           <div className="flex items-center gap-3 flex-1 max-w-130 bg-white rounded-lg px-4 py-3 border border-gray-200">
             <img src={SearchIcon} alt="Search" className="w-5 h-5" />
