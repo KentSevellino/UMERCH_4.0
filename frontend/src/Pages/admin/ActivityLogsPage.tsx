@@ -6,6 +6,7 @@ import TotalActivitiesIcon from '../../assets/images/TotalActivities.svg';
 import TotalLoginsIcon from '../../assets/images/TotalLogins.svg';
 import SearchIcon from '../../assets/images/SearchIcon.svg';
 
+// StatCard component to display statistics
 interface StatCardProps {
   title: string;
   value: string | number;
