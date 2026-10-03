@@ -43,6 +43,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Auth (no OTP required)
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/me', [AuthController::class, 'me']);
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
     Route::get('/trusted-devices', [AuthController::class, 'getTrustedDevices']);
