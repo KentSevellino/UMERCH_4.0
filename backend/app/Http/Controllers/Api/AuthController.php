@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
@@ -212,6 +213,7 @@ class AuthController extends Controller
         try {
             Mail::to($user->email)->send(new OtpMail($otp, $user->user_fullname ?? 'User'));
         } catch (\Throwable $e) {
+            Log::warning('OTP mail failed', ['error' => $e->getMessage()]);
         }
 
         return response()->json(['message' => 'OTP resent successfully', 'email' => $this->censorEmail($user->email)]);
@@ -441,6 +443,7 @@ class AuthController extends Controller
         try {
             Mail::to($user->email)->send(new OtpMail($otp, $user->user_fullname ?? 'User'));
         } catch (\Throwable $e) {
+            Log::warning('OTP mail failed', ['error' => $e->getMessage()]);
         }
     }
 

@@ -102,6 +102,10 @@ it('requires an otp after a google admin sign in and unlocks the admin api once 
     expect($response->json('user.email'))->toBe($admin->email);
     Mail::assertSent(OtpMail::class, fn ($mail) => $mail->hasTo($admin->email));
 
+    $masked = $response->json('email');
+    expect($masked)->not->toBe($admin->email);
+    expect($masked)->toContain('*')->toEndWith('@'.explode('@', $admin->email)[1]);
+
     $token = $response->json('token');
 
     $this->withToken($token)
@@ -261,6 +265,10 @@ it('sends an admin password login through otp and returns them to the admin dash
         ]);
 
     Mail::assertSent(OtpMail::class, fn ($mail) => $mail->hasTo($admin->email));
+
+    $masked = $response->json('email');
+    expect($masked)->not->toBe($admin->email);
+    expect($masked)->toContain('*')->toEndWith('@'.explode('@', $admin->email)[1]);
 
     $token = $response->json('token');
 

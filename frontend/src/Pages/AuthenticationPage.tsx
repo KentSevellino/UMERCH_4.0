@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
+import { censorEmail } from '../utils/censorEmail';
 
 interface AuthenticationPageProps {
     email?: string;
@@ -23,7 +24,7 @@ export default function AuthenticationPage({ email: initialEmail, flash }: Authe
     const [otpError, setOtpError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
 
-    const displayEmail = initialEmail || user?.email || '';
+    const displayEmail = initialEmail || censorEmail(user?.email || '');
 
     useEffect(() => {
         if (flash?.status) {
