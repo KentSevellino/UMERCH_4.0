@@ -100,7 +100,12 @@ it('requires an otp after a google admin sign in and unlocks the admin api once 
         ->assertJsonStructure(['user', 'token', 'otp_required', 'email', 'redirect']);
 
     expect($response->json('user.email'))->toBe($admin->email);
-    Mail::assertSent(OtpMail::class, fn ($mail) => $mail->hasTo($admin->email));
+    Mail::assertSent(OtpMail::class, function ($mail) use ($admin) {
+        return $mail->hasTo($admin->email)
+            && $mail->maskedEmail !== ''
+            && $mail->maskedEmail !== $admin->email
+            && str_contains($mail->maskedEmail, '*');
+    });
 
     $masked = $response->json('email');
     expect($masked)->not->toBe($admin->email);
@@ -264,7 +269,12 @@ it('sends an admin password login through otp and returns them to the admin dash
             'redirect' => '/authentication',
         ]);
 
-    Mail::assertSent(OtpMail::class, fn ($mail) => $mail->hasTo($admin->email));
+    Mail::assertSent(OtpMail::class, function ($mail) use ($admin) {
+        return $mail->hasTo($admin->email)
+            && $mail->maskedEmail !== ''
+            && $mail->maskedEmail !== $admin->email
+            && str_contains($mail->maskedEmail, '*');
+    });
 
     $masked = $response->json('email');
     expect($masked)->not->toBe($admin->email);

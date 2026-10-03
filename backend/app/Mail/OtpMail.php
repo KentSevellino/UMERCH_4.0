@@ -15,6 +15,7 @@ class OtpMail extends Mailable
     public function __construct(
         public int|string $otp,
         public string $name,
+        public string $maskedEmail = '',
     ) {}
 
     public function envelope(): Envelope

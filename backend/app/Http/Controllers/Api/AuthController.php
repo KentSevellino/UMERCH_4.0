@@ -211,7 +211,7 @@ class AuthController extends Controller
         session(['otp' => $otp, 'otp_expires' => now()->addMinutes(5), 'otp_attempts' => 0]);
 
         try {
-            Mail::to($user->email)->send(new OtpMail($otp, $user->user_fullname ?? 'User'));
+            Mail::to($user->email)->send(new OtpMail($otp, $user->user_fullname ?? 'User', $this->censorEmail($user->email)));
         } catch (\Throwable $e) {
             Log::warning('OTP mail failed', ['error' => $e->getMessage()]);
         }
@@ -441,7 +441,7 @@ class AuthController extends Controller
         ]);
 
         try {
-            Mail::to($user->email)->send(new OtpMail($otp, $user->user_fullname ?? 'User'));
+            Mail::to($user->email)->send(new OtpMail($otp, $user->user_fullname ?? 'User', $this->censorEmail($user->email)));
         } catch (\Throwable $e) {
             Log::warning('OTP mail failed', ['error' => $e->getMessage()]);
         }
