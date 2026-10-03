@@ -90,6 +90,7 @@ class AuthController extends Controller
             $token = $adminUser->createToken('auth-token')->plainTextToken;
             Auth::login($adminUser, $credentials['remember'] ?? false);
             $request->session()->regenerate();
+            $request->session()->put('otp_verified', true);
 
             if (file_exists($rateLimitFile)) {
                 @unlink($rateLimitFile);
@@ -128,27 +129,11 @@ class AuthController extends Controller
                 $request->session()->regenerate();
                 ActivityLog::logLogin($user, 'user');
 
-                $isTrustedDevice = false;
-                if ($credentials['device_fingerprint']) {
-                    $fingerprintHash = hash('sha256', $credentials['device_fingerprint']);
-                    $device = TrustedDevice::where('user_id', $user->id)
-                        ->where('device_fingerprint', $fingerprintHash)
-                        ->first();
-
-                    if ($device) {
-                        $isTrustedDevice = true;
-                        $device->update(['last_used_at' => now()]);
-                    } else {
-                        TrustedDevice::create([
-                            'user_id' => $user->id,
-                            'device_fingerprint' => $fingerprintHash,
-                            'device_name' => $request->userAgent(),
-                            'ip_address' => $request->ip(),
-                            'user_agent' => $request->userAgent(),
-                            'last_used_at' => now(),
-                        ]);
-                    }
-                }
+                $isTrustedDevice = $this->resolveTrustedDevice(
+                    $request,
+                    $user,
+                    $credentials['device_fingerprint'] ?? null
+                );
 
                 if ($isTrustedDevice) {
                     session(['otp_verified' => true]);
@@ -158,15 +143,10 @@ class AuthController extends Controller
                         'user' => $user,
                         'token' => $token,
                         'otp_verified' => true,
-                        'redirect' => '/Landing',
+                        'redirect' => $user->role === 'Admin' ? '/admin' : '/Landing',
                     ]);
                 } else {
-                    $otp = random_int(100000, 999999);
-                    session(['otp' => $otp, 'otp_expires' => now()->addMinutes(5)]);
-                    try {
-                        Mail::to($user->email)->send(new OtpMail($otp, $user->user_fullname ?? 'User'));
-                    } catch (\Exception $e) {
-                    }
+                    $this->sendOtp($request, $user, $user->role === 'Admin' ? '/admin' : '/Landing');
                     $token = $user->createToken('auth-token')->plainTextToken;
 
                     return response()->json([
@@ -207,10 +187,11 @@ class AuthController extends Controller
         }
 
         if ((string) $request->otp === (string) $sessionOtp) {
-            session()->forget(['otp', 'otp_expires', 'otp_attempts']);
+            $redirect = session('otp_redirect', '/Landing');
+            session()->forget(['otp', 'otp_expires', 'otp_attempts', 'otp_redirect']);
             session(['otp_verified' => true]);
 
-            return response()->json(['message' => 'OTP verified successfully', 'redirect' => '/Landing']);
+            return response()->json(['message' => 'OTP verified successfully', 'redirect' => $redirect]);
         }
 
         session(['otp_attempts' => $attempts + 1]);
@@ -230,7 +211,7 @@ class AuthController extends Controller
 
         try {
             Mail::to($user->email)->send(new OtpMail($otp, $user->user_fullname ?? 'User'));
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
         }
 
         return response()->json(['message' => 'OTP resent successfully', 'email' => $this->censorEmail($user->email)]);
@@ -337,7 +318,10 @@ class AuthController extends Controller
 
     public function exchangeGoogleCode(Request $request): JsonResponse
     {
-        $request->validate(['code' => 'required|string']);
+        $request->validate([
+            'code' => 'required|string',
+            'device_fingerprint' => 'nullable|string',
+        ]);
 
         $payload = Cache::pull('google_login:'.$request->code);
         if (! is_array($payload) || ! isset($payload['user_id'], $payload['redirect'])) {
@@ -360,21 +344,104 @@ class AuthController extends Controller
             ], 422);
         }
 
-        if ($request->hasSession()) {
-            Auth::login($user);
-            $request->session()->regenerate();
-            $request->session()->put('otp_verified', true);
+        if (! $request->hasSession()) {
+            return response()->json([
+                'message' => 'Your browser session could not be started. Please try signing in again.',
+            ], 422);
         }
+
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        $isTrustedDevice = $this->resolveTrustedDevice(
+            $request,
+            $user,
+            $request->input('device_fingerprint')
+        );
 
         $token = $user->createToken('auth-token')->plainTextToken;
         ActivityLog::logLogin($user, $user->role === 'Admin' ? 'admin' : 'user');
 
+        if ($isTrustedDevice) {
+            $request->session()->put('otp_verified', true);
+
+            return response()->json([
+                'user' => $user,
+                'token' => $token,
+                'otp_verified' => true,
+                'redirect' => $payload['redirect'],
+            ]);
+        }
+
+        $this->sendOtp($request, $user, $payload['redirect']);
+
         return response()->json([
             'user' => $user,
             'token' => $token,
-            'otp_verified' => true,
-            'redirect' => $payload['redirect'],
+            'otp_required' => true,
+            'email' => $this->censorEmail($user->email),
+            'redirect' => '/authentication',
         ]);
+    }
+
+    /**
+     * Look up the trusted device for a raw fingerprint, registering it on first use.
+     *
+     * Returns true only when the device was already trusted, so the current
+     * sign-in still has to complete the OTP challenge.
+     */
+    private function resolveTrustedDevice(Request $request, User $user, ?string $fingerprint): bool
+    {
+        if (! $fingerprint) {
+            return false;
+        }
+
+        $fingerprintHash = hash('sha256', $fingerprint);
+        $device = TrustedDevice::where('user_id', $user->id)
+            ->where('device_fingerprint', $fingerprintHash)
+            ->first();
+
+        if ($device) {
+            $device->update(['last_used_at' => now()]);
+
+            return true;
+        }
+
+        TrustedDevice::create([
+            'user_id' => $user->id,
+            'device_fingerprint' => $fingerprintHash,
+            'device_name' => $request->userAgent(),
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'last_used_at' => now(),
+        ]);
+
+        return false;
+    }
+
+    /**
+     * Store a one time code in the session and email it to the user.
+     * The destination to return to once the code is confirmed is kept too.
+     */
+    private function sendOtp(Request $request, User $user, string $redirect): void
+    {
+        if (! $request->hasSession()) {
+            return;
+        }
+
+        $otp = random_int(100000, 999999);
+
+        session([
+            'otp' => $otp,
+            'otp_expires' => now()->addMinutes(5),
+            'otp_attempts' => 0,
+            'otp_redirect' => $redirect,
+        ]);
+
+        try {
+            Mail::to($user->email)->send(new OtpMail($otp, $user->user_fullname ?? 'User'));
+        } catch (\Throwable $e) {
+        }
     }
 
     private function googleProvider(): AbstractProvider

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;
 
 function adminUserManagementAdmin(): User
@@ -32,6 +33,10 @@ function adminUserManagementCustomer(array $attributes = []): User
         'status' => 'active',
     ]);
 }
+
+beforeEach(function () {
+    $this->withSession(['otp_verified' => true]);
+});
 
 it('requires authentication to create a user', function () {
     $this->postJson('/api/admin/users', [
@@ -191,7 +196,7 @@ it('updates a user with the documented field names', function () {
         'um_id' => 555,
     ]);
 
-    expect(\Illuminate\Support\Facades\Hash::check(
+    expect(Hash::check(
         'new-secret-123',
         User::find($customer->id)->user_password
     ))->toBeTrue();
@@ -220,7 +225,7 @@ it('does not change the password when an empty password is submitted', function 
         'user_password' => '',
     ])->assertOk();
 
-    expect(\Illuminate\Support\Facades\Hash::check(
+    expect(Hash::check(
         'original-secret',
         User::find($customer->id)->user_password
     ))->toBeTrue();

@@ -72,7 +72,7 @@ Route::middleware('auth:sanctum')->group(function () {
     | Admin Routes
     |--------------------------------------------------------------------------
     */
-    Route::middleware('is_admin')->prefix('admin')->group(function () {
+    Route::middleware(['is_admin', 'otp_verified'])->prefix('admin')->group(function () {
 
         // Dashboard
         Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);

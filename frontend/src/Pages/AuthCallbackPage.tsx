@@ -2,6 +2,23 @@ import { useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { takeOauthOrigin } from '../utils/oauthErrors';
+import { DeviceFingerprint } from '../utils/DeviceFingerprint';
+
+async function resolveFingerprint(): Promise<string | undefined> {
+  try {
+    const stored = DeviceFingerprint.getStoredFingerprint();
+    if (stored) {
+      return stored;
+    }
+
+    const generated = await DeviceFingerprint.generateFingerprint();
+    DeviceFingerprint.storeFingerprint(generated);
+
+    return generated;
+  } catch {
+    return undefined;
+  }
+}
 
 export default function AuthCallbackPage() {
   const [searchParams] = useSearchParams();
@@ -27,7 +44,8 @@ export default function AuthCallbackPage() {
       return;
     }
 
-    loginWithGoogleCode(code)
+    resolveFingerprint()
+      .then((fingerprint) => loginWithGoogleCode(code, fingerprint))
       .then((result) => navigate(result.redirect || '/Landing', { replace: true }))
       .catch((err: unknown) => {
         const data = (err as { response?: { data?: { message?: string } } })?.response?.data;

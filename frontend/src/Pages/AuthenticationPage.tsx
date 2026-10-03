@@ -111,9 +111,9 @@ export default function AuthenticationPage({ email: initialEmail, flash }: Authe
         setOtpError('');
 
         try {
-            await api.post('/verify-otp', { otp });
+            const response = await api.post('/verify-otp', { otp });
             setOtpVerified(true);
-            navigate('/Landing');
+            navigate(response.data?.redirect || '/Landing');
         } catch (error: any) {
             const errorMsg = error.response?.data?.errors?.otp
                 ? Array.isArray(error.response.data.errors.otp)

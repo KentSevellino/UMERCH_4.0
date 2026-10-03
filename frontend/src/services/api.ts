@@ -26,6 +26,14 @@ api.interceptors.response.use(
         window.location.href = '/login';
       }
     }
+
+    if (error.response?.status === 403 && error.response?.data?.message === 'OTP verification required') {
+      localStorage.removeItem('otp_verified');
+      if (window.location.pathname !== '/authentication') {
+        window.location.href = '/authentication';
+      }
+    }
+
     return Promise.reject(error);
   }
 );

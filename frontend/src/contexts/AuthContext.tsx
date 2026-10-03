@@ -18,7 +18,7 @@ interface AuthContextType {
   isLoading: boolean;
   otpVerified: boolean;
   login: (login: string, password: string, deviceFingerprint?: string) => Promise<LoginResponse>;
-  loginWithGoogleCode: (code: string) => Promise<LoginResponse>;
+  loginWithGoogleCode: (code: string, deviceFingerprint?: string) => Promise<LoginResponse>;
   logout: () => Promise<void>;
   verifyOtp: (otp: string) => Promise<void>;
   resendOtp: () => Promise<{ email: string }>;
@@ -112,8 +112,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return data;
   }, [setToken, handleSetUser, setOtpVerified]);
 
-  const loginWithGoogleCode = useCallback(async (code: string): Promise<LoginResponse> => {
-    const response = await api.post('/auth/exchange', { code });
+  const loginWithGoogleCode = useCallback(async (code: string, deviceFingerprint?: string): Promise<LoginResponse> => {
+    const response = await api.post('/auth/exchange', { code, device_fingerprint: deviceFingerprint });
     const data = response.data;
 
     if (data.token) {
@@ -122,7 +122,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (data.user) {
       handleSetUser(data.user);
     }
-    if (data.otp_verified || data.redirect) {
+
+    if (data.otp_required) {
+      setOtpVerified(false);
+    } else if (data.otp_verified) {
       setOtpVerified(true);
     }
 

@@ -46,6 +46,10 @@ function inventoryProduct(array $attributes, ?int $quantity = null): Products
     return $product;
 }
 
+beforeEach(function () {
+    $this->withSession(['otp_verified' => true]);
+});
+
 it('classifies products and returns percentages that match the counts', function () {
     inventoryProduct(['product_name' => 'In stock'], 50);
     inventoryProduct(['product_name' => 'Low stock'], 20);
