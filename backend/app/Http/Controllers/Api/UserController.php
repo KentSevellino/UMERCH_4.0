@@ -24,12 +24,14 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
+        $this->normalizeUmId($request);
+
         $validated = $request->validate([
-            'user_fullname' => 'required|string',
-            'email' => 'required|email|unique:users,email',
-            'um_id' => 'required|integer|unique:users,um_id',
+            'user_fullname' => 'required|string|max:255|unique:users,user_fullname',
+            'email' => 'required|email|max:255|unique:users,email',
+            'um_id' => 'required|integer|max:2147483647|unique:users,um_id',
             'user_password' => 'required|string|min:6',
-        ]);
+        ], $this->validationMessages());
 
         $validated['user_password'] = Hash::make($validated['user_password']);
         $validated['role'] = 'customer';
@@ -47,12 +49,14 @@ class UserController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
 
+        $this->normalizeUmId($request);
+
         $validated = $request->validate([
-            'user_fullname' => 'sometimes|string',
-            'email' => 'sometimes|email|unique:users,email,' . $id,
-            'um_id' => 'sometimes|integer|unique:users,um_id,' . $id,
+            'user_fullname' => 'sometimes|string|max:255|unique:users,user_fullname,' . (int) $id,
+            'email' => 'sometimes|email|max:255|unique:users,email,' . (int) $id,
+            'um_id' => 'sometimes|integer|max:2147483647|unique:users,um_id,' . (int) $id,
             'user_password' => 'nullable|string|min:6',
-        ]);
+        ], $this->validationMessages());
 
         if (!empty($validated['user_password'])) {
             $validated['user_password'] = Hash::make($validated['user_password']);
@@ -63,6 +67,33 @@ class UserController extends Controller
         $user->update($validated);
 
         return response()->json(['message' => 'User updated successfully', 'user' => $user]);
+    }
+
+    private function normalizeUmId(Request $request): void
+    {
+        $value = $request->input('um_id');
+
+        if (is_string($value) && preg_match('/^0*\d+$/', $value)) {
+            $request->merge(['um_id' => ltrim($value, '0') ?: '0']);
+        }
+    }
+
+    private function validationMessages(): array
+    {
+        return [
+            'user_fullname.required' => 'Full name is required.',
+            'user_fullname.unique' => 'This name is already taken.',
+            'user_fullname.max' => 'Full name may not be longer than 255 characters.',
+            'email.required' => 'Email address is required.',
+            'email.email' => 'Please enter a valid email address.',
+            'email.unique' => 'This email is already taken.',
+            'um_id.required' => 'User ID is required.',
+            'um_id.integer' => 'User ID must be a whole number.',
+            'um_id.max' => 'User ID must be 2147483647 or less.',
+            'um_id.unique' => 'This User ID is already in use.',
+            'user_password.required' => 'Password is required.',
+            'user_password.min' => 'Password must be at least 6 characters.',
+        ];
     }
 
     public function destroy($id)

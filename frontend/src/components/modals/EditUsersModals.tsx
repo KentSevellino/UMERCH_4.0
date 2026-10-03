@@ -1,4 +1,5 @@
-import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
+﻿import { useState, useEffect } from 'react';
+import type { ChangeEvent, FormEvent } from 'react';
 import api from '../../services/api';
 
 interface User {
@@ -15,26 +16,40 @@ interface EditUsersModalsProps {
   onSuccess?: () => void;
 }
 
+type FieldErrors = Record<string, string | string[]>;
+
+function fieldError(errs: FieldErrors, key: string): string {
+  const value = errs?.[key];
+  if (!value) return '';
+  return Array.isArray(value) ? value.filter(Boolean).join(' ') : String(value);
+}
+
+function normalizeUmId(value: string): string {
+  return value.trim().replace(/^0+(?=\d)/, '');
+}
+
 export default function EditUsersModals({ isOpen, onClose, user, onSuccess }: EditUsersModalsProps) {
   const [data, setData] = useState({
-    name: '',
+    user_fullname: '',
     email: '',
-    userId: '',
-    password: ''
+    um_id: '',
+    user_password: ''
   });
   const [processing, setProcessing] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [formError, setFormError] = useState('');
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     if (isOpen && user) {
       setData({
-        name: user.user_fullname || '',
+        user_fullname: user.user_fullname || '',
         email: user.email || '',
-        userId: user.um_id || '',
-        password: ''
+        um_id: String(user.um_id ?? ''),
+        user_password: ''
       });
       setErrors({});
+      setFormError('');
       setVisible(true);
     } else if (isOpen) {
       setVisible(true);
@@ -54,13 +69,14 @@ export default function EditUsersModals({ isOpen, onClose, user, onSuccess }: Ed
       delete next[name];
       return next;
     });
+    setFormError('');
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (data.password && data.password.length > 0 && data.password.length < 8) {
-      setErrors({ password: 'Password must be at least 8 characters.' });
+    if (data.user_password && data.user_password.length < 8) {
+      setErrors({ user_password: 'Password must be at least 8 characters.' });
       return;
     }
 
@@ -70,15 +86,29 @@ export default function EditUsersModals({ isOpen, onClose, user, onSuccess }: Ed
     }
 
     setProcessing(true);
+    setErrors({});
+    setFormError('');
+
     try {
-      await api.patch(`/admin/users/${user.id}`, data);
+      await api.patch(`/admin/users/${user.id}`, {
+        ...data,
+        um_id: normalizeUmId(data.um_id),
+      });
       if (onSuccess) onSuccess();
       onClose();
     } catch (error: any) {
-      if (error.response?.data?.errors) {
-        setErrors(error.response.data.errors);
+      const body = error.response?.data;
+      const fieldErrors = body?.errors ?? {};
+      const hasFieldError = ['user_fullname', 'email', 'um_id', 'user_password']
+        .some(key => fieldError(fieldErrors, key) !== '');
+
+      console.error('Update user failed:', error.response?.status, body);
+
+      if (hasFieldError) {
+        setErrors(fieldErrors);
+      } else {
+        setFormError(body?.message || 'Unable to update user. Please check the details and try again.');
       }
-      console.error('Validation errors:', error);
     } finally {
       setProcessing(false);
     }
@@ -107,20 +137,20 @@ export default function EditUsersModals({ isOpen, onClose, user, onSuccess }: Ed
         <form onSubmit={handleSubmit} className="p-6">
           <div className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="user_fullname" className="block text-sm font-medium text-gray-700 mb-1">
                 Full Name
               </label>
               <input
                 type="text"
-                id="name"
-                name="name"
-                value={data.name}
+                id="user_fullname"
+                name="user_fullname"
+                value={data.user_fullname}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9C0306] focus:border-[#9C0306]"
                 placeholder="Enter full name"
                 required
               />
-              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+              {fieldError(errors, 'user_fullname') && <p className="text-red-500 text-sm mt-1">{fieldError(errors, 'user_fullname')}</p>}
             </div>
 
             <div>
@@ -137,41 +167,48 @@ export default function EditUsersModals({ isOpen, onClose, user, onSuccess }: Ed
                 placeholder="Enter email address"
                 required
               />
-              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+              {fieldError(errors, 'email') && <p className="text-red-500 text-sm mt-1">{fieldError(errors, 'email')}</p>}
             </div>
 
             <div>
-              <label htmlFor="userId" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="um_id" className="block text-sm font-medium text-gray-700 mb-1">
                 User ID
               </label>
               <input
                 type="text"
-                id="userId"
-                name="userId"
-                value={data.userId}
+                inputMode="numeric"
+                id="um_id"
+                name="um_id"
+                value={data.um_id}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9C0306] focus:border-[#9C0306]"
                 placeholder="Enter user ID"
                 required
               />
-              {errors.userId && <p className="text-red-500 text-sm mt-1">{errors.userId}</p>}
+              {fieldError(errors, 'um_id') && <p className="text-red-500 text-sm mt-1">{fieldError(errors, 'um_id')}</p>}
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="user_password" className="block text-sm font-medium text-gray-700 mb-1">
                 Password
               </label>
               <input
                 type="password"
-                id="password"
-                name="password"
-                value={data.password}
+                id="user_password"
+                name="user_password"
+                value={data.user_password}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9C0306] focus:border-[#9C0306]"
                 placeholder="Leave blank to keep current password"
               />
-              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+              {fieldError(errors, 'user_password') && <p className="text-red-500 text-sm mt-1">{fieldError(errors, 'user_password')}</p>}
             </div>
           </div>
+
+          {formError && (
+            <div className="mt-4 rounded-lg border border-red-300 bg-red-50 px-3 py-2">
+              <p className="text-red-600 text-sm">{formError}</p>
+            </div>
+          )}
 
           <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
             <button

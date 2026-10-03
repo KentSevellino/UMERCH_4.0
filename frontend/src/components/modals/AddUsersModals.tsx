@@ -1,4 +1,5 @@
-import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
+﻿import { useState, useEffect } from 'react';
+import type { ChangeEvent, FormEvent } from 'react';
 import api from '../../services/api';
 
 interface AddUsersModalsProps {
@@ -13,6 +14,18 @@ interface PasswordStrength {
   text: string;
 }
 
+type FieldErrors = Record<string, string | string[]>;
+
+function fieldError(errs: FieldErrors, key: string): string {
+  const value = errs?.[key];
+  if (!value) return '';
+  return Array.isArray(value) ? value.filter(Boolean).join(' ') : String(value);
+}
+
+function normalizeUmId(value: string): string {
+  return value.trim().replace(/^0+(?=\d)/, '');
+}
+
 export default function AddUsersModals({ isOpen, onClose, onUserAdded }: AddUsersModalsProps) {
   const [data, setData] = useState({
     user_fullname: '',
@@ -21,7 +34,8 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }: AddUser
     user_password: ''
   });
   const [processing, setProcessing] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [formError, setFormError] = useState('');
   const [visible, setVisible] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState<PasswordStrength>({ level: '', color: '', text: '' });
 
@@ -55,6 +69,8 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }: AddUser
   useEffect(() => {
     if (isOpen) {
       setVisible(true);
+      setErrors({});
+      setFormError('');
     } else {
       const timer = setTimeout(() => setVisible(false), 200);
       return () => clearTimeout(timer);
@@ -77,15 +93,22 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }: AddUser
       delete next[name];
       return next;
     });
+    setFormError('');
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setProcessing(true);
     setErrors({});
+    setFormError('');
+
+    const payload = {
+      ...data,
+      um_id: normalizeUmId(data.um_id),
+    };
 
     try {
-      const response = await api.post('/admin/users', data);
+      const response = await api.post('/admin/users', payload);
       if (onUserAdded) {
         onUserAdded(response.data.user || null);
       }
@@ -93,10 +116,18 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }: AddUser
       setPasswordStrength({ level: '', color: '', text: '' });
       onClose();
     } catch (error: any) {
-      if (error.response?.data?.errors) {
-        setErrors(error.response.data.errors);
+      const body = error.response?.data;
+      const fieldErrors = body?.errors ?? {};
+      const hasFieldError = ['user_fullname', 'email', 'um_id', 'user_password']
+        .some(key => fieldError(fieldErrors, key) !== '');
+
+      console.error('Add user failed:', error.response?.status, body);
+
+      if (hasFieldError) {
+        setErrors(fieldErrors);
+      } else {
+        setFormError(body?.message || 'Unable to add user. Please check the details and try again.');
       }
-      console.error('Validation errors:', error);
     } finally {
       setProcessing(false);
     }
@@ -138,10 +169,7 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }: AddUser
                 placeholder="Enter full name"
                 required
               />
-              {errors.user_fullname && <p className="text-red-500 text-sm mt-1">{errors.user_fullname}</p>}
-              {errors.user_fullname && errors.user_fullname.toLowerCase().includes('unique') && (
-                <p className="text-red-500 text-sm mt-1">This name is already taken.</p>
-              )}
+              {fieldError(errors, 'user_fullname') && <p className="text-red-500 text-sm mt-1">{fieldError(errors, 'user_fullname')}</p>}
             </div>
 
             <div>
@@ -158,10 +186,7 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }: AddUser
                 placeholder="Enter email address"
                 required
               />
-              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-              {errors.email && errors.email.toLowerCase().includes('unique') && (
-                <p className="text-red-500 text-sm mt-1">This email is already taken.</p>
-              )}
+              {fieldError(errors, 'email') && <p className="text-red-500 text-sm mt-1">{fieldError(errors, 'email')}</p>}
             </div>
 
             <div>
@@ -178,6 +203,7 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }: AddUser
                 placeholder="Enter user ID"
                 required
               />
+              {fieldError(errors, 'um_id') && <p className="text-red-500 text-sm mt-1">{fieldError(errors, 'um_id')}</p>}
             </div>
 
             <div>
@@ -221,9 +247,15 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }: AddUser
                 </div>
               )}
 
-              {errors.user_password && <p className="text-red-500 text-sm mt-1">{errors.user_password}</p>}
+              {fieldError(errors, 'user_password') && <p className="text-red-500 text-sm mt-1">{fieldError(errors, 'user_password')}</p>}
             </div>
           </div>
+
+          {formError && (
+            <div className="mt-4 rounded-lg border border-red-300 bg-red-50 px-3 py-2">
+              <p className="text-red-600 text-sm">{formError}</p>
+            </div>
+          )}
 
           <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200 hover:cursor-pointer">
             <button
