@@ -1,12 +1,12 @@
-    import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import {
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -15,93 +15,91 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { router } from "expo-router";
 
-import OrderCard, {
-  Order,
-} from "../components/orders/OrderCard";
+import OrderCard, { Order } from "../components/orders/OrderCard";
 
-import OrderFilters, {
-  OrderFilter,
-} from "../components/orders/OrderFilters";
-
+import OrderDetailsModal from "../components/orders/OrderDetailsModal";
+import OrderFilters, { OrderFilter } from "../components/orders/OrderFilters";
+import { useCart } from "../context/CartContext";
 
 /* ==========================================
    ORDER DATA
 ========================================== */
-
-const orders: Order[] = [];
-
 
 /* ==========================================
    SCREEN
 ========================================== */
 
 export default function OrdersScreen() {
+  const { placedOrders } = useCart();
 
-  const [selectedFilter, setSelectedFilter] =
-    useState<OrderFilter>("All");
+  const [selectedFilter, setSelectedFilter] = useState<OrderFilter>("All");
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
+  const orders = useMemo<Order[]>(
+    () =>
+      placedOrders.map((placedOrder) => {
+        const firstItem = placedOrder.items[0];
+        const total = placedOrder.items.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0,
+        );
+
+        return {
+          id: placedOrder.id,
+          date: placedOrder.date,
+          status: "To Pay",
+          productName: firstItem.name,
+          quantity: firstItem.quantity,
+          price: firstItem.price,
+          image: firstItem.image,
+          total,
+        };
+      }),
+    [placedOrders],
+  );
 
   /* ========================================
      FILTER ORDERS
   ======================================== */
 
   const filteredOrders = useMemo(() => {
-
     if (selectedFilter === "All") {
       return orders;
     }
 
-    return orders.filter(
-      (order) => order.status === selectedFilter
-    );
+    return orders.filter((order) => order.status === selectedFilter);
+  }, [orders, selectedFilter]);
 
-  }, [selectedFilter]);
-
+  const selectedOrder =
+    placedOrders.find((order) => order.id === selectedOrderId) ?? null;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor="#B00000"
-      />
+      <StatusBar barStyle="light-content" backgroundColor="#B00000" />
 
       {/* ==================================
           HEADER
       ================================== */}
 
       <View style={styles.header}>
-
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace("/tabs");
+            }
+          }}
           style={styles.backButton}
         >
-          <Ionicons
-            name="chevron-back"
-            size={28}
-            color="#FFFFFF"
-          />
+          <Ionicons name="chevron-back" size={28} color="#FFFFFF" />
         </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>
-          My Orders
-        </Text>
-
+        <Text style={styles.headerTitle}>My Orders</Text>
       </View>
 
-
       {/* ==================================
-          FILTERS
-      ================================== */}
-
-      <OrderFilters
-        selected={selectedFilter}
-        onSelect={setSelectedFilter}
-      />
-
-
-      {/* ==================================
-          ORDERS
+          FILTERS AND ORDERS
       ================================== */}
 
       <ScrollView
@@ -109,58 +107,45 @@ export default function OrdersScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
+        <OrderFilters selected={selectedFilter} onSelect={setSelectedFilter} />
 
         {filteredOrders.length > 0 ? (
-
           filteredOrders.map((order) => (
-
             <OrderCard
               key={order.id}
               order={order}
               onPress={() => {
-                console.log(
-                  "Open order:",
-                  order.id
-                );
+                setSelectedOrderId(order.id);
               }}
             />
-
           ))
-
         ) : (
-
           <View style={styles.emptyContainer}>
+            <Text style={styles.emptyIcon}>🛍️</Text>
 
-            <Text style={styles.emptyIcon}>
-              🛍️
-            </Text>
-
-            <Text style={styles.emptyTitle}>
-              No Orders Found
-            </Text>
+            <Text style={styles.emptyTitle}>No Orders Found</Text>
 
             <Text style={styles.emptyText}>
-              You don't have any orders
-              in this category.
+              You don&apos;t have any orders in this category.
             </Text>
-
           </View>
-
         )}
-
       </ScrollView>
 
+      <OrderDetailsModal
+        visible={selectedOrder !== null}
+        order={selectedOrder}
+        onClose={() => setSelectedOrderId(null)}
+      />
     </SafeAreaView>
   );
 }
-
 
 /* ==========================================
    STYLES
 ========================================== */
 
 const styles = StyleSheet.create({
-
   safeArea: {
     flex: 1,
     backgroundColor: "#F7F7F7",
@@ -201,7 +186,7 @@ const styles = StyleSheet.create({
   },
 
   content: {
-    paddingHorizontal: 11,
+    paddingHorizontal: 0,
     paddingBottom: 30,
   },
 
@@ -235,5 +220,4 @@ const styles = StyleSheet.create({
 
     textAlign: "center",
   },
-
 });

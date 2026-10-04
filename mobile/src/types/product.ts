@@ -6,5 +6,6 @@ export type Product = {
   category: string;
   price: string;
   oldPrice?: string;
+  hasSize?: boolean;
   image: ImageSourcePropType;
 };

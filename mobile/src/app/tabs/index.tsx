@@ -36,7 +36,7 @@ const products: Product[] = [
     category: "Shirts",
     price: "₱500.00",
     oldPrice: "₱600.00",
-    image: require("../../assets/images/product-image/cceshirt.jpg"),
+    image: require("../../assets/images/product-image/Shirt/cceshirt.jpg"),
   },
   {
     id: 2,
@@ -44,7 +44,7 @@ const products: Product[] = [
     category: "Bottles",
     price: "₱515.00",
     oldPrice: "₱650.00",
-    image: require("../../assets/images/product-image/wooden-tumbler.jpg"),
+    image: require("../../assets/images/product-image/Drinkware/wooden-tumbler.jpg"),
   },
   {
     id: 3,
@@ -52,7 +52,8 @@ const products: Product[] = [
     category: "Accessories",
     price: "₱180.00",
     oldPrice: "₱220.00",
-    image: require("../../assets/images/product-image/tote-bag.jpg"),
+    hasSize: false,
+    image: require("../../assets/images/product-image/Bags/tote-bag.jpg"),
   },
   {
     id: 4,
@@ -60,7 +61,8 @@ const products: Product[] = [
     category: "Others",
     price: "₱85.00",
     oldPrice: "₱120.00",
-    image: require("../../assets/images/product-image/notebook.png"),
+    hasSize: false,
+    image: require("../../assets/images/product-image/SchoolSupplies/notebook.png"),
   },
   {
     id: 5,
@@ -68,7 +70,7 @@ const products: Product[] = [
     category: "Bottles",
     price: "₱250.00",
     oldPrice: "₱300.00",
-    image: require("../../assets/images/product-image/mug.png"),
+    image: require("../../assets/images/product-image/Drinkware/mug.png"),
   },
 ];
 

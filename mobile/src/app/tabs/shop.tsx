@@ -1,16 +1,22 @@
+import { BottomNavbar } from "@/components/navigation/BottomNavbar";
 import { ShopCategories } from "@/components/navigation/shop/ShopCategories";
 import ShopHeader from "@/components/navigation/shop/ShopHeader";
 import { ShopProductCard } from "@/components/navigation/shop/ShopProductCard";
 import { ShopSearch } from "@/components/navigation/shop/ShopSearch";
-import { BottomNavbar } from "@/components/navigation/BottomNavbar";
+import ProductDetailModal from "@/components/product/ProductDetailModal";
 import { TabContent } from "@/components/tab-content";
 import { useCart } from "@/context/CartContext";
 import { useFavorites } from "@/context/FavoritesContext";
 import type { Product } from "@/types/product";
+import { router } from "expo-router";
 import { useState } from "react";
-import { ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import {
+    ScrollView,
+    StyleSheet,
+    View,
+    useWindowDimensions,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import ProductDetailModal from "@/components/product/ProductDetailModal";
 
 /*
 |--------------------------------------------------------------------------
@@ -27,7 +33,7 @@ const products: Product[] = [
     category: "Jersey",
     price: "₱500.00",
     oldPrice: "₱600.00",
-    image: require("../../assets/images/product-image/cceshirt.jpg"),
+    image: require("../../assets/images/product-image/Shirt/cceshirt.jpg"),
   },
   {
     id: 2,
@@ -35,7 +41,7 @@ const products: Product[] = [
     category: "Drinkware",
     price: "₱515.00",
     oldPrice: "₱650.00",
-    image: require("../../assets/images/product-image/wooden-tumbler.jpg"),
+    image: require("../../assets/images/product-image/Drinkware/wooden-tumbler.jpg"),
   },
   {
     id: 3,
@@ -43,7 +49,8 @@ const products: Product[] = [
     category: "Bags",
     price: "₱180.00",
     oldPrice: "₱220.00",
-    image: require("../../assets/images/product-image/tote-bag.jpg"),
+    hasSize: false,
+    image: require("../../assets/images/product-image/Bags/tote-bag.jpg"),
   },
   {
     id: 4,
@@ -51,7 +58,8 @@ const products: Product[] = [
     category: "School Supplies",
     price: "₱85.00",
     oldPrice: "₱120.00",
-    image: require("../../assets/images/product-image/notebook.png"),
+    hasSize: false,
+    image: require("../../assets/images/product-image/SchoolSupplies/notebook.png"),
   },
   {
     id: 5,
@@ -59,7 +67,7 @@ const products: Product[] = [
     category: "Drinkware",
     price: "₱250.00",
     oldPrice: "₱300.00",
-    image: require("../../assets/images/product-image/mug.png"),
+    image: require("../../assets/images/product-image/Drinkware/mug.png"),
   },
 ];
 
@@ -95,7 +103,6 @@ export default function Shop() {
       .includes(searchQuery.toLowerCase());
 
     return matchesCategory && matchesQuery;
-  
   });
 
   return (
@@ -158,11 +165,10 @@ export default function Shop() {
             setProductModalVisible(false);
           }}
           onBuyNow={(product, quantity, size) => {
-            console.log("BUY NOW", {
-              product: product.name,
-              quantity,
-              size,
-            });
+            addItem(product, quantity);
+            setProductModalVisible(false);
+            setSelectedProduct(null);
+            router.push("/tabs/checkout");
           }}
         />
       </View>

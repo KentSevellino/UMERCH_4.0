@@ -44,7 +44,7 @@ export default function ProductDetailModal({
   onAddToCart,
   onBuyNow,
 }: Props) {
-  const [selectedSize, setSelectedSize] = useState("M");
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
 
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -191,43 +191,47 @@ export default function ProductDetailModal({
 
               {/* ================= SIZE ================= */}
 
-              <Text style={styles.sectionTitle}>
-                Size
-              </Text>
+              {product.hasSize !== false && (
+                <>
+                  <Text style={styles.sectionTitle}>
+                    Size
+                  </Text>
 
-              <View style={styles.sizeContainer}>
+                  <View style={styles.sizeContainer}>
 
-                {sizes.map((size) => {
+                    {sizes.map((size) => {
 
-                  const active =
-                    selectedSize === size;
+                      const active =
+                        selectedSize === size;
 
-                  return (
-                    <TouchableOpacity
-                      key={size}
-                      onPress={() =>
-                        setSelectedSize(size)
-                      }
-                      style={[
-                        styles.sizeButton,
-                        active &&
-                          styles.sizeButtonActive,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.sizeText,
-                          active &&
-                            styles.sizeTextActive,
-                        ]}
-                      >
-                        {size}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
+                      return (
+                        <TouchableOpacity
+                          key={size}
+                          onPress={() =>
+                            setSelectedSize(size)
+                          }
+                          style={[
+                            styles.sizeButton,
+                            active &&
+                              styles.sizeButtonActive,
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.sizeText,
+                              active &&
+                                styles.sizeTextActive,
+                            ]}
+                          >
+                            {size}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
 
-              </View>
+                  </View>
+                </>
+              )}
 
               {/* ================= QUANTITY ================= */}
 
@@ -283,7 +287,7 @@ export default function ProductDetailModal({
                 onAddToCart(
                   product,
                   quantity,
-                  selectedSize
+                  selectedSize ?? ""
                 )
               }
             >
@@ -305,7 +309,7 @@ export default function ProductDetailModal({
                 onBuyNow(
                   product,
                   quantity,
-                  selectedSize
+                  selectedSize ?? ""
                 )
               }
             >
@@ -495,7 +499,9 @@ const styles = StyleSheet.create({
 
   sizeButtonActive: {
     borderColor: "#D60000",
-    backgroundColor: "#FFF6F6",
+    borderWidth: 2,
+
+    backgroundColor: "#FDE7E7",
   },
 
   sizeText: {

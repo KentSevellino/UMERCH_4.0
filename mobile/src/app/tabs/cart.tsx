@@ -1,11 +1,18 @@
+import { BottomNavbar } from "@/components/navigation/BottomNavbar";
 import CartHeader from "@/components/navigation/cart/CartHeader";
 import { CartItem } from "@/components/navigation/cart/CartItem";
 import { CartSummary } from "@/components/navigation/cart/CartSummary";
 import { CheckoutButton } from "@/components/navigation/cart/CheckoutButton";
-import { BottomNavbar } from "@/components/navigation/BottomNavbar";
 import { TabContent } from "@/components/tab-content";
 import { useCart } from "@/context/CartContext";
-import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { router } from "expo-router";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const SHIPPING = 0;
@@ -27,7 +34,7 @@ export default function Cart() {
 
   const subtotal = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
-    0
+    0,
   );
 
   const total = subtotal + SHIPPING;
@@ -65,7 +72,7 @@ export default function Cart() {
 
                 <CheckoutButton
                   onPress={() => {
-                    console.log("Check out");
+                    router.push("/tabs/checkout");
                   }}
                 />
               </>
@@ -87,7 +94,7 @@ export default function Cart() {
             BOTTOM NAVIGATION
         ====================================================== */}
 
-        <BottomNavbar activeTab="home" />
+        <BottomNavbar activeTab="cart" />
       </View>
     </SafeAreaView>
   );

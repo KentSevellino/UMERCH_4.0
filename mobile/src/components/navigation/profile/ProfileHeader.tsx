@@ -1,22 +1,12 @@
 import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-} from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { View, Text, StyleSheet, Image } from "react-native";
 
 type Props = {
   scale?: number;
-  notificationCount?: number;
+  title?: string;
 };
 
-export default function ProfileHeader({
-  scale = 1,
-  notificationCount = 2,
-}: Props) {
+export default function ProfileHeader({ scale = 1, title = "Profile" }: Props) {
   return (
     <View
       style={[
@@ -27,11 +17,9 @@ export default function ProfileHeader({
         },
       ]}
     >
-
       {/* Logo + Title */}
 
       <View style={styles.left}>
-
         <Image
           source={require("../../../assets/images/umerch-logo.png")}
           style={[
@@ -52,31 +40,9 @@ export default function ProfileHeader({
             },
           ]}
         >
-          Profile
+          {title}
         </Text>
-
       </View>
-
-      {/* Notification */}
-
-      <TouchableOpacity style={styles.notification}>
-
-        <Ionicons
-          name="notifications-outline"
-          size={25 * scale}
-          color="#FFFFFF"
-        />
-
-        {notificationCount > 0 && (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>
-              {notificationCount}
-            </Text>
-          </View>
-        )}
-
-      </TouchableOpacity>
-
     </View>
   );
 }
@@ -88,7 +54,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-
   },
 
   left: {
@@ -102,38 +67,6 @@ const styles = StyleSheet.create({
 
   title: {
     color: "#FFFFFF",
-    fontWeight: "800",
-  },
-
-  notification: {
-    width: 42,
-    height: 42,
-
-    justifyContent: "center",
-    alignItems: "center",
-
-    position: "relative",
-  },
-
-  badge: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-
-    width: 18,
-    height: 18,
-
-    borderRadius: 9,
-
-    backgroundColor: "#FFFFFF",
-
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  badgeText: {
-    color: "#B00000",
-    fontSize: 9,
     fontWeight: "800",
   },
 });

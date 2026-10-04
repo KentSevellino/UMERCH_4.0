@@ -78,7 +78,7 @@ export function ShopProductCard({
         <View style={styles.priceRow}>
           <Text style={styles.productPrice}>{product.price}</Text>
 
-          <Text style={styles.oldPrice}>{product.oldPrice}</Text>
+
         </View>
       </View>
     </TouchableOpacity>
@@ -178,14 +178,6 @@ const createStyles = (scale: number, gridCardWidth: number) =>
       fontSize: Math.max(14, Math.round(15 * scale)),
 
       fontWeight: "800",
-    },
-
-    oldPrice: {
-      color: "#A5A5A5",
-
-      fontSize: Math.max(11, Math.round(11 * scale)),
-
-      textDecorationLine: "line-through",
     },
     
   });

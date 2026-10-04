@@ -1,12 +1,17 @@
+import { BottomNavbar } from "@/components/navigation/BottomNavbar";
 import { LogoutButton } from "@/components/navigation/profile/LogoutButton";
+import { ProfileDetails } from "@/components/navigation/profile/ProfileDetails";
 import ProfileHeader from "@/components/navigation/profile/ProfileHeader";
 import { ProfileInfo } from "@/components/navigation/profile/ProfileInfo";
-import { ProfileDetails } from "@/components/navigation/profile/ProfileDetails";
-import { useProfileImage } from "@/hooks/use-profile-image";
-import { BottomNavbar } from "@/components/navigation/BottomNavbar";
 import { TabContent } from "@/components/tab-content";
+import { useProfileImage } from "@/hooks/use-profile-image";
 import { router } from "expo-router";
-import { ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Profile() {
@@ -21,23 +26,11 @@ export default function Profile() {
   const handleMenuPress = (id: string) => {
     switch (id) {
       case "personal":
-        console.log("Personal Information");
+        router.push("/personal-information");
         break;
 
       case "orders":
         router.push("/orders");
-        break;
-
-      case "favorites":
-        router.push("/tabs/favorites");
-        break;
-
-      case "support":
-        console.log("Help & Support");
-        break;
-
-      case "settings":
-        console.log("Settings");
         break;
 
       default:
@@ -56,7 +49,7 @@ export default function Profile() {
             HEADER
         ================================================== */}
 
-        <ProfileHeader scale={scale} notificationCount={2} />
+        <ProfileHeader scale={scale} />
 
         {/* ==================================================
             CONTENT

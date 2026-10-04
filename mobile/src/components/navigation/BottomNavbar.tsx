@@ -106,7 +106,10 @@ export function BottomNavbar({ activeTab }: BottomNavbarProps) {
       {/* SHOP */}
 
       <TouchableOpacity
-        style={styles.cartButton}
+        style={[
+          styles.cartButton,
+          activeTab === "shop" && styles.activeCartButton,
+        ]}
         activeOpacity={0.8}
         onPress={() => {
           router.push("/tabs/shop");
@@ -115,7 +118,7 @@ export function BottomNavbar({ activeTab }: BottomNavbarProps) {
         <Ionicons
           name="bag-handle"
           size={Math.round(30 * scale)}
-          color="#FFFFFF"
+          color="#ffffff"
         />
       </TouchableOpacity>
 
@@ -234,5 +237,15 @@ const createStyles = (scale: number, bottomInset: number) =>
       shadowRadius: 4,
 
       elevation: 5,
+    },
+
+    activeCartButton: {
+      backgroundColor: "#E50000",
+
+      borderWidth: Math.max(2, Math.round(2 * scale)),
+      borderColor: "#FF9A9A",
+
+      shadowOpacity: 0.35,
+      elevation: 8,
     },
   });
