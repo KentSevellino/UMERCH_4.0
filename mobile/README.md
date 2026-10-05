@@ -75,10 +75,28 @@ The mobile app uses the Laravel API in the sibling `backend` directory.
    # EXPO_PUBLIC_API_URL=http://192.168.x.x:8000/api
    ```
 
+   The mobile app signs in with the email and password created by an admin.
+   For a normal user, `POST /api/login` sends a six-digit OTP to that user's
+   email, and the app verifies it through `POST /api/verify-otp`. Android
+   emulators use `10.0.2.2`; physical devices need the computer's LAN IP.
+
 The existing email login is `POST /api/login` and the product catalog is
 `GET /api/products`. OTP delivery also requires valid mail settings in the
 backend `.env` file. Product images uploaded through Laravel are returned as
 public `image_url` values by the API.
+
+For Gmail OTP delivery, configure the backend with an app password:
+
+```env
+MAIL_MAILER=smtp
+MAIL_SCHEME=smtps
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=465
+MAIL_USERNAME=your-sending-account@gmail.com
+MAIL_PASSWORD=your-gmail-app-password
+MAIL_FROM_ADDRESS=your-sending-account@gmail.com
+MAIL_FROM_NAME="Umerch"
+```
 
 To learn more about developing your project with Expo, look at the following resources:
 

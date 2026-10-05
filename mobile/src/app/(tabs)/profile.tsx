@@ -4,6 +4,7 @@ import { LogoutButton } from "@/components/profile/LogoutButton";
 import { ProfileDetails } from "@/components/profile/ProfileDetails";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import { ProfileInfo } from "@/components/profile/ProfileInfo";
+import { useAuth } from "@/context/AuthContext";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import { router } from "expo-router";
 import {
@@ -22,6 +23,7 @@ export default function Profile() {
   const styles = createStyles(scale, width);
 
   const { avatarUri, changeProfileImage } = useProfileImage();
+  const { logout } = useAuth();
 
   const handleMenuPress = (id: string) => {
     switch (id) {
@@ -38,8 +40,12 @@ export default function Profile() {
     }
   };
 
-  const handleLogout = () => {
-    router.replace("/login");
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      router.replace("/login");
+    }
   };
 
   return (

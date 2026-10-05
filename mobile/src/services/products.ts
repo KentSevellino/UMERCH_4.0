@@ -1,7 +1,7 @@
 import type { ImageSourcePropType } from "react-native";
 
-import { API_URL, request } from "./api";
 import type { Product } from "@/types/product";
+import { API_URL, request } from "./apiClient";
 
 export type ApiInventoryRow = {
   inventory_id: number;
@@ -21,6 +21,9 @@ export type ApiProduct = {
   product_stock: number;
   variant: string;
   variant_type: string | null;
+  category?: string | null;
+  category_name?: string | null;
+  product_category?: string | null;
   status: string;
   inventory: ApiInventoryRow[];
 };
@@ -52,7 +55,7 @@ export const SHOP_TAXONOMY: CategoryTaxonomy = {
 const STORAGE_BASE = API_URL.replace(/\/api\/?$/, "");
 
 export function normalizeImageUrl(
-  path?: string | null
+  path?: string | null,
 ): ImageSourcePropType | null {
   if (!path) return null;
 
@@ -78,7 +81,7 @@ const CATEGORY_RULES: CategoryRule[] = [
 
 export function deriveCategory(
   name: string,
-  taxonomy: CategoryTaxonomy
+  taxonomy: CategoryTaxonomy,
 ): string {
   const match = CATEGORY_RULES.find((rule) => rule.pattern.test(name));
 
@@ -93,27 +96,40 @@ function toPriceLabel(value: string): string {
 
 export function mapToProduct(
   row: ApiProduct,
-  taxonomy: CategoryTaxonomy
+  taxonomy: CategoryTaxonomy,
 ): Product {
   const variants = Array.from(
     new Set(
       (row.inventory ?? [])
-        .filter((entry) => entry.quantity > 0)
         .map((entry) => entry.variant.trim())
-        .filter(Boolean)
-    )
+        .filter(Boolean),
+    ),
+  );
+  const variantStocks = Object.fromEntries(
+    (row.inventory ?? []).map((entry) => [
+      entry.variant.trim(),
+      Math.max(0, Number(entry.quantity) || 0),
+    ]),
   );
 
   return {
     id: row.product_id,
     name: row.product_name,
-    category: deriveCategory(row.product_name, taxonomy),
+    category:
+      row.category ??
+      row.category_name ??
+      row.product_category ??
+      deriveCategory(row.product_name, taxonomy),
     price: toPriceLabel(row.product_price),
     image:
       normalizeImageUrl(row.product_image) ??
       require("../assets/images/umerch-logo.png"),
     description: row.product_description ?? undefined,
     variants: variants.length > 0 ? variants : undefined,
+    variantStocks,
+    variant: row.variant?.trim() || undefined,
+    variantType: row.variant_type?.trim() || undefined,
+    hasSize: /size/i.test(row.variant_type ?? ""),
     stock: row.product_stock,
   };
 }

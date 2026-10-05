@@ -1,7 +1,7 @@
-import { request } from "./api";
-import { getToken } from "./token-storage";
-import { normalizeImageUrl } from "./products";
 import type { ImageSourcePropType } from "react-native";
+import { request } from "./apiClient";
+import { normalizeImageUrl } from "./products";
+import { getToken } from "./tokenStorage";
 
 export type OrderCartItem = {
   cartItemId?: number;
@@ -13,6 +13,7 @@ export type OrderCartItem = {
 
 export type PlaceOrderInput = {
   cartItems: OrderCartItem[];
+  paymentMethod?: "cashier" | "salary_deduction";
   fulfillmentMethod: string;
   campus?: string | null;
 };
@@ -27,6 +28,9 @@ export type ApiOrderItem = {
     product_name: string;
     product_image: string | null;
     product_description: string | null;
+    category?: string | null;
+    category_name?: string | null;
+    product_category?: string | null;
   } | null;
 };
 
@@ -46,6 +50,8 @@ export type OrderCardData = {
   date: string;
   status: "To Pay" | "To Receive" | "Completed" | "Canceled";
   productName: string;
+  category?: string;
+  variant?: string;
   quantity: number;
   price: number;
   image: ImageSourcePropType;
@@ -56,7 +62,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<number> {
     method: "POST",
     token: await getToken(),
     body: {
-      payment_method: "cashier",
+      payment_method: input.paymentMethod ?? "cashier",
       fulfillment_method: input.fulfillmentMethod,
       campus: input.campus ?? null,
       cart_items: input.cartItems.map((item) => ({
@@ -88,6 +94,11 @@ export function toOrderCardData(order: ApiOrder): OrderCardData {
   const first = items[0];
   const quantity = items.reduce((sum, item) => sum + (item.quantity ?? 0), 0);
   const name = first?.product?.product_name ?? "Order";
+  const category =
+    first?.product?.category ??
+    first?.product?.category_name ??
+    first?.product?.product_category ??
+    undefined;
 
   const status = (() => {
     switch ((order.order_status ?? "").toLowerCase()) {
@@ -115,10 +126,13 @@ export function toOrderCardData(order: ApiOrder): OrderCardData {
         })
       : "",
     status,
-    productName:
-      items.length > 1 ? `${name} +${items.length - 1} more` : name,
+    productName: items.length > 1 ? `${name} +${items.length - 1} more` : name,
+    category,
+    variant: first?.variant ?? undefined,
     quantity: quantity || 1,
     price: toNumber(order.order_total),
-    image: normalizeImageUrl(first?.product?.product_image) ?? require("../assets/images/umerch-logo.png"),
+    image:
+      normalizeImageUrl(first?.product?.product_image) ??
+      require("../assets/images/umerch-logo.png"),
   };
 }

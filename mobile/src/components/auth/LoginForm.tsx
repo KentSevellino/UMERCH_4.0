@@ -4,36 +4,28 @@ import { getSavedCredentials } from "@/services/credentialStorage";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import {
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  useWindowDimensions,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+    useWindowDimensions,
 } from "react-native";
 
 type LoginFormProps = {
   onLogin: (email: string, password: string, rememberMe: boolean) => void;
   onForgotPassword: () => void;
   onGoogleLogin: () => void;
-<<<<<<< HEAD
   loading?: boolean;
   error?: string | null;
-=======
-  isSubmitting?: boolean;
->>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
 };
 
 export function LoginForm({
   onLogin,
   onForgotPassword,
   onGoogleLogin,
-<<<<<<< HEAD
   loading = false,
   error = null,
-=======
-  isSubmitting = false,
->>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
 }: LoginFormProps) {
   const { width } = useWindowDimensions();
 
@@ -118,24 +110,14 @@ export function LoginForm({
         <TouchableOpacity
           style={[styles.signInButton, loading && styles.signInButtonDisabled]}
           onPress={() => {
-<<<<<<< HEAD
             if (loading) return;
-            onLogin(email, password);
+            onLogin(email.trim(), password, rememberMe);
           }}
           disabled={loading}
           activeOpacity={0.8}
         >
           <Text style={styles.signInText}>
-            {loading ? "Signing in…" : "Sign In"}
-=======
-            onLogin(email.trim(), password, rememberMe);
-          }}
-          disabled={isSubmitting}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.signInText}>
-            {isSubmitting ? "Signing in..." : "Sign In"}
->>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
+            {loading ? "Signing in..." : "Sign In"}
           </Text>
         </TouchableOpacity>
       </View>

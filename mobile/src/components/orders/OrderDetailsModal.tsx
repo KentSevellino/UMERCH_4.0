@@ -1,19 +1,20 @@
 import { Ionicons } from "@expo/vector-icons";
 import {
-  Image,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Image,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
-import type { PlacedOrder } from "@/context/CartContext";
+import type { ApiOrder } from "@/services/orders";
+import { normalizeImageUrl } from "@/services/products";
 
 type OrderDetailsModalProps = {
   visible: boolean;
-  order: PlacedOrder | null;
+  order: ApiOrder | null;
   onClose: () => void;
 };
 
@@ -26,10 +27,14 @@ export default function OrderDetailsModal({
     return null;
   }
 
-  const total = order.items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0,
-  );
+  const items = order.order_items ?? [];
+  const total =
+    Number(order.order_total) ||
+    items.reduce(
+      (sum, item) =>
+        sum + Number(item.subtotal || Number(item.price) * item.quantity),
+      0,
+    );
 
   return (
     <Modal
@@ -43,7 +48,7 @@ export default function OrderDetailsModal({
           <View style={styles.header}>
             <View>
               <Text style={styles.title}>Order Details</Text>
-              <Text style={styles.orderNumber}>#{order.id}</Text>
+              <Text style={styles.orderNumber}>#{order.order_id}</Text>
             </View>
             <TouchableOpacity
               accessibilityLabel="Close order details"
@@ -64,32 +69,46 @@ export default function OrderDetailsModal({
               </View>
               <View>
                 <Text style={styles.statusLabel}>Order Status</Text>
-                <Text style={styles.statusValue}>To Pay</Text>
+                <Text style={styles.statusValue}>{order.order_status}</Text>
               </View>
             </View>
 
+            <Text style={styles.fulfillment}>
+              {order.fulfillment_method === "pickup" ? "Pick-Up" : "Delivery"}
+              {order.campus ? ` | ${order.campus}` : ""}
+            </Text>
+
             <Text style={styles.sectionTitle}>Ordered Products</Text>
 
-            {order.items.map((item, index) => (
-              <View key={`${order.id}-${item.id}`}>
+            {items.map((item, index) => (
+              <View key={`${order.order_id}-${index}`}>
                 <View style={styles.productRow}>
-                  <Image source={item.image} style={styles.productImage} />
+                  <Image
+                    source={
+                      normalizeImageUrl(item.product?.product_image) ??
+                      require("../../assets/images/umerch-logo.png")
+                    }
+                    style={styles.productImage}
+                  />
                   <View style={styles.productInfo}>
                     <Text style={styles.productName} numberOfLines={2}>
-                      {item.name}
+                      {item.product?.product_name ?? "Product"}
                     </Text>
-                    <Text style={styles.productDetail}>{item.category}</Text>
+                    <Text style={styles.productDetail}>
+                      {item.variant || "No variety"}
+                    </Text>
                     <Text style={styles.productDetail}>
                       Qty: {item.quantity}
                     </Text>
                   </View>
                   <Text style={styles.productPrice}>
-                    ₱{(item.price * item.quantity).toFixed(2)}
+                    ₱
+                    {Number(
+                      item.subtotal || Number(item.price) * item.quantity,
+                    ).toFixed(2)}
                   </Text>
                 </View>
-                {index < order.items.length - 1 && (
-                  <View style={styles.divider} />
-                )}
+                {index < items.length - 1 && <View style={styles.divider} />}
               </View>
             ))}
 
@@ -140,6 +159,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   content: { paddingVertical: 16 },
+  fulfillment: {
+    color: "#71819A",
+    fontSize: 13,
+    marginBottom: 16,
+  },
   statusCard: {
     flexDirection: "row",
     alignItems: "center",

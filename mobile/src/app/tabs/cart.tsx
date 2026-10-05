@@ -7,15 +7,12 @@ import { BottomNavbar } from "@/components/navigation/BottomNavbar";
 import { useCart } from "@/context/CartContext";
 import { router } from "expo-router";
 import {
-<<<<<<< HEAD
-  Alert,
-=======
->>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  useWindowDimensions,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
+    useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -34,12 +31,19 @@ export default function Cart() {
 
   const styles = createStyles(scale, width);
 
-  const { items, totalCount, removeItem, updateQuantity } = useCart();
+  const {
+    items,
+    selectedCartItemIds,
+    toggleItemSelection,
+    totalCount,
+    removeItem,
+    updateQuantity,
+  } = useCart();
 
   const reportError = (title: string, error: unknown) => {
     Alert.alert(
       title,
-      error instanceof Error ? error.message : "Please try again."
+      error instanceof Error ? error.message : "Please try again.",
     );
   };
 
@@ -84,6 +88,12 @@ export default function Cart() {
               <CartItem
                 key={item.cartItemId ?? item.id}
                 item={item}
+                selected={selectedCartItemIds.includes(
+                  item.cartItemId ?? item.id,
+                )}
+                onToggleSelection={() =>
+                  toggleItemSelection(item.cartItemId ?? item.id)
+                }
                 onChangeQuantity={handleChangeQuantity}
                 onRemove={handleRemove}
               />
@@ -99,11 +109,7 @@ export default function Cart() {
 
                 <CheckoutButton
                   onPress={() => {
-<<<<<<< HEAD
                     router.push("/checkout");
-=======
-                    router.push("/tabs/checkout");
->>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
                   }}
                 />
               </>

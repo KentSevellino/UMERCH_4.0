@@ -12,11 +12,11 @@ import type { Product } from "@/types/product";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  useWindowDimensions,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
+    useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -124,11 +124,11 @@ export default function Shop() {
             setSelectedProduct(null);
           }}
           onAddToCart={(product, quantity, size) => {
-            addItem(product, quantity);
+            addItem(product, quantity, size);
             setProductModalVisible(false);
           }}
-          onBuyNow={(product, quantity, size) => {
-            addItem(product, quantity);
+          onBuyNow={async (product, quantity, size) => {
+            await addItem(product, quantity, size);
             setProductModalVisible(false);
             setSelectedProduct(null);
             router.push("/checkout");

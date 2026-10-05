@@ -1,15 +1,9 @@
 import { AuthenticationProgressModal } from "@/components/auth/AuthenticationProgressModal";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { useAuth } from "@/context/AuthContext";
-<<<<<<< HEAD
-import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { useState } from "react";
-=======
->>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
 import {
-  clearCredentials,
-  saveCredentials,
+    clearCredentials,
+    saveCredentials,
 } from "@/services/credentialStorage";
 import { Ionicons } from "@expo/vector-icons";
 import { makeRedirectUri } from "expo-auth-session";
@@ -17,15 +11,15 @@ import * as Google from "expo-auth-session/providers/google";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  useWindowDimensions,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+    useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -76,6 +70,7 @@ export default function Login() {
       .then((result) => {
         setProgressStatus("success");
         setTimeout(() => {
+          setIsSubmitting(false);
           router.replace(result.otp_required ? "/otp" : "/home");
         }, 900);
       })
@@ -90,33 +85,6 @@ export default function Login() {
 
   const styles = createStyles(scale, width, height);
 
-<<<<<<< HEAD
-  const { login } = useAuth();
-
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleLogin = async (email: string, password: string) => {
-    setError(null);
-    setSubmitting(true);
-
-    try {
-      const result = await login(email.trim(), password);
-
-      if (result.otp_required) {
-        router.replace("/otp");
-        return;
-      }
-
-      router.replace("/tabs");
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Sign in failed. Try again."
-      );
-    } finally {
-      setSubmitting(false);
-    }
-=======
   const handleLogin = (
     email: string,
     password: string,
@@ -139,6 +107,7 @@ export default function Login() {
         ).then(() => {
           setProgressStatus("success");
           setTimeout(() => {
+            setIsSubmitting(false);
             router.replace(result.otp_required ? "/otp" : "/home");
           }, 900);
         }),
@@ -147,7 +116,6 @@ export default function Login() {
         setIsSubmitting(false);
         Alert.alert("Sign in failed", error.message);
       });
->>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
   };
 
   const handleForgotPassword = () => {
@@ -205,12 +173,7 @@ export default function Login() {
             onLogin={handleLogin}
             onForgotPassword={handleForgotPassword}
             onGoogleLogin={handleGoogleLogin}
-<<<<<<< HEAD
-            loading={submitting}
-            error={error}
-=======
-            isSubmitting={isSubmitting}
->>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
+            loading={isSubmitting}
           />
         </ScrollView>
       </KeyboardAvoidingView>

@@ -9,12 +9,9 @@ export type Product = {
   hasSize?: boolean;
   image: ImageSourcePropType;
   description?: string;
-<<<<<<< HEAD
   variants?: string[];
-  stock?: number;
-=======
+  variantStocks?: Record<string, number>;
   stock?: number;
   variant?: string;
   variantType?: string;
->>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
 };

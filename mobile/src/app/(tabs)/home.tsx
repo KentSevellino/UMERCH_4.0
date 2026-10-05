@@ -11,14 +11,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-  Image,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  useWindowDimensions,
+    Image,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+    useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -254,10 +254,11 @@ export default function Home() {
             setSelectedProduct(null);
           }}
           onAddToCart={(product, quantity, size) => {
-            addItem(product, quantity);
+            addItem(product, quantity, size);
             setProductModalVisible(false);
           }}
           onBuyNow={(product, quantity, size) => {
+            addItem(product, quantity, size);
             console.log("BUY NOW", {
               product: product.name,
               quantity,

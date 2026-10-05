@@ -1,31 +1,23 @@
-<<<<<<< HEAD
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
-import type { CartItemData } from "@/components/navigation/cart/CartItem";
+import type { CartItemData } from "@/components/cart/CartItem";
 import { useAuth } from "@/context/AuthContext";
 import {
-  addToCart,
-  fetchCart,
-  removeCartItem,
-  updateCartQuantity,
-  type ApiCartItem,
+    addToCart,
+    fetchCart,
+    removeCartItem,
+    updateCartQuantity,
+    type ApiCartItem,
 } from "@/services/cart";
-import { normalizeImageUrl, SHOP_TAXONOMY, deriveCategory } from "@/services/products";
-=======
-import type { CartItemData } from "@/components/cart/CartItem";
->>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
+import {
+    deriveCategory,
+    normalizeImageUrl,
+    SHOP_TAXONOMY,
+} from "@/services/products";
 import type { Product } from "@/types/product";
 import {
     createContext,
     useCallback,
     useContext,
+    useEffect,
     useMemo,
     useState,
     type ReactNode,
@@ -33,21 +25,23 @@ import {
 
 type CartContextValue = {
   items: CartItemData[];
+  selectedItems: CartItemData[];
+  selectedCartItemIds: number[];
+  toggleItemSelection: (cartItemId: number) => void;
+  selectAllItems: () => void;
   placedOrderItems: CartItemData[];
   placedOrders: PlacedOrder[];
   totalCount: number;
   bump: number;
-<<<<<<< HEAD
-  addItem: (product: Product, quantity: number, variant: string) => Promise<void>;
+  addItem: (
+    product: Product,
+    quantity: number,
+    variant?: string,
+  ) => Promise<void>;
+  placeOrder: () => void;
   removeItem: (cartItemId: number) => Promise<void>;
   updateQuantity: (cartItemId: number, quantity: number) => Promise<void>;
   refresh: () => Promise<void>;
-=======
-  addItem: (product: Product, quantity: number) => void;
-  placeOrder: () => void;
-  removeItem: (id: number) => void;
-  updateQuantity: (id: number, quantity: number) => void;
->>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
 };
 
 export type PlacedOrder = {
@@ -57,10 +51,9 @@ export type PlacedOrder = {
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
-
 const EMPTY_ITEMS: CartItemData[] = [];
 
-const toNumber = (value: string) =>
+const toNumber = (value: string | number) =>
   parseFloat(String(value).replace(/[^\d.]/g, "")) || 0;
 
 function toCartItem(row: ApiCartItem): CartItemData {
@@ -70,178 +63,125 @@ function toCartItem(row: ApiCartItem): CartItemData {
     id: row.product_id,
     cartItemId: row.cart_item_id,
     name,
-    category: deriveCategory(name, SHOP_TAXONOMY),
+    category:
+      row.product?.category ??
+      row.product?.category_name ??
+      row.product?.product_category ??
+      deriveCategory(name, SHOP_TAXONOMY),
     price: toNumber(row.price),
     image:
       normalizeImageUrl(row.product?.product_image) ??
       require("../assets/images/umerch-logo.png"),
     quantity: row.quantity,
-    variant: row.variant ?? "",
+    variant: row.variant ?? row.product?.variant ?? "",
   };
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
-<<<<<<< HEAD
   const { status } = useAuth();
-
   const [storedItems, setStoredItems] = useState<CartItemData[]>([]);
-=======
-  const [items, setItems] = useState<CartItemData[]>([]);
+  const [selectedCartItemIds, setSelectedCartItemIds] = useState<number[]>([]);
   const [placedOrderItems, setPlacedOrderItems] = useState<CartItemData[]>([]);
   const [placedOrders, setPlacedOrders] = useState<PlacedOrder[]>([]);
->>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
   const [bump, setBump] = useState(0);
-
   const items = status === "authenticated" ? storedItems : EMPTY_ITEMS;
 
-<<<<<<< HEAD
-  const refresh = useCallback(
-    () =>
-      fetchCart()
-        .then((rows) => {
-          setStoredItems(rows.map(toCartItem));
-        })
-        .catch(() => setStoredItems((current) => current)),
-    []
-  );
+  const refresh = useCallback(async () => {
+    try {
+      const rows = await fetchCart();
+      const nextItems = rows.map(toCartItem);
+      setStoredItems(nextItems);
+      setSelectedCartItemIds((current) => {
+        const availableIds = new Set(
+          nextItems.map((item) => item.cartItemId ?? item.id),
+        );
+        const retainedIds = current.filter((id) => availableIds.has(id));
+        return retainedIds.length > 0 || current.length > 0
+          ? retainedIds
+          : nextItems.map((item) => item.cartItemId ?? item.id);
+      });
+    } catch {
+      setStoredItems((current) => current);
+    }
+  }, []);
+
+  const toggleItemSelection = useCallback((cartItemId: number) => {
+    setSelectedCartItemIds((current) =>
+      current.includes(cartItemId)
+        ? current.filter((id) => id !== cartItemId)
+        : [...current, cartItemId],
+    );
+  }, []);
+
+  const selectAllItems = useCallback(() => {
+    const itemIds = items.map((item) => item.cartItemId ?? item.id);
+    setSelectedCartItemIds((current) =>
+      itemIds.length > 0 && itemIds.every((id) => current.includes(id))
+        ? []
+        : itemIds,
+    );
+  }, [items]);
 
   useEffect(() => {
-    if (status !== "authenticated") return;
-
-    void refresh();
+    if (status === "authenticated") void refresh();
   }, [status, refresh]);
 
   const addItem = useCallback(
-    async (product: Product, quantity: number, variant: string) => {
+    async (product: Product, quantity: number, variant = "") => {
       const price = toNumber(product.price);
-
-      setStoredItems((current) => {
-        const existing = current.find(
-          (item) => item.id === product.id && item.variant === variant
-=======
-      if (existing) {
-        return current.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
-            : item,
->>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
-        );
-
-        if (existing) {
-          return current.map((item) =>
-            item === existing ? { ...item, quantity: item.quantity + quantity } : item
-          );
-        }
-
-        return [
-          ...current,
-          {
-            id: product.id,
-            name: product.name,
-            category: product.category,
-            price,
-            image: product.image,
-            quantity,
-            variant,
-          },
-        ];
-      });
-
-      try {
-        await addToCart({
-          productId: product.id,
-          variant,
-          quantity,
-          price,
-        });
-
-        await refresh();
-        setBump((current) => current + 1);
-      } catch (error) {
-        await refresh();
-        throw error;
-      }
+      await addToCart({ productId: product.id, variant, quantity, price });
+      await refresh();
+      setBump((current) => current + 1);
     },
-    [refresh]
+    [refresh],
   );
 
-<<<<<<< HEAD
+  const placeOrder = useCallback(() => {
+    if (items.length === 0) return;
+    setPlacedOrderItems(items);
+    setPlacedOrders((current) => [
+      { id: `${Date.now()}`, date: "Placed just now", items },
+      ...current,
+    ]);
+  }, [items]);
+
   const removeItem = useCallback(
     async (cartItemId: number) => {
-      setStoredItems((current) => current.filter((item) => item.cartItemId !== cartItemId));
-
-      try {
-        await removeCartItem(cartItemId);
-        await refresh();
-      } catch (error) {
-        await refresh();
-        throw error;
-      }
+      await removeCartItem(cartItemId);
+      await refresh();
     },
-    [refresh]
+    [refresh],
   );
 
   const updateQuantity = useCallback(
     async (cartItemId: number, quantity: number) => {
       if (quantity < 1) return;
-
-      setStoredItems((current) =>
-        current.map((item) =>
-          item.cartItemId === cartItemId ? { ...item, quantity } : item
-        )
-      );
-
-      try {
-        await updateCartQuantity(cartItemId, quantity);
-        await refresh();
-      } catch (error) {
-        await refresh();
-        throw error;
-      }
+      await updateCartQuantity(cartItemId, quantity);
+      await refresh();
     },
-    [refresh]
+    [refresh],
   );
-=======
-  const placeOrder = useCallback(() => {
-    if (items.length === 0) {
-      return;
-    }
-
-    setPlacedOrderItems(items);
-    setPlacedOrders((current) => [
-      {
-        id: `${Date.now()}`,
-        date: "Placed just now",
-        items,
-      },
-      ...current,
-    ]);
-    setItems([]);
-  }, [items]);
-
-  const removeItem = useCallback((id: number) => {
-    setItems((current) => current.filter((item) => item.id !== id));
-  }, []);
-
-  const updateQuantity = useCallback((id: number, quantity: number) => {
-    setItems((current) =>
-      current.map((item) => (item.id === id ? { ...item, quantity } : item)),
-    );
-  }, []);
->>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
 
   const totalCount = useMemo(
     () => items.reduce((sum, item) => sum + item.quantity, 0),
     [items],
   );
 
+  const selectedItems = useMemo(
+    () =>
+      items.filter((item) =>
+        selectedCartItemIds.includes(item.cartItemId ?? item.id),
+      ),
+    [items, selectedCartItemIds],
+  );
+
   const value = useMemo(
-<<<<<<< HEAD
-    () => ({ items, totalCount, bump, addItem, removeItem, updateQuantity, refresh }),
-    [items, totalCount, bump, addItem, removeItem, updateQuantity, refresh]
-=======
     () => ({
       items,
+      selectedItems,
+      selectedCartItemIds,
+      toggleItemSelection,
+      selectAllItems,
       placedOrderItems,
       placedOrders,
       totalCount,
@@ -250,9 +190,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       placeOrder,
       removeItem,
       updateQuantity,
+      refresh,
     }),
     [
       items,
+      selectedItems,
+      selectedCartItemIds,
+      toggleItemSelection,
+      selectAllItems,
       placedOrderItems,
       placedOrders,
       totalCount,
@@ -261,8 +206,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       placeOrder,
       removeItem,
       updateQuantity,
+      refresh,
     ],
->>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
@@ -270,10 +215,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
 export function useCart() {
   const context = useContext(CartContext);
-
-  if (!context) {
-    throw new Error("useCart must be used within a CartProvider");
-  }
-
+  if (!context) throw new Error("useCart must be used within a CartProvider");
   return context;
 }

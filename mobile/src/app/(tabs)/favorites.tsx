@@ -1,21 +1,21 @@
+import { TabContent } from "@/components/common/TabContent";
+import FavoritesHeader from "@/components/favorites/FavoritesHeader";
+import { BottomNavbar } from "@/components/navigation/BottomNavbar";
+import ProductDetailModal from "@/components/product/ProductDetailModal";
+import { ShopProductCard } from "@/components/shop/ShopProductCard";
+import { useCart } from "@/context/CartContext";
+import { useFavorites } from "@/context/FavoritesContext";
+import type { Product } from "@/types/product";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  useWindowDimensions,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
+    useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import FavoritesHeader from "@/components/favorites/FavoritesHeader";
-import { ShopProductCard } from "@/components/shop/ShopProductCard";
-import ProductDetailModal from "@/components/product/ProductDetailModal";
-import { BottomNavbar } from "@/components/navigation/BottomNavbar";
-import { TabContent } from "@/components/common/TabContent";
-import { useFavorites } from "@/context/FavoritesContext";
-import { useCart } from "@/context/CartContext";
-import type { Product } from "@/types/product";
 
 export default function Favorites() {
   const { width } = useWindowDimensions();
@@ -85,10 +85,11 @@ export default function Favorites() {
             setSelectedProduct(null);
           }}
           onAddToCart={(product, quantity, size) => {
-            addItem(product, quantity);
+            addItem(product, quantity, size);
             setProductModalVisible(false);
           }}
           onBuyNow={(product, quantity, size) => {
+            addItem(product, quantity, size);
             console.log("BUY NOW", {
               product: product.name,
               quantity,

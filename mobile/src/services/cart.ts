@@ -1,11 +1,16 @@
-import { request } from "./api";
-import { getToken } from "./token-storage";
+import { request } from "./apiClient";
+import { getToken } from "./tokenStorage";
 
 export type ApiCartProduct = {
   product_id: number;
   product_name: string;
   product_image: string | null;
   product_description: string | null;
+  category?: string | null;
+  category_name?: string | null;
+  product_category?: string | null;
+  variant?: string | null;
+  variant_type?: string | null;
 };
 
 export type ApiCartItem = {
@@ -48,7 +53,7 @@ export async function addToCart(input: AddToCartInput): Promise<void> {
 
 export async function updateCartQuantity(
   cartItemId: number,
-  quantity: number
+  quantity: number,
 ): Promise<void> {
   await request(`/cart/${cartItemId}`, {
     method: "PUT",

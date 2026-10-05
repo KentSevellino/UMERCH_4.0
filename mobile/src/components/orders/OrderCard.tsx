@@ -7,6 +7,8 @@ export interface Order {
   date: string;
   status: OrderStatus;
   productName: string;
+  category?: string;
+  variant?: string;
   quantity: number;
   price: number;
   image: any;
@@ -44,6 +46,12 @@ export default function OrderCard({ order, onPress }: OrderCardProps) {
           <Text style={styles.productName} numberOfLines={1}>
             {order.productName}
           </Text>
+
+          {order.category || order.variant ? (
+            <Text style={styles.quantity}>
+              {[order.category, order.variant].filter(Boolean).join(" | ")}
+            </Text>
+          ) : null}
 
           <Text style={styles.quantity}>
             {order.quantity} item

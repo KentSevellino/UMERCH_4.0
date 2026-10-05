@@ -1,25 +1,17 @@
-<<<<<<< HEAD
-import { LogoutButton } from "@/components/navigation/profile/LogoutButton";
-import ProfileHeader from "@/components/navigation/profile/ProfileHeader";
-import { ProfileInfo } from "@/components/navigation/profile/ProfileInfo";
-import { ProfileDetails } from "@/components/navigation/profile/ProfileDetails";
-import { useAuth } from "@/context/AuthContext";
-import { useProfileImage } from "@/hooks/use-profile-image";
-=======
 import { TabContent } from "@/components/common/TabContent";
->>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
 import { BottomNavbar } from "@/components/navigation/BottomNavbar";
 import { LogoutButton } from "@/components/profile/LogoutButton";
 import { ProfileDetails } from "@/components/profile/ProfileDetails";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import { ProfileInfo } from "@/components/profile/ProfileInfo";
+import { useAuth } from "@/context/AuthContext";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import { router } from "expo-router";
 import {
-  ScrollView,
-  StyleSheet,
-  View,
-  useWindowDimensions,
+    ScrollView,
+    StyleSheet,
+    View,
+    useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 

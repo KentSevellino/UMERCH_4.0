@@ -1,38 +1,36 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import {
-  Modal,
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-  ScrollView,
-  Dimensions,
-} from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import type { Product } from "@/types/product";
 import { useFavorites } from "@/context/FavoritesContext";
+import type { Product } from "@/types/product";
+import { Ionicons } from "@expo/vector-icons";
+import {
+  Dimensions,
+  Image,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 const { width, height } = Dimensions.get("window");
+const VARIANT_OPTIONS: Record<string, string[]> = {
+  size: ["XS", "S", "M", "L", "XL"],
+  mug: ["One size"],
+  tumbler: ["12oz", "16oz", "20oz", "24oz"],
+  notebook: ["30 pages", "50 pages", "100 pages"],
+  umbrella: ["One size"],
+  totebag: ["One size"],
+};
 
 type Props = {
   visible: boolean;
   product: Product | null;
   onClose: () => void;
-  onAddToCart: (
-    product: Product,
-    quantity: number,
-    size: string
-  ) => void;
-  onBuyNow: (
-    product: Product,
-    quantity: number,
-    size: string
-  ) => void;
+  onAddToCart: (product: Product, quantity: number, size: string) => void;
+  onBuyNow: (product: Product, quantity: number, size: string) => void;
 };
-
-const DEFAULT_SIZES = ["S", "M", "L", "XL", "XXL"];
 
 const toNumber = (value: string) =>
   parseFloat(value.replace(/[^\d.]/g, "")) || 0;
@@ -44,16 +42,30 @@ export default function ProductDetailModal({
   onAddToCart,
   onBuyNow,
 }: Props) {
-<<<<<<< HEAD
-  const sizes = product?.variants?.length ? product.variants : DEFAULT_SIZES;
-
-  const [selectedSize, setSelectedSize] = useState(sizes[0] ?? "M");
-=======
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
->>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
+  const variants = product?.variants ?? [];
+  const rawVariantType = product?.variantType?.trim().toLowerCase() ?? "";
+  const variantType = rawVariantType.includes("size") ? "size" : rawVariantType;
+  const isSizeVariant = product?.hasSize === true || variantType === "size";
+  const configuredVariants = VARIANT_OPTIONS[variantType] ?? [];
+  const displayVariants =
+    configuredVariants.length > 0
+      ? configuredVariants
+      : variants.length > 0
+        ? variants
+        : product?.variant
+          ? [product.variant]
+          : [];
+  const [selectedVariant, setSelectedVariant] = useState(
+    displayVariants[0] ?? product?.variant ?? "",
+  );
   const [quantity, setQuantity] = useState(1);
 
   const { isFavorite, toggleFavorite } = useFavorites();
+
+  useEffect(() => {
+    setSelectedVariant(displayVariants[0] ?? product?.variant ?? "");
+    setQuantity(1);
+  }, [product?.id, displayVariants.join("|")]);
 
   if (!product) {
     return null;
@@ -67,13 +79,20 @@ export default function ProductDetailModal({
   const discount =
     oldPrice > price ? Math.round((1 - price / oldPrice) * 100) : null;
 
-  const increaseQuantity = () => {
-    setQuantity((current) => current + 1);
+  const decreaseQuantity = () => {
+    setQuantity((current) => (current > 1 ? current - 1 : 1));
   };
 
-  const decreaseQuantity = () => {
+  const selectedStock =
+    displayVariants.length > 0
+      ? (product.variantStocks?.[selectedVariant.trim()] ?? 0)
+      : (product.variantStocks?.[selectedVariant.trim()] ?? product.stock ?? 0);
+  const isOutOfStock = selectedStock < 1;
+  const canPurchase = !isOutOfStock && quantity <= selectedStock;
+
+  const increaseQuantity = () => {
     setQuantity((current) =>
-      current > 1 ? current - 1 : 1
+      selectedStock > 0 ? Math.min(current + 1, selectedStock) : current,
     );
   };
 
@@ -85,7 +104,6 @@ export default function ProductDetailModal({
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-
         {/* Dark area above modal */}
         <TouchableOpacity
           style={styles.backgroundClose}
@@ -96,16 +114,13 @@ export default function ProductDetailModal({
         {/* ================= MODAL ================= */}
 
         <View style={styles.modalContainer}>
-
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
           >
-
             {/* ================= PRODUCT IMAGE ================= */}
 
             <View style={styles.imageContainer}>
-
               <Image
                 source={product.image}
                 style={styles.productImage}
@@ -113,15 +128,8 @@ export default function ProductDetailModal({
               />
 
               {/* Close */}
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={onClose}
-              >
-                <Ionicons
-                  name="close"
-                  size={23}
-                  color="#FFFFFF"
-                />
+              <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+                <Ionicons name="close" size={23} color="#FFFFFF" />
               </TouchableOpacity>
 
               {/* Favorite */}
@@ -138,200 +146,159 @@ export default function ProductDetailModal({
               </TouchableOpacity>
 
               {/* Share */}
-              <TouchableOpacity
-                style={styles.shareButton}
-              >
+              <TouchableOpacity style={styles.shareButton}>
                 <Ionicons
                   name="share-social-outline"
                   size={21}
                   color="#FFFFFF"
                 />
               </TouchableOpacity>
-
-              </View>
+            </View>
 
             {/* ================= PRODUCT INFORMATION ================= */}
 
             <View style={styles.productInfo}>
+              <Text style={styles.productName}>{product.name}</Text>
 
-              <Text style={styles.productName}>
-                {product.name}
-              </Text>
-
-              <Text style={styles.productCategory}>
-                {product.category}
-              </Text>
+              <Text style={styles.productCategory}>{product.category}</Text>
 
               {/* Rating */}
 
               <View style={styles.ratingRow}>
+                <Ionicons name="star" size={17} color="#FFB800" />
 
-                <Ionicons
-                  name="star"
-                  size={17}
-                  color="#FFB800"
-                />
+                <Text style={styles.rating}>4.8</Text>
 
-                <Text style={styles.rating}>
-                  4.8
-                </Text>
-
-                <Text style={styles.reviews}>
-                  (124 reviews)
-                </Text>
-
+                <Text style={styles.reviews}>(124 reviews)</Text>
               </View>
 
               {/* Price */}
 
               <View style={styles.priceRow}>
-
-                <Text style={styles.price}>
-                  ₱{price.toFixed(2)}
-                </Text>
-
-
-                
-
+                <Text style={styles.price}>₱{price.toFixed(2)}</Text>
               </View>
 
-              {/* ================= SIZE ================= */}
+              {/* ================= ADMIN-ASSIGNED VARIETY ================= */}
 
-              {product.hasSize !== false && (
+              {displayVariants.length > 0 && (
                 <>
                   <Text style={styles.sectionTitle}>
-                    Size
+                    {isSizeVariant ? "Size" : product.variantType || "Variety"}
                   </Text>
 
                   <View style={styles.sizeContainer}>
-
-                    {sizes.map((size) => {
-
-                      const active =
-                        selectedSize === size;
+                    {displayVariants.map((variant) => {
+                      const variantStock =
+                        product.variantStocks?.[variant.trim()] ?? 0;
+                      const active = selectedVariant === variant;
 
                       return (
                         <TouchableOpacity
-                          key={size}
-                          onPress={() =>
-                            setSelectedSize(size)
-                          }
+                          key={variant}
+                          onPress={() => {
+                            setSelectedVariant(variant);
+                            setQuantity(1);
+                          }}
+                          disabled={variantStock < 1}
                           style={[
                             styles.sizeButton,
-                            active &&
-                              styles.sizeButtonActive,
+                            active && styles.sizeButtonActive,
+                            variantStock < 1 && styles.sizeButtonDisabled,
                           ]}
                         >
                           <Text
                             style={[
                               styles.sizeText,
-                              active &&
-                                styles.sizeTextActive,
+                              active && styles.sizeTextActive,
+                              variantStock < 1 && styles.sizeTextDisabled,
                             ]}
                           >
-                            {size}
+                            {variant}
                           </Text>
                         </TouchableOpacity>
                       );
                     })}
-
                   </View>
                 </>
               )}
 
               {/* ================= QUANTITY ================= */}
 
-              <Text style={styles.sectionTitle}>
-                Quantity
-              </Text>
+              <Text style={styles.sectionTitle}>Quantity</Text>
 
               <View style={styles.quantityContainer}>
-
                 <TouchableOpacity
                   style={styles.quantityButton}
                   onPress={decreaseQuantity}
                 >
-                  <Ionicons
-                    name="remove"
-                    size={17}
-                    color="#7A8494"
-                  />
+                  <Ionicons name="remove" size={17} color="#7A8494" />
                 </TouchableOpacity>
 
-                <Text style={styles.quantityText}>
-                  {quantity}
-                </Text>
+                <Text style={styles.quantityText}>{quantity}</Text>
 
                 <TouchableOpacity
                   style={styles.quantityButton}
                   onPress={increaseQuantity}
                 >
-                  <Ionicons
-                    name="add"
-                    size={17}
-                    color="#7A8494"
-                  />
+                  <Ionicons name="add" size={17} color="#7A8494" />
                 </TouchableOpacity>
-
               </View>
+
+              <Text
+                style={
+                  isOutOfStock ? styles.stockUnavailable : styles.stockAvailable
+                }
+              >
+                {isOutOfStock ? "Out of stock" : `${selectedStock} available`}
+              </Text>
 
               {/* Bottom spacing */}
               <View style={{ height: 85 }} />
-
             </View>
-
           </ScrollView>
 
           {/* ================= ACTION BUTTONS ================= */}
 
           <View style={styles.actionContainer}>
-
             <TouchableOpacity
-              style={styles.addToCartButton}
+              style={[
+                styles.addToCartButton,
+                !canPurchase && styles.addToCartDisabled,
+              ]}
               activeOpacity={0.8}
-              onPress={() =>
-                onAddToCart(
-                  product,
-                  quantity,
-                  selectedSize ?? ""
-                )
-              }
+              onPress={() => onAddToCart(product, quantity, selectedVariant)}
+              disabled={!canPurchase}
             >
               <Ionicons
                 name="cart-outline"
                 size={18}
-                color="#D60000"
+                color={canPurchase ? "#D60000" : "#D4878C"}
               />
 
-              <Text style={styles.addToCartText}>
+              <Text
+                style={[
+                  styles.addToCartText,
+                  !canPurchase && styles.addToCartTextDisabled,
+                ]}
+              >
                 Add to Cart
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.buyNowButton}
+              style={[
+                styles.buyNowButton,
+                !canPurchase && styles.buyNowDisabled,
+              ]}
               activeOpacity={0.8}
-              onPress={() =>
-                onBuyNow(
-                  product,
-                  quantity,
-                  selectedSize ?? ""
-                )
-              }
+              onPress={() => onBuyNow(product, quantity, selectedVariant)}
+              disabled={!canPurchase}
             >
-              <Ionicons
-                name="cart"
-                size={17}
-                color="#FFFFFF"
-              />
+              <Ionicons name="cart" size={17} color="#FFFFFF" />
 
-              <Text style={styles.buyNowText}>
-                Buy Now
-              </Text>
+              <Text style={styles.buyNowText}>Buy Now</Text>
             </TouchableOpacity>
-
           </View>
-
         </View>
       </View>
     </Modal>
@@ -491,7 +458,8 @@ const styles = StyleSheet.create({
   },
 
   sizeButton: {
-    width: 45,
+    minWidth: 45,
+    paddingHorizontal: 10,
     height: 40,
 
     borderRadius: 6,
@@ -510,6 +478,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#FDE7E7",
   },
 
+  sizeButtonDisabled: {
+    backgroundColor: "#F2F2F2",
+    borderColor: "#E1E1E1",
+    opacity: 0.6,
+  },
+
   sizeText: {
     fontSize: 15,
     color: "#6B7280",
@@ -518,6 +492,11 @@ const styles = StyleSheet.create({
   sizeTextActive: {
     color: "#D60000",
     fontWeight: "700",
+  },
+
+  sizeTextDisabled: {
+    color: "#A0A0A0",
+    textDecorationLine: "line-through",
   },
 
   /* ================= QUANTITY ================= */
@@ -553,6 +532,19 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#4B5563",
+  },
+
+  stockAvailable: {
+    color: "#6B7280",
+    fontSize: 12,
+    marginTop: 8,
+  },
+
+  stockUnavailable: {
+    color: "#B00000",
+    fontSize: 12,
+    fontWeight: "700",
+    marginTop: 8,
   },
 
   /* ================= ACTION ================= */
@@ -600,6 +592,10 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
 
+  addToCartTextDisabled: {
+    color: "#D4878C",
+  },
+
   buyNowButton: {
     flex: 1,
 
@@ -612,6 +608,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+  },
+
+  addToCartDisabled: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#D4878C",
+  },
+
+  buyNowDisabled: {
+    backgroundColor: "#D4878C",
+    borderColor: "#D4878C",
   },
 
   buyNowText: {

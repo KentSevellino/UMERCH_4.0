@@ -172,7 +172,7 @@ export default function Shop() {
             addItem(product, quantity);
             setProductModalVisible(false);
             setSelectedProduct(null);
-            router.push("/tabs/checkout");
+            router.push("/checkout");
           }}
         />
       </View>

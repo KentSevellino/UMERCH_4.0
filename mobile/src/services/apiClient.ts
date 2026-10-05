@@ -1,5 +1,21 @@
-export const API_URL =
-  process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:8000/api";
+import Constants from "expo-constants";
+import * as Device from "expo-device";
+import { Platform } from "react-native";
+
+const configuredApiUrl = process.env.EXPO_PUBLIC_API_URL;
+const expoHost = Constants.expoConfig?.hostUri?.split(":")[0];
+const androidApiHost = Device.isDevice ? expoHost : "10.0.2.2";
+
+export const API_URL = configuredApiUrl
+  ? Platform.OS === "android"
+    ? configuredApiUrl.replace(
+        /^(https?:\/\/)(localhost|127\.0\.0\.1)(?=[:/]|$)/,
+        (_match, protocol: string) => `${protocol}${androidApiHost}`,
+      )
+    : configuredApiUrl
+  : Platform.OS === "android"
+    ? "http://10.0.2.2:8000/api"
+    : "http://localhost:8000/api";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -33,15 +49,16 @@ export async function request<T>(
       method,
       headers: {
         Accept: "application/json",
-        ...(body === undefined
-          ? {}
-          : { "Content-Type": "application/json" }),
+        ...(body === undefined ? {} : { "Content-Type": "application/json" }),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {
-    throw new ApiError("Could not reach the server. Check your connection.", 0);
+    throw new ApiError(
+      `Could not reach the server at ${API_URL}. Start the backend and set EXPO_PUBLIC_API_URL for this device.`,
+      0,
+    );
   }
 
   const text = await response.text();

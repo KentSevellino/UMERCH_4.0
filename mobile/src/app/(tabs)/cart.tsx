@@ -5,13 +5,15 @@ import { CheckoutButton } from "@/components/cart/CheckoutButton";
 import { TabContent } from "@/components/common/TabContent";
 import { BottomNavbar } from "@/components/navigation/BottomNavbar";
 import { useCart } from "@/context/CartContext";
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
-    useWindowDimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -30,9 +32,18 @@ export default function Cart() {
 
   const styles = createStyles(scale, width);
 
-  const { items, totalCount, removeItem, updateQuantity } = useCart();
+  const {
+    items,
+    selectedItems,
+    selectedCartItemIds,
+    toggleItemSelection,
+    selectAllItems,
+    totalCount,
+    removeItem,
+    updateQuantity,
+  } = useCart();
 
-  const subtotal = items.reduce(
+  const subtotal = selectedItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
@@ -53,16 +64,41 @@ export default function Cart() {
             contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}
           >
+            {items.length > 0 ? (
+              <TouchableOpacity
+                style={styles.selectAll}
+                onPress={selectAllItems}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name={
+                    selectedCartItemIds.length === items.length
+                      ? "checkbox"
+                      : "square-outline"
+                  }
+                  size={22}
+                  color="#B00000"
+                />
+                <Text style={styles.selectAllText}>Select all</Text>
+              </TouchableOpacity>
+            ) : null}
+
             {items.map((item) => (
               <CartItem
                 key={item.id}
                 item={item}
+                selected={selectedCartItemIds.includes(
+                  item.cartItemId ?? item.id,
+                )}
+                onToggleSelection={() =>
+                  toggleItemSelection(item.cartItemId ?? item.id)
+                }
                 onChangeQuantity={updateQuantity}
                 onRemove={removeItem}
               />
             ))}
 
-            {items.length > 0 ? (
+            {selectedItems.length > 0 ? (
               <>
                 <CartSummary
                   subtotal={subtotal}
@@ -76,6 +112,15 @@ export default function Cart() {
                   }}
                 />
               </>
+            ) : items.length > 0 ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyTitle}>
+                  Select an item to checkout
+                </Text>
+                <Text style={styles.emptySubtitle}>
+                  Choose at least one product from your cart.
+                </Text>
+              </View>
             ) : (
               <View style={styles.emptyState}>
                 <Text style={styles.emptyTitle}>Your cart is empty</Text>
@@ -124,6 +169,20 @@ const createStyles = (scale: number, width: number) =>
       paddingBottom: 20,
 
       gap: Math.round(10 * scale),
+    },
+
+    selectAll: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: Math.round(12 * scale),
+      paddingVertical: Math.round(4 * scale),
+      gap: 8,
+    },
+
+    selectAllText: {
+      color: "#333333",
+      fontSize: Math.round(14 * scale),
+      fontWeight: "700",
     },
 
     emptyState: {

@@ -2,12 +2,12 @@ import { CartQuantityControl } from "@/components/cart/CartQuantityControl";
 import { Ionicons } from "@expo/vector-icons";
 import type { ImageSourcePropType } from "react-native";
 import {
-    Image,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-    useWindowDimensions,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  useWindowDimensions,
 } from "react-native";
 
 export type CartItemData = {
@@ -23,11 +23,19 @@ export type CartItemData = {
 
 type CartItemProps = {
   item: CartItemData;
+  selected: boolean;
+  onToggleSelection: () => void;
   onChangeQuantity: (id: number, quantity: number) => void;
   onRemove: (id: number) => void;
 };
 
-export function CartItem({ item, onChangeQuantity, onRemove }: CartItemProps) {
+export function CartItem({
+  item,
+  selected,
+  onToggleSelection,
+  onChangeQuantity,
+  onRemove,
+}: CartItemProps) {
   const { width } = useWindowDimensions();
 
   const scale = Math.min(Math.max(width / 375, 0.9), 1.15);
@@ -36,6 +44,20 @@ export function CartItem({ item, onChangeQuantity, onRemove }: CartItemProps) {
 
   return (
     <View style={styles.card}>
+      <TouchableOpacity
+        style={styles.checkboxButton}
+        onPress={onToggleSelection}
+        activeOpacity={0.7}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: selected }}
+      >
+        <Ionicons
+          name={selected ? "checkbox" : "square-outline"}
+          size={Math.round(24 * scale)}
+          color={selected ? "#B00000" : "#89919D"}
+        />
+      </TouchableOpacity>
+
       {/* Product image */}
 
       <View style={styles.imageContainer}>
@@ -105,6 +127,13 @@ const createStyles = (scale: number, width: number) =>
       shadowOpacity: 0.07,
 
       shadowRadius: 3,
+    },
+
+    checkboxButton: {
+      width: Math.round(30 * scale),
+      justifyContent: "center",
+      alignItems: "center",
+      marginRight: Math.round(4 * scale),
     },
 
     imageContainer: {

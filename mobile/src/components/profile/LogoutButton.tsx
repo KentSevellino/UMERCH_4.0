@@ -1,9 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  useWindowDimensions,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    useWindowDimensions,
 } from "react-native";
 
 type LogoutButtonProps = {
@@ -46,6 +46,9 @@ const createStyles = (scale: number) =>
       paddingHorizontal: Math.round(25 * scale),
 
       backgroundColor: "#FFF7F7",
+
+      borderWidth: 1,
+      borderColor: "#B00000",
 
       borderRadius: Math.round(16 * scale),
 
