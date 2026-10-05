@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   createContext,
   useCallback,
@@ -17,16 +18,42 @@ import {
   type ApiCartItem,
 } from "@/services/cart";
 import { normalizeImageUrl, SHOP_TAXONOMY, deriveCategory } from "@/services/products";
+=======
+import type { CartItemData } from "@/components/cart/CartItem";
+>>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
 import type { Product } from "@/types/product";
+import {
+    createContext,
+    useCallback,
+    useContext,
+    useMemo,
+    useState,
+    type ReactNode,
+} from "react";
 
 type CartContextValue = {
   items: CartItemData[];
+  placedOrderItems: CartItemData[];
+  placedOrders: PlacedOrder[];
   totalCount: number;
   bump: number;
+<<<<<<< HEAD
   addItem: (product: Product, quantity: number, variant: string) => Promise<void>;
   removeItem: (cartItemId: number) => Promise<void>;
   updateQuantity: (cartItemId: number, quantity: number) => Promise<void>;
   refresh: () => Promise<void>;
+=======
+  addItem: (product: Product, quantity: number) => void;
+  placeOrder: () => void;
+  removeItem: (id: number) => void;
+  updateQuantity: (id: number, quantity: number) => void;
+>>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
+};
+
+export type PlacedOrder = {
+  id: string;
+  date: string;
+  items: CartItemData[];
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -54,13 +81,20 @@ function toCartItem(row: ApiCartItem): CartItemData {
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
+<<<<<<< HEAD
   const { status } = useAuth();
 
   const [storedItems, setStoredItems] = useState<CartItemData[]>([]);
+=======
+  const [items, setItems] = useState<CartItemData[]>([]);
+  const [placedOrderItems, setPlacedOrderItems] = useState<CartItemData[]>([]);
+  const [placedOrders, setPlacedOrders] = useState<PlacedOrder[]>([]);
+>>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
   const [bump, setBump] = useState(0);
 
   const items = status === "authenticated" ? storedItems : EMPTY_ITEMS;
 
+<<<<<<< HEAD
   const refresh = useCallback(
     () =>
       fetchCart()
@@ -84,6 +118,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setStoredItems((current) => {
         const existing = current.find(
           (item) => item.id === product.id && item.variant === variant
+=======
+      if (existing) {
+        return current.map((item) =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + quantity }
+            : item,
+>>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
         );
 
         if (existing) {
@@ -124,6 +165,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [refresh]
   );
 
+<<<<<<< HEAD
   const removeItem = useCallback(
     async (cartItemId: number) => {
       setStoredItems((current) => current.filter((item) => item.cartItemId !== cartItemId));
@@ -159,15 +201,68 @@ export function CartProvider({ children }: { children: ReactNode }) {
     },
     [refresh]
   );
+=======
+  const placeOrder = useCallback(() => {
+    if (items.length === 0) {
+      return;
+    }
+
+    setPlacedOrderItems(items);
+    setPlacedOrders((current) => [
+      {
+        id: `${Date.now()}`,
+        date: "Placed just now",
+        items,
+      },
+      ...current,
+    ]);
+    setItems([]);
+  }, [items]);
+
+  const removeItem = useCallback((id: number) => {
+    setItems((current) => current.filter((item) => item.id !== id));
+  }, []);
+
+  const updateQuantity = useCallback((id: number, quantity: number) => {
+    setItems((current) =>
+      current.map((item) => (item.id === id ? { ...item, quantity } : item)),
+    );
+  }, []);
+>>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
 
   const totalCount = useMemo(
     () => items.reduce((sum, item) => sum + item.quantity, 0),
-    [items]
+    [items],
   );
 
   const value = useMemo(
+<<<<<<< HEAD
     () => ({ items, totalCount, bump, addItem, removeItem, updateQuantity, refresh }),
     [items, totalCount, bump, addItem, removeItem, updateQuantity, refresh]
+=======
+    () => ({
+      items,
+      placedOrderItems,
+      placedOrders,
+      totalCount,
+      bump,
+      addItem,
+      placeOrder,
+      removeItem,
+      updateQuantity,
+    }),
+    [
+      items,
+      placedOrderItems,
+      placedOrders,
+      totalCount,
+      bump,
+      addItem,
+      placeOrder,
+      removeItem,
+      updateQuantity,
+    ],
+>>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

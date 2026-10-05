@@ -1,14 +1,14 @@
-import React, { useEffect, useRef, useState } from "react";
-import {
-  Animated,
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-} from "react-native";
+import { useCart } from "@/context/CartContext";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useCart } from "@/context/CartContext";
+import { useEffect, useRef, useState } from "react";
+import {
+    Animated,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
 
 type Props = {
   scale?: number;
@@ -52,17 +52,11 @@ export default function ShopHeader({ scale = 1 }: Props) {
         },
       ]}
     >
-
       {/* ================= TITLE ================= */}
 
       <View style={styles.titleRow}>
-
         <View style={styles.titleLeft}>
-          <Ionicons
-            name="bag-handle"
-            size={25 * scale}
-            color="#FFFFFF"
-          />
+          <Ionicons name="bag-handle" size={25 * scale} color="#FFFFFF" />
 
           <Text
             style={[
@@ -81,7 +75,7 @@ export default function ShopHeader({ scale = 1 }: Props) {
           style={styles.cartButton}
           activeOpacity={0.7}
           onPress={() => {
-            router.push("/tabs/cart");
+            router.push("/cart");
           }}
         >
           <Animated.View
@@ -89,24 +83,16 @@ export default function ShopHeader({ scale = 1 }: Props) {
               transform: [{ scale: cartScale }],
             }}
           >
-            <Ionicons
-              name="cart-outline"
-              size={27 * scale}
-              color="#FFFFFF"
-            />
+            <Ionicons name="cart-outline" size={27 * scale} color="#FFFFFF" />
 
             {totalCount > 0 && (
               <View style={styles.cartBadge}>
-                <Text style={styles.cartBadgeText}>
-                  {totalCount}
-                </Text>
+                <Text style={styles.cartBadgeText}>{totalCount}</Text>
               </View>
             )}
           </Animated.View>
         </TouchableOpacity>
-
       </View>
-
     </View>
   );
 }

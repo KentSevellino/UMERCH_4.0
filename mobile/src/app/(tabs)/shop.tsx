@@ -7,16 +7,16 @@ import { ShopProductCard } from "@/components/shop/ShopProductCard";
 import { ShopSearch } from "@/components/shop/ShopSearch";
 import { useCart } from "@/context/CartContext";
 import { useFavorites } from "@/context/FavoritesContext";
-import { useProducts } from "@/hooks/use-products";
-import { SHOP_TAXONOMY } from "@/services/products";
+import { useProducts } from "@/hooks/useProducts";
 import type { Product } from "@/types/product";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    View,
-    useWindowDimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -27,51 +27,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 */
 
 const CATEGORIES = ["All", "Jersey", "Bags", "Drinkware", "School Supplies"];
-
-const FALLBACK_PRODUCTS: Product[] = [
-  {
-    id: 1,
-    name: "UM CCE Esports Jersey",
-    category: "Jersey",
-    price: "₱500.00",
-    oldPrice: "₱600.00",
-    image: require("../../assets/images/product-image/Shirt/cceshirt.jpg"),
-  },
-  {
-    id: 2,
-    name: "Wooden Tumbler",
-    category: "Drinkware",
-    price: "₱515.00",
-    oldPrice: "₱650.00",
-    image: require("../../assets/images/product-image/Drinkware/wooden-tumbler.jpg"),
-  },
-  {
-    id: 3,
-    name: "UM Tote Bag",
-    category: "Bags",
-    price: "₱180.00",
-    oldPrice: "₱220.00",
-    hasSize: false,
-    image: require("../../assets/images/product-image/Bags/tote-bag.jpg"),
-  },
-  {
-    id: 4,
-    name: "Notebook",
-    category: "School Supplies",
-    price: "₱85.00",
-    oldPrice: "₱120.00",
-    hasSize: false,
-    image: require("../../assets/images/product-image/SchoolSupplies/notebook.png"),
-  },
-  {
-    id: 5,
-    name: "UM Mug",
-    category: "Drinkware",
-    price: "₱250.00",
-    oldPrice: "₱300.00",
-    image: require("../../assets/images/product-image/Drinkware/mug.png"),
-  },
-];
 
 /*
 |--------------------------------------------------------------------------
@@ -89,8 +44,7 @@ export default function Shop() {
   const { addItem } = useCart();
 
   const { isFavorite, toggleFavorite } = useFavorites();
-
-  const catalog = useProducts(FALLBACK_PRODUCTS, SHOP_TAXONOMY);
+  const { products, isLoading, error } = useProducts();
 
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
@@ -98,7 +52,7 @@ export default function Shop() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productModalVisible, setProductModalVisible] = useState(false);
 
-  const filteredProducts = catalog.filter((product) => {
+  const filteredProducts = products.filter((product) => {
     const matchesCategory =
       selectedCategory === "All" || product.category === selectedCategory;
 
@@ -123,6 +77,11 @@ export default function Shop() {
             contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}
           >
+            {isLoading && (
+              <Text style={styles.statusText}>Loading products...</Text>
+            )}
+            {error && <Text style={styles.errorText}>{error}</Text>}
+
             <ShopSearch value={searchQuery} onChangeText={setSearchQuery} />
 
             <ShopCategories
@@ -165,14 +124,14 @@ export default function Shop() {
             setSelectedProduct(null);
           }}
           onAddToCart={(product, quantity, size) => {
-            addItem(product, quantity, size);
+            addItem(product, quantity);
             setProductModalVisible(false);
           }}
           onBuyNow={(product, quantity, size) => {
             addItem(product, quantity);
             setProductModalVisible(false);
             setSelectedProduct(null);
-            router.push("/tabs/checkout");
+            router.push("/checkout");
           }}
         />
       </View>
@@ -200,6 +159,18 @@ const createStyles = (scale: number, width: number) =>
 
     content: {
       paddingBottom: 20,
+    },
+
+    statusText: {
+      paddingVertical: 12,
+      color: "#666666",
+      textAlign: "center",
+    },
+
+    errorText: {
+      paddingVertical: 12,
+      color: "#B00000",
+      textAlign: "center",
     },
 
     productsGrid: {

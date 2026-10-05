@@ -1,8 +1,8 @@
-import { TabContent } from "@/components/common/TabContent";
-import { BottomNavbar } from "@/components/navigation/BottomNavbar";
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { BottomNavbar } from "@/components/navigation/BottomNavbar";
+import { TabContent } from "@/components/common/TabContent";
 
 export default function Search() {
   const { width } = useWindowDimensions();

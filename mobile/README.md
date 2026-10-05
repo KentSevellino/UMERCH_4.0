@@ -43,6 +43,43 @@ This command will move the starter code to the **app-example** directory and cre
 
 ## Learn more
 
+## Local API integration
+
+The mobile app uses the Laravel API in the sibling `backend` directory.
+
+1. From `backend`, install dependencies and create the local environment:
+
+   ```bash
+   composer install
+   copy .env.example .env
+   php artisan key:generate
+   php artisan migrate --seed
+   ```
+
+2. Start the API from `backend`:
+
+   ```bash
+   php artisan serve --host=0.0.0.0 --port=8000
+   ```
+
+3. Set `EXPO_PUBLIC_API_URL` in `mobile/.env`:
+
+   ```env
+   # Web or iOS simulator
+   EXPO_PUBLIC_API_URL=http://localhost:8000/api
+
+   # Android emulator
+   # EXPO_PUBLIC_API_URL=http://10.0.2.2:8000/api
+
+   # Physical device: replace the address with the computer's LAN IP
+   # EXPO_PUBLIC_API_URL=http://192.168.x.x:8000/api
+   ```
+
+The existing email login is `POST /api/login` and the product catalog is
+`GET /api/products`. OTP delivery also requires valid mail settings in the
+backend `.env` file. Product images uploaded through Laravel are returned as
+public `image_url` values by the API.
+
 To learn more about developing your project with Expo, look at the following resources:
 
 - [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).

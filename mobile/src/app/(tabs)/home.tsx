@@ -5,21 +5,20 @@ import { BottomNavbar } from "@/components/navigation/BottomNavbar";
 import ProductDetailModal from "@/components/product/ProductDetailModal";
 import { ShopSearch } from "@/components/shop/ShopSearch";
 import { useCart } from "@/context/CartContext";
-import { useProducts } from "@/hooks/use-products";
-import { HOME_TAXONOMY } from "@/services/products";
+import { useProducts } from "@/hooks/useProducts";
 import type { Product } from "@/types/product";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-    Image,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-    useWindowDimensions,
+  Image,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -30,51 +29,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 */
 
 const CATEGORIES = ["All", "Shirts", "Accessories", "Bottles", "Others"];
-
-const FALLBACK_PRODUCTS: Product[] = [
-  {
-    id: 1,
-    name: "UM CCE Esports Jersey",
-    category: "Shirts",
-    price: "₱500.00",
-    oldPrice: "₱600.00",
-    image: require("../../assets/images/product-image/Shirt/cceshirt.jpg"),
-  },
-  {
-    id: 2,
-    name: "Wooden Tumbler",
-    category: "Bottles",
-    price: "₱515.00",
-    oldPrice: "₱650.00",
-    image: require("../../assets/images/product-image/Drinkware/wooden-tumbler.jpg"),
-  },
-  {
-    id: 3,
-    name: "UM Tote Bag",
-    category: "Accessories",
-    price: "₱180.00",
-    oldPrice: "₱220.00",
-    hasSize: false,
-    image: require("../../assets/images/product-image/Bags/tote-bag.jpg"),
-  },
-  {
-    id: 4,
-    name: "Notebook",
-    category: "Others",
-    price: "₱85.00",
-    oldPrice: "₱120.00",
-    hasSize: false,
-    image: require("../../assets/images/product-image/SchoolSupplies/notebook.png"),
-  },
-  {
-    id: 5,
-    name: "UM Mug",
-    category: "Bottles",
-    price: "₱250.00",
-    oldPrice: "₱300.00",
-    image: require("../../assets/images/product-image/Drinkware/mug.png"),
-  },
-];
 
 /*
 |--------------------------------------------------------------------------
@@ -97,13 +51,12 @@ export default function Home() {
   const styles = createStyles(scale, width, height);
 
   const { addItem } = useCart();
-
-  const catalog = useProducts(FALLBACK_PRODUCTS, HOME_TAXONOMY);
+  const { products, isLoading, error } = useProducts();
 
   const filteredProducts =
     selectedCategory === "All"
-      ? catalog
-      : catalog.filter((product) => product.category === selectedCategory);
+      ? products
+      : products.filter((product) => product.category === selectedCategory);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
@@ -130,12 +83,17 @@ export default function Home() {
             contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}
           >
+            {isLoading && (
+              <Text style={styles.statusText}>Loading products...</Text>
+            )}
+            {error && <Text style={styles.errorText}>{error}</Text>}
+
             <ShopSearch
               value={searchQuery}
               onChangeText={setSearchQuery}
               placeholder="Search for shirts, hoodies, accessories..."
               onSubmitEditing={() => {
-                router.push("/tabs/search");
+                router.push("/search");
               }}
               containerStyle={styles.searchFill}
             />
@@ -224,7 +182,7 @@ export default function Home() {
               selectedCategory={selectedCategory}
               onSelectCategory={setSelectedCategory}
               onSeeAll={() => {
-                router.push("/tabs/shop");
+                router.push("/shop");
               }}
               products={filteredProducts.slice(0, 4)}
               onProductPress={(product) => {
@@ -296,7 +254,7 @@ export default function Home() {
             setSelectedProduct(null);
           }}
           onAddToCart={(product, quantity, size) => {
-            addItem(product, quantity, size);
+            addItem(product, quantity);
             setProductModalVisible(false);
           }}
           onBuyNow={(product, quantity, size) => {
@@ -348,6 +306,18 @@ const createStyles = (scale: number, width: number, height: number) =>
       paddingTop: Math.round(10 * scale),
 
       paddingBottom: 20,
+    },
+
+    statusText: {
+      paddingVertical: 12,
+      color: "#666666",
+      textAlign: "center",
+    },
+
+    errorText: {
+      paddingVertical: 12,
+      color: "#B00000",
+      textAlign: "center",
     },
 
     /* ========================================================

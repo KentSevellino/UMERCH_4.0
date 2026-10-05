@@ -1,17 +1,20 @@
 import { Ionicons } from "@expo/vector-icons";
 import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  useWindowDimensions,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    useWindowDimensions,
 } from "react-native";
 
-type CartQuantityProps = {
+type CartQuantityControlProps = {
   quantity: number;
   onChange: (quantity: number) => void;
 };
 
-export function CartQuantity({ quantity, onChange }: CartQuantityProps) {
+export function CartQuantityControl({
+  quantity,
+  onChange,
+}: CartQuantityControlProps) {
   const { width } = useWindowDimensions();
 
   const scale = Math.min(Math.max(width / 375, 0.9), 1.15);

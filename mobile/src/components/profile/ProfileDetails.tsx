@@ -18,24 +18,6 @@ export const PROFILE_DETAILS_ITEMS: ProfileButtonData[] = [
     subtitle: "View your purchase history",
     icon: "bag-handle-outline",
   },
-  {
-    id: "favorites",
-    title: "My Favorites",
-    subtitle: "Saved items",
-    icon: "heart-outline",
-  },
-  {
-    id: "support",
-    title: "Help & Support",
-    subtitle: "FAQs and contact us",
-    icon: "headset-outline",
-  },
-  {
-    id: "settings",
-    title: "Settings",
-    subtitle: "App preferences",
-    icon: "settings-outline",
-  },
 ];
 
 type ProfileDetailsProps = {

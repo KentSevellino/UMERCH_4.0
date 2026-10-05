@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 
 import {
-  loadProfileImage,
-  pickAndStoreProfileImage,
-} from "@/hooks/profile-image-storage";
+    loadProfileImage,
+    pickAndStoreProfileImage,
+} from "@/services/profileImageStorage";
 
 export function useProfileImage() {
   const [avatarUri, setAvatarUri] = useState<string | null>(null);

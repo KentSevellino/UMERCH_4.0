@@ -7,15 +7,11 @@ import { BottomNavbar } from "@/components/navigation/BottomNavbar";
 import { useCart } from "@/context/CartContext";
 import { router } from "expo-router";
 import {
-<<<<<<< HEAD
-  Alert,
-=======
->>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  useWindowDimensions,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
+    useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -35,29 +31,6 @@ export default function Cart() {
   const styles = createStyles(scale, width);
 
   const { items, totalCount, removeItem, updateQuantity } = useCart();
-
-  const reportError = (title: string, error: unknown) => {
-    Alert.alert(
-      title,
-      error instanceof Error ? error.message : "Please try again."
-    );
-  };
-
-  const handleChangeQuantity = async (cartItemId: number, quantity: number) => {
-    try {
-      await updateQuantity(cartItemId, quantity);
-    } catch (error) {
-      reportError("Could not update quantity", error);
-    }
-  };
-
-  const handleRemove = async (cartItemId: number) => {
-    try {
-      await removeItem(cartItemId);
-    } catch (error) {
-      reportError("Could not remove item", error);
-    }
-  };
 
   const subtotal = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -82,10 +55,10 @@ export default function Cart() {
           >
             {items.map((item) => (
               <CartItem
-                key={item.cartItemId ?? item.id}
+                key={item.id}
                 item={item}
-                onChangeQuantity={handleChangeQuantity}
-                onRemove={handleRemove}
+                onChangeQuantity={updateQuantity}
+                onRemove={removeItem}
               />
             ))}
 
@@ -99,11 +72,7 @@ export default function Cart() {
 
                 <CheckoutButton
                   onPress={() => {
-<<<<<<< HEAD
                     router.push("/checkout");
-=======
-                    router.push("/tabs/checkout");
->>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
                   }}
                 />
               </>

@@ -1,15 +1,6 @@
-import React from "react";
-import {
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-import OrderStatusBadge, {
-  OrderStatus,
-} from "./OrderStatusBadge";
+import OrderStatusBadge, { OrderStatus } from "./OrderStatusBadge";
 
 export interface Order {
   id: string;
@@ -19,6 +10,7 @@ export interface Order {
   quantity: number;
   price: number;
   image: any;
+  total?: number;
 }
 
 interface OrderCardProps {
@@ -26,26 +18,15 @@ interface OrderCardProps {
   onPress?: () => void;
 }
 
-export default function OrderCard({
-  order,
-  onPress,
-}: OrderCardProps) {
+export default function OrderCard({ order, onPress }: OrderCardProps) {
   return (
-    <TouchableOpacity
-      activeOpacity={0.9}
-      onPress={onPress}
-      style={styles.card}
-    >
+    <TouchableOpacity activeOpacity={0.9} onPress={onPress} style={styles.card}>
       {/* ORDER HEADER */}
       <View style={styles.orderHeader}>
         <View>
-          <Text style={styles.orderNumber}>
-            #{order.id}
-          </Text>
+          <Text style={styles.orderNumber}>#{order.id}</Text>
 
-          <Text style={styles.date}>
-            {order.date}
-          </Text>
+          <Text style={styles.date}>{order.date}</Text>
         </View>
 
         <OrderStatusBadge status={order.status} />
@@ -60,10 +41,7 @@ export default function OrderCard({
         />
 
         <View style={styles.productInfo}>
-          <Text
-            style={styles.productName}
-            numberOfLines={1}
-          >
+          <Text style={styles.productName} numberOfLines={1}>
             {order.productName}
           </Text>
 
@@ -72,9 +50,7 @@ export default function OrderCard({
             {order.quantity > 1 ? "s" : ""}
           </Text>
 
-          <Text style={styles.price}>
-            ₱{order.price.toFixed(2)}
-          </Text>
+          <Text style={styles.price}>₱{order.price.toFixed(2)}</Text>
         </View>
       </View>
 
@@ -83,18 +59,14 @@ export default function OrderCard({
         <Text style={styles.total}>
           Total:{" "}
           <Text style={styles.totalPrice}>
-            ₱{order.price.toFixed(2)}
+            ₱{(order.total ?? order.price * order.quantity).toFixed(2)}
           </Text>
         </Text>
 
         <View style={styles.details}>
-          <Text style={styles.detailsText}>
-            View Details
-          </Text>
+          <Text style={styles.detailsText}>View Details</Text>
 
-          <Text style={styles.arrow}>
-            ›
-          </Text>
+          <Text style={styles.arrow}>›</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -107,6 +79,7 @@ const styles = StyleSheet.create({
 
     borderRadius: 13,
 
+    marginHorizontal: 11,
     marginBottom: 9,
 
     paddingHorizontal: 12,

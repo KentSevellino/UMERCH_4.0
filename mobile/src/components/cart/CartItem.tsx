@@ -1,14 +1,14 @@
-import { CartQuantity } from "@/components/navigation/cart/CartQuantity";
+import { CartQuantityControl } from "@/components/cart/CartQuantityControl";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  useWindowDimensions,
-} from "react-native";
 import type { ImageSourcePropType } from "react-native";
+import {
+    Image,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+    useWindowDimensions,
+} from "react-native";
 
 export type CartItemData = {
   id: number;
@@ -56,7 +56,7 @@ export function CartItem({ item, onChangeQuantity, onRemove }: CartItemProps) {
         <Text style={styles.price}>₱{item.price.toFixed(2)}</Text>
 
         <View style={styles.bottomRow}>
-          <CartQuantity
+          <CartQuantityControl
             quantity={item.quantity}
             onChange={(quantity) => {
               onChangeQuantity(item.cartItemId ?? item.id, quantity);

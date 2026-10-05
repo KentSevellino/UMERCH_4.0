@@ -9,6 +9,7 @@ use App\Models\Products;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -26,10 +27,17 @@ class ProductController extends Controller
             ->map(function ($group) {
                 $first = $group->first();
                 $totalStock = $group->sum(fn ($p) => $p->inventory->sum('quantity') ?? $p->product_stock);
+                $imageUrl = $first->product_image;
+
+                if ($imageUrl && ! filter_var($imageUrl, FILTER_VALIDATE_URL)) {
+                    $imageUrl = url(Storage::disk('public')->url($imageUrl));
+                }
+
                 return [
                     'product_id' => $first->product_id,
                     'product_name' => $first->product_name,
                     'product_image' => $first->product_image,
+                    'image_url' => $imageUrl,
                     'product_description' => $first->product_description,
                     'product_price' => $first->product_price,
                     'product_stock' => $totalStock,

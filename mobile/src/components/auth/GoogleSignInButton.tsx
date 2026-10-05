@@ -1,10 +1,15 @@
-import { StyleSheet, Text, TouchableOpacity, useWindowDimensions } from "react-native";
+import {
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    useWindowDimensions,
+} from "react-native";
 
-type GoogleButtonProps = {
+type GoogleSignInButtonProps = {
   onPress: () => void;
 };
 
-export function GoogleButton({ onPress }: GoogleButtonProps) {
+export function GoogleSignInButton({ onPress }: GoogleSignInButtonProps) {
   const { width } = useWindowDimensions();
 
   const scale = Math.min(Math.max(width / 375, 0.9), 1.15);
@@ -12,7 +17,11 @@ export function GoogleButton({ onPress }: GoogleButtonProps) {
   const styles = createStyles(scale);
 
   return (
-    <TouchableOpacity style={styles.googleButton} onPress={onPress} activeOpacity={0.8}>
+    <TouchableOpacity
+      style={styles.googleButton}
+      onPress={onPress}
+      activeOpacity={0.8}
+    >
       <Text style={styles.googleLogo}>G</Text>
 
       <Text style={styles.googleText}>Continue with Google</Text>

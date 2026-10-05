@@ -1,7 +1,8 @@
-import { GoogleButton } from "@/components/auth/GoogleButton";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { PasswordInput } from "@/components/auth/PasswordInput";
+import { getSavedCredentials } from "@/services/credentialStorage";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -12,19 +13,27 @@ import {
 } from "react-native";
 
 type LoginFormProps = {
-  onLogin: (email: string, password: string) => void;
+  onLogin: (email: string, password: string, rememberMe: boolean) => void;
   onForgotPassword: () => void;
   onGoogleLogin: () => void;
+<<<<<<< HEAD
   loading?: boolean;
   error?: string | null;
+=======
+  isSubmitting?: boolean;
+>>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
 };
 
 export function LoginForm({
   onLogin,
   onForgotPassword,
   onGoogleLogin,
+<<<<<<< HEAD
   loading = false,
   error = null,
+=======
+  isSubmitting = false,
+>>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
 }: LoginFormProps) {
   const { width } = useWindowDimensions();
 
@@ -35,6 +44,15 @@ export function LoginForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    getSavedCredentials().then((saved) => {
+      if (!saved) return;
+      setEmail(saved.email);
+      setPassword(saved.password);
+      setRememberMe(true);
+    });
+  }, []);
 
   return (
     <>
@@ -91,7 +109,7 @@ export function LoginForm({
       </View>
 
       {/* Google Button */}
-      <GoogleButton onPress={onGoogleLogin} />
+      <GoogleSignInButton onPress={onGoogleLogin} />
 
       {/* Sign In Button */}
       <View style={styles.bottomContainer}>
@@ -100,6 +118,7 @@ export function LoginForm({
         <TouchableOpacity
           style={[styles.signInButton, loading && styles.signInButtonDisabled]}
           onPress={() => {
+<<<<<<< HEAD
             if (loading) return;
             onLogin(email, password);
           }}
@@ -108,6 +127,15 @@ export function LoginForm({
         >
           <Text style={styles.signInText}>
             {loading ? "Signing in…" : "Sign In"}
+=======
+            onLogin(email.trim(), password, rememberMe);
+          }}
+          disabled={isSubmitting}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.signInText}>
+            {isSubmitting ? "Signing in..." : "Sign In"}
+>>>>>>> 601a3f3cda49a062698ae6911126951b6f3006b9
           </Text>
         </TouchableOpacity>
       </View>

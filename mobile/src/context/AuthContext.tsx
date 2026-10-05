@@ -1,4 +1,13 @@
 import {
+  fetchMe,
+  resendOtp,
+  signIn,
+  signInWithGoogle,
+  signOut,
+  submitOtp,
+} from "@/services/authService";
+import type { LoginResponse, User, VerifyOtpResponse } from "@/types/auth";
+import {
   createContext,
   useCallback,
   useContext,
@@ -7,16 +16,9 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import {
-  fetchMe,
-  resendOtp,
-  signIn,
-  signOut,
-  submitOtp,
-} from "@/services/auth";
-import type { LoginResponse, User, VerifyOtpResponse } from "@/types/auth";
 
-export type AuthStatus = "loading" | "signedOut" | "otpRequired" | "authenticated";
+export type AuthStatus =
+  "loading" | "signedOut" | "otpRequired" | "authenticated";
 
 type AuthContextValue = {
   status: AuthStatus;
@@ -24,6 +26,7 @@ type AuthContextValue = {
   /** Destination the backend masked for the OTP email, shown on the code screen. */
   maskedEmail: string | null;
   login: (login: string, password: string) => Promise<LoginResponse>;
+  loginWithGoogle: (idToken: string) => Promise<LoginResponse>;
   verifyOtp: (otp: string) => Promise<VerifyOtpResponse>;
   resendOtp: () => Promise<void>;
   logout: () => Promise<void>;
@@ -80,6 +83,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return result;
   }, []);
 
+  const loginWithGoogle = useCallback(async (idToken: string) => {
+    const result = await signInWithGoogle(idToken);
+
+    setUser(result.user);
+
+    if (result.otp_required) {
+      setMaskedEmail(result.email ?? null);
+      setStatus("otpRequired");
+      return result;
+    }
+
+    setMaskedEmail(null);
+    setStatus("authenticated");
+    return result;
+  }, []);
+
   const verifyOtp = useCallback(async (otp: string) => {
     const result = await submitOtp(otp);
 
@@ -102,8 +121,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ status, user, maskedEmail, login, verifyOtp, resendOtp: handleResendOtp, logout }),
-    [status, user, maskedEmail, login, verifyOtp, handleResendOtp, logout],
+    () => ({
+      status,
+      user,
+      maskedEmail,
+      login,
+      loginWithGoogle,
+      verifyOtp,
+      resendOtp: handleResendOtp,
+      logout,
+    }),
+    [
+      status,
+      user,
+      maskedEmail,
+      login,
+      loginWithGoogle,
+      verifyOtp,
+      handleResendOtp,
+      logout,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

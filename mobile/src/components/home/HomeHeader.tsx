@@ -1,15 +1,15 @@
-import React, { useEffect, useRef, useState } from "react";
-import {
-  Animated,
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { useCart } from "@/context/CartContext";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useCart } from "@/context/CartContext";
+import { useEffect, useRef, useState } from "react";
+import {
+    Animated,
+    Image,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
 
 type Props = {
   scale?: number;
@@ -60,7 +60,7 @@ export default function HomeHeader({ scale = 1 }: Props) {
 
         <View style={styles.brandContainer}>
           <Image
-            source={require("../../../assets/images/UMERCH.png")}
+            source={require("../../assets/images/UMERCH.png")}
             style={styles.logo}
             resizeMode="contain"
           />
@@ -73,7 +73,7 @@ export default function HomeHeader({ scale = 1 }: Props) {
             style={styles.cartButton}
             activeOpacity={0.7}
             onPress={() => {
-              router.push("/tabs/cart");
+              router.push("/cart");
             }}
           >
             <Animated.View

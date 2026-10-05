@@ -1,14 +1,14 @@
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  useWindowDimensions,
-} from "react-native";
-import { CategoryButtons } from "@/components/navigation/home/CategoryButtons";
-import { ProductCard } from "@/components/navigation/home/ProductCard";
+import { CategoryButtons } from "@/components/home/CategoryButtons";
+import { ProductCard } from "@/components/home/ProductCard";
 import type { Product } from "@/types/product";
+import {
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+    useWindowDimensions,
+} from "react-native";
 
 type RecommendedSectionProps = {
   categories: string[];

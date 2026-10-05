@@ -1,6 +1,6 @@
-import { ApiError, request } from "./api";
-import { getToken, setToken } from "./token-storage";
 import type { LoginResponse, User, VerifyOtpResponse } from "@/types/auth";
+import { ApiError, request } from "./apiClient";
+import { getToken, setToken } from "./tokenStorage";
 
 /**
  * Sign in with an email or UM ID. The token is persisted immediately because
@@ -17,6 +17,18 @@ export async function signIn(
 
   await setToken(result.token);
 
+  return result;
+}
+
+export async function signInWithGoogle(
+  idToken: string,
+): Promise<LoginResponse> {
+  const result = await request<LoginResponse>("/google-login", {
+    method: "POST",
+    body: { id_token: idToken },
+  });
+
+  await setToken(result.token);
   return result;
 }
 
