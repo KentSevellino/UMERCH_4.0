@@ -57,6 +57,13 @@ class AccountSeeder extends Seeder
             'role' => 'customer',
             'status' => 'inactive',
         ],
+        [
+            'um_id' => 90002,
+            'email' => 'k.sevellino.545000@umindanao.edu.ph',
+            'user_fullname' => 'Kent Sevellino',
+            'role' => 'customer',
+            'status' => 'active',
+        ]
     ];
 
     /**
