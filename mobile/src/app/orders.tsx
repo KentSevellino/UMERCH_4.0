@@ -87,7 +87,7 @@ export default function OrdersScreen() {
             if (router.canGoBack()) {
               router.back();
             } else {
-              router.replace("/tabs");
+              router.replace("/home");
             }
           }}
           style={styles.backButton}

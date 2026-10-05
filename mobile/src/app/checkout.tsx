@@ -27,7 +27,7 @@ export default function CheckoutScreen() {
 
   const handlePlaceOrder = () => {
     placeOrder();
-    router.replace("/tabs/order-placed");
+    router.replace("/order-placed");
   };
 
   return (
@@ -55,7 +55,7 @@ export default function CheckoutScreen() {
             </Text>
             <TouchableOpacity
               style={styles.shopButton}
-              onPress={() => router.replace("/tabs/shop")}
+              onPress={() => router.replace("/shop")}
             >
               <Text style={styles.shopButtonText}>Browse Products</Text>
             </TouchableOpacity>

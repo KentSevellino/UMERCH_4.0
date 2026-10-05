@@ -4,7 +4,7 @@ import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useColorScheme } from "react-native";
 
-import { AnimatedSplashOverlay } from "@/components/animated-icon";
+import { AnimatedSplashOverlay } from "@/components/common/AnimatedIcon";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 import { FavoritesProvider } from "@/context/FavoritesContext";
@@ -23,7 +23,12 @@ export default function RootLayout() {
               <Stack.Screen name="index" options={{ headerShown: false }} />
               <Stack.Screen name="login" options={{ headerShown: false }} />
               <Stack.Screen name="otp" options={{ headerShown: false }} />
-              <Stack.Screen name="tabs" options={{ headerShown: false }} />
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="checkout" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="order-placed"
+                options={{ headerShown: false }}
+              />
               <Stack.Screen name="orders" options={{ headerShown: false }} />
               <Stack.Screen
                 name="personal-information"

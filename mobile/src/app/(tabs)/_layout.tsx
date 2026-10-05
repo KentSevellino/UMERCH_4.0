@@ -8,12 +8,10 @@ export default function TabsLayout() {
         animation: "none",
       }}
     >
-      <Stack.Screen name="index" />
+      <Stack.Screen name="home" />
       <Stack.Screen name="search" />
       <Stack.Screen name="shop" />
       <Stack.Screen name="cart" />
-      <Stack.Screen name="checkout" />
-      <Stack.Screen name="order-placed" />
       <Stack.Screen name="favorites" />
       <Stack.Screen name="profile" />
     </Stack>

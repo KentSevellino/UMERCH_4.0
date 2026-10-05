@@ -1,17 +1,17 @@
-import { Ionicons } from "@expo/vector-icons";
-import ProfileHeader from "@/components/navigation/profile/ProfileHeader";
-import { ProfileInfo } from "@/components/navigation/profile/ProfileInfo";
 import { BottomNavbar } from "@/components/navigation/BottomNavbar";
-import { useProfileImage } from "@/hooks/use-profile-image";
+import ProfileHeader from "@/components/profile/ProfileHeader";
+import { ProfileInfo } from "@/components/profile/ProfileInfo";
+import { useProfileImage } from "@/hooks/useProfileImage";
+import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  useWindowDimensions,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+    useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 

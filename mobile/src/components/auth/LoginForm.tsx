@@ -1,7 +1,8 @@
-import { GoogleButton } from "@/components/auth/GoogleButton";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { PasswordInput } from "@/components/auth/PasswordInput";
+import { getSavedCredentials } from "@/services/credentialStorage";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -12,15 +13,17 @@ import {
 } from "react-native";
 
 type LoginFormProps = {
-  onLogin: (email: string, password: string) => void;
+  onLogin: (email: string, password: string, rememberMe: boolean) => void;
   onForgotPassword: () => void;
   onGoogleLogin: () => void;
+  isSubmitting?: boolean;
 };
 
 export function LoginForm({
   onLogin,
   onForgotPassword,
   onGoogleLogin,
+  isSubmitting = false,
 }: LoginFormProps) {
   const { width } = useWindowDimensions();
 
@@ -31,6 +34,15 @@ export function LoginForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    getSavedCredentials().then((saved) => {
+      if (!saved) return;
+      setEmail(saved.email);
+      setPassword(saved.password);
+      setRememberMe(true);
+    });
+  }, []);
 
   return (
     <>
@@ -87,18 +99,21 @@ export function LoginForm({
       </View>
 
       {/* Google Button */}
-      <GoogleButton onPress={onGoogleLogin} />
+      <GoogleSignInButton onPress={onGoogleLogin} />
 
       {/* Sign In Button */}
       <View style={styles.bottomContainer}>
         <TouchableOpacity
           style={styles.signInButton}
           onPress={() => {
-            onLogin(email, password);
+            onLogin(email.trim(), password, rememberMe);
           }}
+          disabled={isSubmitting}
           activeOpacity={0.8}
         >
-          <Text style={styles.signInText}>Sign In</Text>
+          <Text style={styles.signInText}>
+            {isSubmitting ? "Signing in..." : "Sign In"}
+          </Text>
         </TouchableOpacity>
       </View>
     </>

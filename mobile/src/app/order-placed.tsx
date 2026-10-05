@@ -33,7 +33,7 @@ export default function OrderPlacedScreen() {
           <TouchableOpacity
             accessibilityLabel="Return to home"
             style={styles.backButton}
-            onPress={() => router.replace("/tabs")}
+            onPress={() => router.replace("/home")}
           >
             <Ionicons name="arrow-back" size={25} color="#FFFFFF" />
           </TouchableOpacity>
@@ -141,34 +141,34 @@ export default function OrderPlacedScreen() {
         <View style={styles.bottomNav}>
           <TouchableOpacity
             style={styles.navItem}
-            onPress={() => router.replace("/tabs")}
+            onPress={() => router.replace("/home")}
           >
             <Ionicons name="home-outline" size={27} color="#7B8798" />
             <Text style={styles.navText}>Home</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.navItem}
-            onPress={() => router.replace("/tabs/cart")}
+            onPress={() => router.replace("/cart")}
           >
             <Ionicons name="cart-outline" size={27} color="#7B8798" />
             <Text style={styles.navText}>Cart</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.centerNavButton}
-            onPress={() => router.replace("/tabs/shop")}
+            onPress={() => router.replace("/shop")}
           >
             <Ionicons name="bag-handle" size={31} color="#FFFFFF" />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.navItem}
-            onPress={() => router.replace("/tabs/favorites")}
+            onPress={() => router.replace("/favorites")}
           >
             <Ionicons name="heart-outline" size={27} color="#7B8798" />
             <Text style={styles.navText}>Favorites</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.navItem}
-            onPress={() => router.replace("/tabs/profile")}
+            onPress={() => router.replace("/profile")}
           >
             <Ionicons name="person-circle-outline" size={28} color="#B00000" />
             <Text style={[styles.navText, styles.profileText]}>Profile</Text>

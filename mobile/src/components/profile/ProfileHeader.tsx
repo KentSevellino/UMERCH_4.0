@@ -1,5 +1,4 @@
-import React from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 
 type Props = {
   scale?: number;
@@ -21,7 +20,7 @@ export default function ProfileHeader({ scale = 1, title = "Profile" }: Props) {
 
       <View style={styles.left}>
         <Image
-          source={require("../../../assets/images/umerch-logo.png")}
+          source={require("../../assets/images/umerch-logo.png")}
           style={[
             styles.logo,
             {

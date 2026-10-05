@@ -1,29 +1,19 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  useWindowDimensions,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+    useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export type NavTabId =
-  | "home"
-  | "search"
-  | "shop"
-  | "cart"
-  | "favorites"
-  | "profile";
+  "home" | "search" | "shop" | "cart" | "favorites" | "profile";
 
 type TabRoute =
-  | "/tabs"
-  | "/tabs/search"
-  | "/tabs/shop"
-  | "/tabs/cart"
-  | "/tabs/favorites"
-  | "/tabs/profile";
+  "/home" | "/search" | "/shop" | "/cart" | "/favorites" | "/profile";
 
 type NavTabConfig = {
   id: NavTabId;
@@ -37,28 +27,28 @@ const TABS: NavTabConfig[] = [
   {
     id: "home",
     label: "Home",
-    route: "/tabs",
+    route: "/home",
     icon: "home-outline",
     activeIcon: "home",
   },
   {
     id: "cart",
     label: "Cart",
-    route: "/tabs/cart",
+    route: "/cart",
     icon: "cart-outline",
     activeIcon: "cart",
   },
   {
     id: "favorites",
     label: "Favorites",
-    route: "/tabs/favorites",
+    route: "/favorites",
     icon: "heart-outline",
     activeIcon: "heart",
   },
   {
     id: "profile",
     label: "Profile",
-    route: "/tabs/profile",
+    route: "/profile",
     icon: "person-circle-outline",
     activeIcon: "person-circle",
   },
@@ -112,7 +102,7 @@ export function BottomNavbar({ activeTab }: BottomNavbarProps) {
         ]}
         activeOpacity={0.8}
         onPress={() => {
-          router.push("/tabs/shop");
+          router.push("/shop");
         }}
       >
         <Ionicons

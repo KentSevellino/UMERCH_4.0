@@ -1,4 +1,4 @@
-import type { CartItemData } from "@/components/navigation/cart/CartItem";
+import type { CartItemData } from "@/components/cart/CartItem";
 import type { Product } from "@/types/product";
 import {
     createContext,

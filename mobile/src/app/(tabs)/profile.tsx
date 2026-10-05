@@ -7,10 +7,10 @@ import { ProfileInfo } from "@/components/profile/ProfileInfo";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import { router } from "expo-router";
 import {
-  ScrollView,
-  StyleSheet,
-  View,
-  useWindowDimensions,
+    ScrollView,
+    StyleSheet,
+    View,
+    useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 

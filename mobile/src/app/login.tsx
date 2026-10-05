@@ -1,7 +1,17 @@
+import { AuthenticationProgressModal } from "@/components/auth/AuthenticationProgressModal";
 import { LoginForm } from "@/components/auth/LoginForm";
-import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { useAuth } from "@/context/AuthContext";
 import {
+  clearCredentials,
+  saveCredentials,
+} from "@/services/credentialStorage";
+import { Ionicons } from "@expo/vector-icons";
+import { makeRedirectUri } from "expo-auth-session";
+import * as Google from "expo-auth-session/providers/google";
+import { router } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -14,17 +24,96 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Login() {
+  const { login, loginWithGoogle } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [progressStatus, setProgressStatus] = useState<"loading" | "success">(
+    "loading",
+  );
+  const googleClientIds = {
+    android: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+    ios: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    web: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  };
+  const googleClientId =
+    Platform.OS === "android"
+      ? googleClientIds.android
+      : Platform.OS === "ios"
+        ? googleClientIds.ios
+        : googleClientIds.web;
+  const isGoogleConfigured = Boolean(googleClientId);
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    androidClientId:
+      googleClientIds.android || "missing-google-android-client-id",
+    iosClientId: googleClientIds.ios || "missing-google-ios-client-id",
+    webClientId: googleClientIds.web || "missing-google-web-client-id",
+    scopes: ["openid", "profile", "email"],
+    redirectUri: makeRedirectUri({ scheme: "umerchapp", path: "oauth" }),
+  });
+
+  useEffect(() => {
+    if (response && response.type !== "success") {
+      setIsSubmitting(false);
+    }
+    if (response?.type !== "success") return;
+    const idToken =
+      response.authentication?.idToken ?? response.params?.id_token;
+    if (!idToken) {
+      Alert.alert(
+        "Google sign-in failed",
+        "Google did not return an ID token.",
+      );
+      return;
+    }
+
+    setIsSubmitting(true);
+    loginWithGoogle(idToken)
+      .then((result) => {
+        setProgressStatus("success");
+        setTimeout(() => {
+          router.replace(result.otp_required ? "/otp" : "/home");
+        }, 900);
+      })
+      .catch((error: Error) => {
+        setIsSubmitting(false);
+        Alert.alert("Google sign-in failed", error.message);
+      });
+  }, [response, loginWithGoogle]);
   const { width, height } = useWindowDimensions();
 
   const scale = Math.min(Math.max(width / 375, 0.9), 1.15);
 
   const styles = createStyles(scale, width, height);
 
-  const handleLogin = (email: string, password: string) => {
-    console.log("Email:", email);
-    console.log("Password:", password);
+  const handleLogin = (
+    email: string,
+    password: string,
+    rememberMe: boolean,
+  ) => {
+    if (!email || !password) {
+      Alert.alert(
+        "Missing details",
+        "Enter your email and password to continue.",
+      );
+      return;
+    }
 
-    router.replace("/tabs");
+    setIsSubmitting(true);
+    login(email, password)
+      .then((result) =>
+        (rememberMe
+          ? saveCredentials(email, password)
+          : clearCredentials()
+        ).then(() => {
+          setProgressStatus("success");
+          setTimeout(() => {
+            router.replace(result.otp_required ? "/otp" : "/home");
+          }, 900);
+        }),
+      )
+      .catch((error: Error) => {
+        setIsSubmitting(false);
+        Alert.alert("Sign in failed", error.message);
+      });
   };
 
   const handleForgotPassword = () => {
@@ -32,7 +121,16 @@ export default function Login() {
   };
 
   const handleGoogleLogin = () => {
-    console.log("Google login");
+    if (!isGoogleConfigured || !request) {
+      Alert.alert(
+        "Google sign-in unavailable",
+        "Google sign-in is not configured yet.",
+      );
+      return;
+    }
+    setProgressStatus("loading");
+    setIsSubmitting(true);
+    void promptAsync();
   };
 
   return (
@@ -73,9 +171,14 @@ export default function Login() {
             onLogin={handleLogin}
             onForgotPassword={handleForgotPassword}
             onGoogleLogin={handleGoogleLogin}
+            isSubmitting={isSubmitting}
           />
         </ScrollView>
       </KeyboardAvoidingView>
+      <AuthenticationProgressModal
+        visible={isSubmitting}
+        status={progressStatus}
+      />
     </SafeAreaView>
   );
 }

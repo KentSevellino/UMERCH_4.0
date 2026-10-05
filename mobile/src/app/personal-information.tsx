@@ -1,1 +1,2 @@
-export { default } from "@/components/navigation/profile/PersonalInformation";
+export { default } from "@/components/profile/PersonalInformation";
+

@@ -1,12 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import {
-    Image,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Image,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 import type { PlacedOrder } from "@/context/CartContext";

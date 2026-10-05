@@ -7,11 +7,11 @@ import { BottomNavbar } from "@/components/navigation/BottomNavbar";
 import { useCart } from "@/context/CartContext";
 import { router } from "expo-router";
 import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  useWindowDimensions,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
+    useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -72,7 +72,7 @@ export default function Cart() {
 
                 <CheckoutButton
                   onPress={() => {
-                    router.push("/tabs/checkout");
+                    router.push("/checkout");
                   }}
                 />
               </>

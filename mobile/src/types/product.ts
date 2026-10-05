@@ -8,4 +8,8 @@ export type Product = {
   oldPrice?: string;
   hasSize?: boolean;
   image: ImageSourcePropType;
+  description?: string;
+  stock?: number;
+  variant?: string;
+  variantType?: string;
 };
