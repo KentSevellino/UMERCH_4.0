@@ -5,7 +5,15 @@ import { CheckoutButton } from "@/components/navigation/cart/CheckoutButton";
 import { BottomNavbar } from "@/components/navigation/BottomNavbar";
 import { TabContent } from "@/components/tab-content";
 import { useCart } from "@/context/CartContext";
-import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { router } from "expo-router";
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const SHIPPING = 0;
@@ -24,6 +32,29 @@ export default function Cart() {
   const styles = createStyles(scale, width);
 
   const { items, totalCount, removeItem, updateQuantity } = useCart();
+
+  const reportError = (title: string, error: unknown) => {
+    Alert.alert(
+      title,
+      error instanceof Error ? error.message : "Please try again."
+    );
+  };
+
+  const handleChangeQuantity = async (cartItemId: number, quantity: number) => {
+    try {
+      await updateQuantity(cartItemId, quantity);
+    } catch (error) {
+      reportError("Could not update quantity", error);
+    }
+  };
+
+  const handleRemove = async (cartItemId: number) => {
+    try {
+      await removeItem(cartItemId);
+    } catch (error) {
+      reportError("Could not remove item", error);
+    }
+  };
 
   const subtotal = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -48,10 +79,10 @@ export default function Cart() {
           >
             {items.map((item) => (
               <CartItem
-                key={item.id}
+                key={item.cartItemId ?? item.id}
                 item={item}
-                onChangeQuantity={updateQuantity}
-                onRemove={removeItem}
+                onChangeQuantity={handleChangeQuantity}
+                onRemove={handleRemove}
               />
             ))}
 
@@ -65,7 +96,7 @@ export default function Cart() {
 
                 <CheckoutButton
                   onPress={() => {
-                    console.log("Check out");
+                    router.push("/checkout");
                   }}
                 />
               </>

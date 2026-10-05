@@ -6,6 +6,8 @@ import { BottomNavbar } from "@/components/navigation/BottomNavbar";
 import { TabContent } from "@/components/tab-content";
 import { useCart } from "@/context/CartContext";
 import { useFavorites } from "@/context/FavoritesContext";
+import { useProducts } from "@/hooks/use-products";
+import { SHOP_TAXONOMY } from "@/services/products";
 import type { Product } from "@/types/product";
 import { useState } from "react";
 import { ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
@@ -20,7 +22,7 @@ import ProductDetailModal from "@/components/product/ProductDetailModal";
 
 const CATEGORIES = ["All", "Jersey", "Bags", "Drinkware", "School Supplies"];
 
-const products: Product[] = [
+const FALLBACK_PRODUCTS: Product[] = [
   {
     id: 1,
     name: "UM CCE Esports Jersey",
@@ -80,13 +82,15 @@ export default function Shop() {
 
   const { isFavorite, toggleFavorite } = useFavorites();
 
+  const catalog = useProducts(FALLBACK_PRODUCTS, SHOP_TAXONOMY);
+
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productModalVisible, setProductModalVisible] = useState(false);
 
-  const filteredProducts = products.filter((product) => {
+  const filteredProducts = catalog.filter((product) => {
     const matchesCategory =
       selectedCategory === "All" || product.category === selectedCategory;
 
@@ -154,7 +158,7 @@ export default function Shop() {
             setSelectedProduct(null);
           }}
           onAddToCart={(product, quantity, size) => {
-            addItem(product, quantity);
+            addItem(product, quantity, size);
             setProductModalVisible(false);
           }}
           onBuyNow={(product, quantity, size) => {

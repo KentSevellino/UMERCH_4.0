@@ -1,4 +1,4 @@
-    import React, { useMemo, useState } from "react";
+    import React, { useEffect, useMemo, useState } from "react";
 
 import {
   ScrollView,
@@ -23,12 +23,7 @@ import OrderFilters, {
   OrderFilter,
 } from "../components/orders/OrderFilters";
 
-
-/* ==========================================
-   ORDER DATA
-========================================== */
-
-const orders: Order[] = [];
+import { fetchOrders, toOrderCardData } from "../services/orders";
 
 
 /* ==========================================
@@ -37,8 +32,28 @@ const orders: Order[] = [];
 
 export default function OrdersScreen() {
 
+  const [orders, setOrders] = useState<Order[]>([]);
+
   const [selectedFilter, setSelectedFilter] =
     useState<OrderFilter>("All");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetchOrders()
+      .then((rows) => {
+        if (cancelled) return;
+        setOrders(rows.map(toOrderCardData));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setOrders([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
 
   /* ========================================
@@ -55,7 +70,7 @@ export default function OrdersScreen() {
       (order) => order.status === selectedFilter
     );
 
-  }, [selectedFilter]);
+  }, [orders, selectedFilter]);
 
 
   return (

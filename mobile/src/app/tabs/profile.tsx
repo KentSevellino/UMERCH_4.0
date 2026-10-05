@@ -2,6 +2,7 @@ import { LogoutButton } from "@/components/navigation/profile/LogoutButton";
 import ProfileHeader from "@/components/navigation/profile/ProfileHeader";
 import { ProfileInfo } from "@/components/navigation/profile/ProfileInfo";
 import { ProfileDetails } from "@/components/navigation/profile/ProfileDetails";
+import { useAuth } from "@/context/AuthContext";
 import { useProfileImage } from "@/hooks/use-profile-image";
 import { BottomNavbar } from "@/components/navigation/BottomNavbar";
 import { TabContent } from "@/components/tab-content";
@@ -17,6 +18,8 @@ export default function Profile() {
   const styles = createStyles(scale, width);
 
   const { avatarUri, changeProfileImage } = useProfileImage();
+
+  const { user, logout } = useAuth();
 
   const handleMenuPress = (id: string) => {
     switch (id) {
@@ -45,8 +48,12 @@ export default function Profile() {
     }
   };
 
-  const handleLogout = () => {
-    router.replace("/login");
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      router.replace("/login");
+    }
   };
 
   return (
@@ -73,8 +80,8 @@ export default function Profile() {
             ================================================== */}
 
             <ProfileInfo
-              name="Kenny"
-              role="STUDENT"
+              name={user?.user_fullname ?? "User"}
+              role={(user?.role ?? "customer").toUpperCase()}
               university="University of Mindanao"
               avatarUri={avatarUri}
               onChangeAvatar={changeProfileImage}

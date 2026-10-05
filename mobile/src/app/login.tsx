@@ -1,6 +1,8 @@
 import { LoginForm } from "@/components/auth/LoginForm";
+import { useAuth } from "@/context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -20,11 +22,31 @@ export default function Login() {
 
   const styles = createStyles(scale, width, height);
 
-  const handleLogin = (email: string, password: string) => {
-    console.log("Email:", email);
-    console.log("Password:", password);
+  const { login } = useAuth();
 
-    router.replace("/tabs");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleLogin = async (email: string, password: string) => {
+    setError(null);
+    setSubmitting(true);
+
+    try {
+      const result = await login(email.trim(), password);
+
+      if (result.otp_required) {
+        router.replace("/otp");
+        return;
+      }
+
+      router.replace("/tabs");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Sign in failed. Try again."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleForgotPassword = () => {
@@ -73,6 +95,8 @@ export default function Login() {
             onLogin={handleLogin}
             onForgotPassword={handleForgotPassword}
             onGoogleLogin={handleGoogleLogin}
+            loading={submitting}
+            error={error}
           />
         </ScrollView>
       </KeyboardAvoidingView>

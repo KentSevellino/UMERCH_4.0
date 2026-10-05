@@ -12,11 +12,13 @@ import type { ImageSourcePropType } from "react-native";
 
 export type CartItemData = {
   id: number;
+  cartItemId?: number;
   name: string;
   category: string;
   price: number;
   image: ImageSourcePropType;
   quantity: number;
+  variant: string;
 };
 
 type CartItemProps = {
@@ -57,7 +59,7 @@ export function CartItem({ item, onChangeQuantity, onRemove }: CartItemProps) {
           <CartQuantity
             quantity={item.quantity}
             onChange={(quantity) => {
-              onChangeQuantity(item.id, quantity);
+              onChangeQuantity(item.cartItemId ?? item.id, quantity);
             }}
           />
 
@@ -65,7 +67,7 @@ export function CartItem({ item, onChangeQuantity, onRemove }: CartItemProps) {
             style={styles.removeButton}
             activeOpacity={0.7}
             onPress={() => {
-              onRemove(item.id);
+              onRemove(item.cartItemId ?? item.id);
             }}
           >
             <Ionicons

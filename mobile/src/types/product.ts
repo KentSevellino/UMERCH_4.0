@@ -7,4 +7,7 @@ export type Product = {
   price: string;
   oldPrice?: string;
   image: ImageSourcePropType;
+  description?: string;
+  variants?: string[];
+  stock?: number;
 };

@@ -5,6 +5,8 @@ import { ShopSearch } from "@/components/navigation/shop/ShopSearch";
 import { BottomNavbar } from "@/components/navigation/BottomNavbar";
 import { TabContent } from "@/components/tab-content";
 import { useCart } from "@/context/CartContext";
+import { useProducts } from "@/hooks/use-products";
+import { HOME_TAXONOMY } from "@/services/products";
 import type { Product } from "@/types/product";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -29,7 +31,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const CATEGORIES = ["All", "Shirts", "Accessories", "Bottles", "Others"];
 
-const products: Product[] = [
+const FALLBACK_PRODUCTS: Product[] = [
   {
     id: 1,
     name: "UM CCE Esports Jersey",
@@ -94,10 +96,12 @@ export default function Home() {
 
   const { addItem } = useCart();
 
+  const catalog = useProducts(FALLBACK_PRODUCTS, HOME_TAXONOMY);
+
   const filteredProducts =
     selectedCategory === "All"
-      ? products
-      : products.filter((product) => product.category === selectedCategory);
+      ? catalog
+      : catalog.filter((product) => product.category === selectedCategory);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
@@ -290,7 +294,7 @@ export default function Home() {
             setSelectedProduct(null);
           }}
           onAddToCart={(product, quantity, size) => {
-            addItem(product, quantity);
+            addItem(product, quantity, size);
             setProductModalVisible(false);
           }}
           onBuyNow={(product, quantity, size) => {

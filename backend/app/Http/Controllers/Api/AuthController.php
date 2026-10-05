@@ -192,7 +192,7 @@ class AuthController extends Controller
         $record = $this->readOtp($request);
 
         if (! is_array($record) || empty($record['otp']) || empty($record['expires'])
-            || now()->greaterThan($record['expires'])) {
+            || $this->otpExpired($record['expires'])) {
             $this->forgetOtp($request);
 
             return response()->json(['message' => 'The OTP has expired. Please request a new one.'], 422);
@@ -467,14 +467,14 @@ class AuthController extends Controller
         if ($request->hasSession()) {
             $this->storeOtp($request, [
                 'otp' => $otp,
-                'expires' => now()->addMinutes(5),
+                'expires' => now()->addMinutes(5)->getTimestamp(),
                 'attempts' => 0,
                 'redirect' => $redirect,
             ]);
         } elseif ($accessToken) {
             $this->storeOtp($request, [
                 'otp' => $otp,
-                'expires' => now()->addMinutes(5),
+                'expires' => now()->addMinutes(5)->getTimestamp(),
                 'attempts' => 0,
                 'redirect' => $redirect,
                 'user_id' => $user->id,
@@ -568,6 +568,25 @@ class AuthController extends Controller
         if ($token) {
             Cache::forget($this->otpCacheKey($token));
         }
+    }
+
+    private function otpExpired($expires): bool
+    {
+        if ($expires instanceof \DateTimeInterface) {
+            return now()->greaterThan($expires);
+        }
+
+        if (is_numeric($expires)) {
+            return now()->getTimestamp() > (int) $expires;
+        }
+
+        if (is_string($expires) && $expires !== '') {
+            $timestamp = strtotime($expires);
+
+            return $timestamp === false || now()->getTimestamp() > $timestamp;
+        }
+
+        return true;
     }
 
     /**

@@ -85,7 +85,7 @@ export default function Favorites() {
             setSelectedProduct(null);
           }}
           onAddToCart={(product, quantity, size) => {
-            addItem(product, quantity);
+            addItem(product, quantity, size);
             setProductModalVisible(false);
           }}
           onBuyNow={(product, quantity, size) => {

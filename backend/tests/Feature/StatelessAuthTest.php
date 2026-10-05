@@ -2,6 +2,7 @@
 
 use App\Mail\OtpMail;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 use Laravel\Sanctum\PersonalAccessToken;
 use Tests\TestCase;
@@ -188,4 +189,30 @@ it('refuses a deactivated account', function () {
         ->assertJson([
             'message' => 'Your account has been deactivated. Please contact an administrator.',
         ]);
+});
+
+it('stores an otp expiry that the session and cache can serialize', function () {
+    Mail::fake();
+
+    $token = statelessLogin($this, statelessUser())->json('token');
+    $tokenId = (int) explode('|', $token)[0];
+
+    $record = Cache::get('otp:token:'.$tokenId);
+
+    expect($record)->toBeArray()
+        ->and($record['expires'])->toBeInt();
+});
+
+it('still confirms a code after the cache serializes and restores it', function () {
+    Mail::fake();
+
+    $token = statelessLogin($this, statelessUser())->json('token');
+    $key = 'otp:token:'.(int) explode('|', $token)[0];
+
+    Cache::put($key, unserialize(serialize(Cache::get($key))), 300);
+
+    $this->withToken($token)
+        ->postJson('/api/verify-otp', ['otp' => statelessOtp()])
+        ->assertOk()
+        ->assertJson(['message' => 'OTP verified successfully']);
 });

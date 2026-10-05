@@ -32,7 +32,7 @@ type Props = {
   ) => void;
 };
 
-const sizes = ["S", "M", "L", "XL", "XXL"];
+const DEFAULT_SIZES = ["S", "M", "L", "XL", "XXL"];
 
 const toNumber = (value: string) =>
   parseFloat(value.replace(/[^\d.]/g, "")) || 0;
@@ -44,7 +44,9 @@ export default function ProductDetailModal({
   onAddToCart,
   onBuyNow,
 }: Props) {
-  const [selectedSize, setSelectedSize] = useState("M");
+  const sizes = product?.variants?.length ? product.variants : DEFAULT_SIZES;
+
+  const [selectedSize, setSelectedSize] = useState(sizes[0] ?? "M");
   const [quantity, setQuantity] = useState(1);
 
   const { isFavorite, toggleFavorite } = useFavorites();

@@ -29,15 +29,7 @@ class CartController extends Controller
         $variant = trim($request->variant);
         $quantityRequested = $request->quantity;
 
-        $inventoryItem = Inventory::where('product_id', $productId)
-            ->where('variant', $variant)
-            ->first();
-        $availableStock = $inventoryItem ? $inventoryItem->quantity : 0;
-
-        if ($availableStock === 0) {
-            $product = Products::where('product_id', $productId)->first();
-            $availableStock = $product ? $product->product_stock : 0;
-        }
+        $availableStock = $this->availableStock($productId, $variant);
 
         if ($availableStock <= 0) {
             return response()->json(['message' => 'This product variant is out of stock', 'available_stock' => 0], 400);
@@ -119,15 +111,59 @@ class CartController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        $request->validate(['variant' => 'required|string']);
+        $validated = $request->validate([
+            'variant' => 'required_without:quantity|string',
+            'quantity' => 'required_without:variant|integer|min:1',
+        ]);
 
         try {
             $cartItem = Carts_Item::findOrFail($cartItemId);
-            $cartItem->update(['variant' => $request->variant]);
+
+            if (array_key_exists('variant', $validated)) {
+                $cartItem->variant = trim($validated['variant']);
+            }
+
+            if (array_key_exists('quantity', $validated)) {
+                $requested = $validated['quantity'];
+                $availableStock = $this->availableStock($cartItem->product_id, $cartItem->variant);
+
+                if ($requested > $availableStock) {
+                    return response()->json([
+                        'message' => 'Insufficient stock available',
+                        'requested' => $requested,
+                        'available_stock' => $availableStock,
+                    ], 400);
+                }
+
+                $cartItem->quantity = $requested;
+            }
+
+            $cartItem->save();
+
             return response()->json(['message' => 'Item updated successfully']);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error updating item'], 500);
         }
+    }
+
+    /**
+     * Stock for a specific variant, falling back to the product's own count
+     * when no inventory row covers it.
+     */
+    private function availableStock(int $productId, string $variant): int
+    {
+        $inventoryItem = Inventory::where('product_id', $productId)
+            ->where('variant', $variant)
+            ->first();
+
+        $availableStock = $inventoryItem ? $inventoryItem->quantity : 0;
+
+        if ($availableStock === 0) {
+            $product = Products::where('product_id', $productId)->first();
+            $availableStock = $product ? $product->product_stock : 0;
+        }
+
+        return $availableStock;
     }
 
     public function checkInventory(Request $request)

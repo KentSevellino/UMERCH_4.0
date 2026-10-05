@@ -15,12 +15,16 @@ type LoginFormProps = {
   onLogin: (email: string, password: string) => void;
   onForgotPassword: () => void;
   onGoogleLogin: () => void;
+  loading?: boolean;
+  error?: string | null;
 };
 
 export function LoginForm({
   onLogin,
   onForgotPassword,
   onGoogleLogin,
+  loading = false,
+  error = null,
 }: LoginFormProps) {
   const { width } = useWindowDimensions();
 
@@ -91,14 +95,20 @@ export function LoginForm({
 
       {/* Sign In Button */}
       <View style={styles.bottomContainer}>
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
         <TouchableOpacity
-          style={styles.signInButton}
+          style={[styles.signInButton, loading && styles.signInButtonDisabled]}
           onPress={() => {
+            if (loading) return;
             onLogin(email, password);
           }}
+          disabled={loading}
           activeOpacity={0.8}
         >
-          <Text style={styles.signInText}>Sign In</Text>
+          <Text style={styles.signInText}>
+            {loading ? "Signing in…" : "Sign In"}
+          </Text>
         </TouchableOpacity>
       </View>
     </>
@@ -245,6 +255,22 @@ const createStyles = (scale: number) =>
       shadowRadius: 3,
 
       elevation: 4,
+    },
+
+    errorText: {
+      color: "#B00000",
+
+      fontSize: Math.round(13 * scale),
+      lineHeight: Math.round(18 * scale),
+      fontWeight: "600",
+
+      textAlign: "center",
+
+      marginBottom: Math.round(10 * scale),
+    },
+
+    signInButtonDisabled: {
+      backgroundColor: "#D08A8A",
     },
 
     signInText: {
