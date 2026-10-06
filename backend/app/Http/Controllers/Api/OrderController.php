@@ -187,18 +187,42 @@ class OrderController extends Controller
                 return response()->json(['message' => 'Order not found'], 404);
             }
 
-            if (!$request->hasFile('receipt_form')) {
+            if ($request->hasFile('receipt_form')) {
+                $file = $request->file('receipt_form');
+                $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+                $mime = $file->getMimeType();
+                $clientMime = $file->getClientMimeType();
+                if (!in_array($mime, $allowedMimes) && !in_array($clientMime, $allowedMimes)) {
+                    return response()->json(['message' => 'Invalid file type. Only JPG, PNG, and PDF are allowed'], 400);
+                }
+
+                $fileName = 'receipt_' . $orderId . '_' . time() . '.' . $file->getClientOriginalExtension();
+                $filePath = $file->storeAs('receipts', $fileName, 'public');
+            } elseif ($request->filled('receipt_base64')) {
+                $base64Data = (string) $request->input('receipt_base64');
+                $ext = 'jpg';
+                if (preg_match('/^data:image\/(\w+);base64,/', $base64Data, $type)) {
+                    $base64Data = substr($base64Data, strpos($base64Data, ',') + 1);
+                    $ext = strtolower($type[1]);
+                    if ($ext === 'jpeg') $ext = 'jpg';
+                } elseif ($request->filled('file_ext')) {
+                    $ext = strtolower(ltrim((string) $request->input('file_ext'), '.'));
+                    if ($ext === 'jpeg') $ext = 'jpg';
+                }
+                $allowedExts = ['jpg', 'jpeg', 'png', 'pdf'];
+                if (!in_array(strtolower($ext), $allowedExts)) {
+                    return response()->json(['message' => 'Invalid file type. Only JPG, PNG, and PDF are allowed'], 400);
+                }
+                $decoded = base64_decode($base64Data);
+                if ($decoded === false || strlen($decoded) === 0) {
+                    return response()->json(['message' => 'Invalid base64 image data'], 400);
+                }
+                $fileName = 'receipt_' . $orderId . '_' . time() . '.' . $ext;
+                $filePath = 'receipts/' . $fileName;
+                \Illuminate\Support\Facades\Storage::disk('public')->put($filePath, $decoded);
+            } else {
                 return response()->json(['message' => 'No file provided'], 400);
             }
-
-            $file = $request->file('receipt_form');
-            $allowedMimes = ['image/jpeg', 'image/png', 'application/pdf'];
-            if (!in_array($file->getMimeType(), $allowedMimes)) {
-                return response()->json(['message' => 'Invalid file type. Only JPG, PNG, and PDF are allowed'], 400);
-            }
-
-            $fileName = 'receipt_' . $orderId . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $filePath = $file->storeAs('receipts', $fileName, 'public');
 
             $updateData = ['receipt_form' => $filePath];
             if (strtolower($order->status) === 'cancelled') {
@@ -365,7 +389,8 @@ class OrderController extends Controller
                 return response()->json(['message' => 'Order not found'], 404);
             }
 
-            if (strtolower($order->status) !== 'ready-for-pickup') {
+            $currentStatus = strtolower(str_replace([' ', '_'], '-', trim($order->status ?? '')));
+            if ($currentStatus !== 'ready-for-pickup') {
                 return response()->json(['message' => 'Order is not ready for pickup'], 400);
             }
 

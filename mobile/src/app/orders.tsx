@@ -5,8 +5,8 @@ import OrderFilters, {
 } from "@/components/orders/OrderFilters";
 import { fetchOrders, toOrderCardData, type ApiOrder } from "@/services/orders";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
 import {
     ScrollView,
     StyleSheet,
@@ -22,13 +22,18 @@ export default function OrdersScreen() {
   const [selectedOrder, setSelectedOrder] = useState<ApiOrder | null>(null);
   const [filter, setFilter] = useState<OrderFilter>("All");
 
-  useEffect(() => {
+  const loadOrders = useCallback(() => {
     let cancelled = false;
     fetchOrders()
       .then((rows) => {
         if (!cancelled) {
           setApiOrders(rows);
           setOrders(rows.map(toOrderCardData));
+          setSelectedOrder((current) =>
+            current
+              ? rows.find((r) => r.order_id === current.order_id) ?? current
+              : null,
+          );
         }
       })
       .catch(() => {
@@ -38,6 +43,8 @@ export default function OrdersScreen() {
       cancelled = true;
     };
   }, []);
+
+  useFocusEffect(loadOrders);
 
   const filtered = useMemo(
     () =>
@@ -82,6 +89,26 @@ export default function OrdersScreen() {
         visible={selectedOrder !== null}
         order={selectedOrder}
         onClose={() => setSelectedOrder(null)}
+        onOrderUpdated={(updatedOrder) => {
+          setSelectedOrder(updatedOrder);
+          setApiOrders((prev) =>
+            prev.map((item) =>
+              item.order_id === updatedOrder.order_id ? updatedOrder : item,
+            ),
+          );
+          setOrders((prev) =>
+            prev.map((item) =>
+              item.id === String(updatedOrder.order_id)
+                ? toOrderCardData(updatedOrder)
+                : item,
+            ),
+          );
+          // Sync with server
+          fetchOrders().then((rows) => {
+            setApiOrders(rows);
+            setOrders(rows.map(toOrderCardData));
+          }).catch(() => {});
+        }}
       />
     </SafeAreaView>
   );

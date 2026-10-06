@@ -44,19 +44,24 @@ export async function request<T>(
 ): Promise<T> {
   let response: Response;
 
+  const isFormData =
+    (typeof FormData !== "undefined" && body instanceof FormData) ||
+    (body !== null && typeof body === "object" && typeof (body as any).append === "function");
+
   try {
     response = await fetch(`${API_URL}${path}`, {
       method,
       headers: {
         Accept: "application/json",
-        ...(body === undefined ? {} : { "Content-Type": "application/json" }),
+        ...(body === undefined || isFormData ? {} : { "Content-Type": "application/json" }),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : isFormData ? (body as any) : JSON.stringify(body),
     });
-  } catch {
+  } catch (err: any) {
     throw new ApiError(
-      `Could not reach the server at ${API_URL}. Start the backend and set EXPO_PUBLIC_API_URL for this device.`,
+      err?.message ||
+        `Could not reach the server at ${API_URL}. Start the backend and set EXPO_PUBLIC_API_URL for this device.`,
       0,
     );
   }
@@ -73,10 +78,21 @@ export async function request<T>(
   }
 
   if (!response.ok) {
-    const message =
-      data && typeof data === "object" && "message" in data
-        ? String((data as { message: unknown }).message)
-        : `Request failed (${response.status})`;
+    let message = `Request failed (${response.status})`;
+    if (data && typeof data === "object") {
+      const d = data as Record<string, unknown>;
+      if (typeof d.message === "string" && d.message.trim()) {
+        message = d.message;
+      } else if (d.errors && typeof d.errors === "object") {
+        message = Object.values(d.errors as Record<string, unknown[]>)
+          .flat()
+          .join(", ");
+      } else if (typeof d.error === "string") {
+        message = d.error;
+      }
+    } else if (text) {
+      message = text.slice(0, 150);
+    }
 
     throw new ApiError(message, response.status);
   }
