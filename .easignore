@@ -1,0 +1,36 @@
+# Root .easignore for monorepo
+backend/
+.git/
+
+# Mobile ignore patterns
+node_modules/
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native credentials
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro & debug
+.metro-health-check*
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# OS
+.DS_Store
+*.pem
+
+# Typescript & env
+*.tsbuildinfo
+.env*.local
+
+# Native directories (managed workflow)
+/ios
+/android

@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "mobile",
+    "name": "UMerch",
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/UM/umerch-logo.png",
     "scheme": "umerchapp",
     "userInterfaceStyle": "automatic",
     "ios": {
@@ -13,24 +13,22 @@
     "android": {
       "package": "com.umerch.mobile",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#B00000",
+        "foregroundImage": "./assets/images/UM/umerch-logo.png"
       },
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/UM/umerch-logo.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
-          "image": "./assets/images/splash-icon.png",
+          "backgroundColor": "#B00000",
+          "image": "./assets/images/UM/umerch-logo.png",
           "imageWidth": 76,
           "iosUrlScheme": "com.googleusercontent.apps.1062751030517-iqlb6uepf9njvqht2t6hjufd7fgemctn"
         }
@@ -39,7 +37,15 @@
       "expo-image",
       "expo-web-browser",
       "expo-secure-store",
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

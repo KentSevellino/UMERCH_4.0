@@ -2,20 +2,29 @@ import Constants from "expo-constants";
 import * as Device from "expo-device";
 import { Platform } from "react-native";
 
-const configuredApiUrl = process.env.EXPO_PUBLIC_API_URL;
-const expoHost = Constants.expoConfig?.hostUri?.split(":")[0];
-const androidApiHost = Device.isDevice ? expoHost : "10.0.2.2";
+function resolveApiUrl(): string {
+  const configured = process.env.EXPO_PUBLIC_API_URL;
+  const expoHost = Constants.expoConfig?.hostUri?.split(":")[0];
+  const androidApiHost = expoHost || (!Device.isDevice ? "10.0.2.2" : undefined);
 
-export const API_URL = configuredApiUrl
-  ? Platform.OS === "android"
-    ? configuredApiUrl.replace(
+  if (configured) {
+    if (Platform.OS === "android" && androidApiHost) {
+      return configured.replace(
         /^(https?:\/\/)(localhost|127\.0\.0\.1)(?=[:/]|$)/,
         (_match, protocol: string) => `${protocol}${androidApiHost}`,
-      )
-    : configuredApiUrl
-  : Platform.OS === "android"
-    ? "http://10.0.2.2:8000/api"
-    : "http://localhost:8000/api";
+      );
+    }
+    return configured;
+  }
+
+  if (Platform.OS === "android") {
+    return androidApiHost ? `http://${androidApiHost}:8000/api` : "http://10.0.2.2:8000/api";
+  }
+
+  return "http://localhost:8000/api";
+}
+
+export const API_URL = resolveApiUrl();
 
 export class ApiError extends Error {
   readonly status: number;
