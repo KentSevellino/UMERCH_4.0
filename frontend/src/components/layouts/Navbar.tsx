@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Logo from '../../assets/images/UMERCH-LOGO.svg';
+import PendingSignInActions from '../ui/PendingSignInActions';
 
 interface NavbarProps {
   onSignInClick?: () => void;
@@ -10,7 +11,7 @@ interface NavbarProps {
 export default function Navbar({ onSignInClick }: NavbarProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isPendingVerification } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const isActive = (href: string) => {
@@ -20,7 +21,9 @@ export default function Navbar({ onSignInClick }: NavbarProps) {
   };
 
   const handleSignIn = () => {
-    if (onSignInClick) {
+    if (isPendingVerification) {
+      navigate('/authentication');
+    } else if (onSignInClick) {
       onSignInClick();
     } else if (isAuthenticated) {
       navigate('/Landing');
@@ -52,14 +55,14 @@ export default function Navbar({ onSignInClick }: NavbarProps) {
           <button
             className="font-bold text-[16px] leading-tight bg-transparent border-none cursor-pointer"
             onClick={handleSignIn}
-          >SIGN IN</button>
+          >{isPendingVerification ? 'VERIFY' : 'SIGN IN'}</button>
         </div>
 
         <div className="flex md:hidden ml-auto items-center gap-3">
           <button
             className="font-bold text-[14px] text-white bg-transparent border-none cursor-pointer"
             onClick={handleSignIn}
-          >SIGN IN</button>
+          >{isPendingVerification ? 'VERIFY' : 'SIGN IN'}</button>
           <button
             className="text-white focus:outline-none"
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -75,6 +78,7 @@ export default function Navbar({ onSignInClick }: NavbarProps) {
         </div>
       </div>
 
+      <PendingSignInActions />
       {mobileOpen && (
         <div className="md:hidden flex flex-col bg-[#7a0205] text-white font-bold text-[15px]" style={{ fontFamily: 'Montserrat' }}>
           <Link to="/Landing" className={`px-6 py-3 border-b border-[#9C0306] ${isActive('/Landing') ? 'text-[#FFB600]' : ''}`} onClick={() => setMobileOpen(false)}>HOME</Link>

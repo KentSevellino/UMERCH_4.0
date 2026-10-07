@@ -1,29 +1,25 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/layouts/Navbar';
 import Footer from '../components/layouts/Footer';
 import GoogleGIcon from '../components/ui/GoogleGIcon';
+import { formatSignInError } from '../utils/signInErrors';
 import { oauthErrorFromUrl, rememberOauthOrigin } from '../utils/oauthErrors';
 
 const googleAuthUrl = `${import.meta.env.VITE_API_URL || '/api'}/auth/google`;
 
 export default function LoginPage() {
-  const { login, isAuthenticated, isAdmin } = useAuth();
+  const { login, isAuthenticated, isAdmin, isPendingVerification, isLoading } = useAuth();
   const navigate = useNavigate();
   const [loginValue, setLoginValue] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(oauthErrorFromUrl);
   const [loading, setLoading] = useState(false);
 
-  if (isAuthenticated) {
-    if (isAdmin) {
-      navigate('/admin', { replace: true });
-    } else {
-      navigate('/Landing', { replace: true });
-    }
-    return null;
-  }
+  if (isLoading) return <p>Loading...</p>;
+  if (isPendingVerification) return <Navigate to="/authentication" replace />;
+  if (isAuthenticated) return <Navigate to={isAdmin ? '/admin' : '/Landing'} replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,8 +38,7 @@ export default function LoginPage() {
         navigate('/Landing');
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Login failed';
-      setError(message);
+      setError(formatSignInError(err).message);
     } finally {
       setLoading(false);
     }

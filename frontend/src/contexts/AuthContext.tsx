@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import api from '../services/api';
+import { authStatus, type AuthStatus } from '../utils/authState';
 
 interface User {
   id: number;
@@ -10,23 +11,6 @@ interface User {
   status: string;
 }
 
-interface AuthContextType {
-  user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  isAdmin: boolean;
-  isLoading: boolean;
-  otpVerified: boolean;
-  login: (login: string, password: string, deviceFingerprint?: string) => Promise<LoginResponse>;
-  loginWithGoogleCode: (code: string, deviceFingerprint?: string) => Promise<LoginResponse>;
-  logout: () => Promise<void>;
-  verifyOtp: (otp: string) => Promise<void>;
-  resendOtp: () => Promise<{ email: string }>;
-  setUser: (user: User | null) => void;
-  setToken: (token: string | null) => void;
-  setOtpVerified: (verified: boolean) => void;
-}
-
 interface LoginResponse {
   user: User;
   token: string;
@@ -34,149 +18,136 @@ interface LoginResponse {
   otp_required?: boolean;
   otp_verified?: boolean;
   email?: string;
-  message?: string;
+}
+
+interface VerificationResponse {
+  otp_verified: boolean;
+  redirect: string;
+}
+
+interface AuthContextType {
+  user: User | null;
+  token: string | null;
+  status: AuthStatus;
+  isAuthenticated: boolean;
+  isAdmin: boolean;
+  isLoading: boolean;
+  isPendingVerification: boolean;
+  otpVerified: boolean;
+  login: (login: string, password: string) => Promise<LoginResponse>;
+  loginWithGoogleCode: (code: string) => Promise<LoginResponse>;
+  logout: () => Promise<void>;
+  verifyOtp: (otp: string) => Promise<VerificationResponse>;
+  resendOtp: () => Promise<{ email: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('auth_user');
-    return saved ? JSON.parse(saved) : null;
-  });
-  const [token, setTokenState] = useState<string | null>(() => {
-    return localStorage.getItem('auth_token');
-  });
-  const [otpVerified, setOtpVerifiedState] = useState<boolean>(() => {
-    return localStorage.getItem('otp_verified') === 'true';
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem('auth_token'));
+  const [otpVerified, setOtpVerified] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const revision = useRef(0);
 
-  useEffect(() => {
-    if (token) {
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    }
+  const saveLogin = useCallback((data: LoginResponse | null) => {
+    revision.current++;
+    setUser(data?.user ?? null);
+    setToken(data?.token ?? null);
+    setOtpVerified(data?.otp_verified === true && data?.otp_required !== true);
     setIsLoading(false);
-  }, []);
-
-  const setToken = useCallback((newToken: string | null) => {
-    setTokenState(newToken);
-    if (newToken) {
-      localStorage.setItem('auth_token', newToken);
-      api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+    // The server, never a persisted flag or redirect, decides verification.
+    localStorage.removeItem('otp_verified');
+    if (data) {
+      localStorage.setItem('auth_token', data.token);
+      localStorage.setItem('auth_user', JSON.stringify(data.user));
     } else {
       localStorage.removeItem('auth_token');
-      delete api.defaults.headers.common['Authorization'];
-    }
-  }, []);
-
-  const handleSetUser = useCallback((newUser: User | null) => {
-    setUser(newUser);
-    if (newUser) {
-      localStorage.setItem('auth_user', JSON.stringify(newUser));
-    } else {
       localStorage.removeItem('auth_user');
     }
+    delete api.defaults.headers.common.Authorization;
   }, []);
 
-  const setOtpVerified = useCallback((verified: boolean) => {
-    setOtpVerifiedState(verified);
-    if (verified) {
-      localStorage.setItem('otp_verified', 'true');
-    } else {
-      localStorage.removeItem('otp_verified');
+  useEffect(() => {
+    let cancelled = false;
+    const startedAt = revision.current;
+    const savedToken = localStorage.getItem('auth_token');
+    const restore = async () => {
+      try {
+        if (!savedToken) {
+          if (!cancelled && revision.current === startedAt) saveLogin(null);
+          return;
+        }
+        const { data } = await api.get('/me');
+        if (!cancelled && revision.current === startedAt) {
+          saveLogin({ ...data, token: savedToken });
+        }
+      } catch {
+        if (!cancelled && revision.current === startedAt) saveLogin(null);
+      }
+    };
+    void restore();
+    return () => { cancelled = true; };
+  }, [saveLogin]);
+
+  const login = useCallback(async (loginStr: string, password: string): Promise<LoginResponse> => {
+    revision.current++;
+    setOtpVerified(false);
+    try {
+      const { data } = await api.post('/login', { login: loginStr, password });
+      saveLogin(data);
+      return data;
+    } catch (error) {
+      saveLogin(null);
+      throw error;
     }
-  }, []);
+  }, [saveLogin]);
 
-  const login = useCallback(async (loginStr: string, password: string, deviceFingerprint?: string): Promise<LoginResponse> => {
-    const response = await api.post('/login', {
-      login: loginStr,
-      password,
-      device_fingerprint: deviceFingerprint,
-    });
-    const data = response.data;
-
-    if (data.token) {
-      setToken(data.token);
+  const loginWithGoogleCode = useCallback(async (code: string): Promise<LoginResponse> => {
+    revision.current++;
+    setOtpVerified(false);
+    try {
+      const { data } = await api.post('/auth/exchange', { code });
+      saveLogin(data);
+      return data;
+    } catch (error) {
+      saveLogin(null);
+      throw error;
     }
-    if (data.user) {
-      handleSetUser(data.user);
-    }
-
-    if (data.otp_required) {
-      setOtpVerified(false);
-    } else if (data.otp_verified || data.redirect) {
-      setOtpVerified(true);
-    }
-
-    return data;
-  }, [setToken, handleSetUser, setOtpVerified]);
-
-  const loginWithGoogleCode = useCallback(async (code: string, deviceFingerprint?: string): Promise<LoginResponse> => {
-    const response = await api.post('/auth/exchange', { code, device_fingerprint: deviceFingerprint });
-    const data = response.data;
-
-    if (data.token) {
-      setToken(data.token);
-    }
-    if (data.user) {
-      handleSetUser(data.user);
-    }
-
-    if (data.otp_required) {
-      setOtpVerified(false);
-    } else if (data.otp_verified) {
-      setOtpVerified(true);
-    }
-
-    return data;
-  }, [setToken, handleSetUser, setOtpVerified]);
+  }, [saveLogin]);
 
   const logout = useCallback(async () => {
-    try {
-      await api.post('/logout');
-    } catch {
-      // Continue even if API call fails
-    } finally {
-      setToken(null);
-      handleSetUser(null);
-      setOtpVerified(false);
-      window.location.href = '/Landing';
-    }
-  }, [setToken, handleSetUser, setOtpVerified]);
+    // Keep the pending state available for retry if server cancellation fails.
+    await api.post('/logout');
+    saveLogin(null);
+    window.location.href = '/Landing';
+  }, [saveLogin]);
 
-  const verifyOtp = useCallback(async (otp: string) => {
-    const response = await api.post('/verify-otp', { otp });
-    return response.data;
+  const verifyOtp = useCallback(async (otp: string): Promise<VerificationResponse> => {
+    const startedAt = revision.current;
+    const { data } = await api.post('/verify-otp', { otp });
+    if (revision.current === startedAt && data.otp_verified === true) {
+      revision.current++;
+      setOtpVerified(true);
+    }
+    return data;
   }, []);
 
   const resendOtp = useCallback(async (): Promise<{ email: string }> => {
-    const response = await api.post('/resend-otp');
-    return response.data;
+    const { data } = await api.post('/resend-otp');
+    return data;
   }, []);
 
-  const isAuthenticated = !!user && !!token;
+  const status = authStatus(!!user, !!token, otpVerified, isLoading);
+  const isAuthenticated = status === 'verified';
   const isAdmin = isAuthenticated && user?.role === 'Admin';
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        isAuthenticated,
-        isAdmin,
-        isLoading,
-        otpVerified,
-        login,
-        loginWithGoogleCode,
-        logout,
-        verifyOtp,
-        resendOtp,
-        setUser: handleSetUser,
-        setToken,
-        setOtpVerified,
-      }}
-    >
+    <AuthContext.Provider value={{
+      user, token, status, isAuthenticated, isAdmin, isLoading,
+      isPendingVerification: status === 'pending', otpVerified,
+      login, loginWithGoogleCode, logout, verifyOtp, resendOtp,
+    }}>
       {children}
     </AuthContext.Provider>
   );
@@ -184,8 +155,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 }

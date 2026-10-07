@@ -47,6 +47,8 @@ function inventoryProduct(array $attributes, ?int $quantity = null): Products
 }
 
 beforeEach(function () {
+    // Session verification belongs to a stateful browser request.
+    $this->withHeader('Origin', 'http://localhost:5173');
     $this->withSession(['otp_verified' => true]);
 });
 

@@ -1,8 +1,9 @@
 import { Navigate } from 'react-router-dom';
+import { protectedDestination } from '../../utils/authState';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading, otpVerified } = useAuth();
+  const { status, isLoading, isAdmin } = useAuth();
 
   if (isLoading) {
     return (
@@ -12,13 +13,8 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (!otpVerified) {
-    return <Navigate to="/authentication" replace />;
-  }
+  const destination = protectedDestination(status, false, isAdmin);
+  if (destination) return <Navigate to={destination} replace />;
 
   return <>{children}</>;
 }

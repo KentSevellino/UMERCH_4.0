@@ -184,7 +184,7 @@ it('stores a pending otp for the frontend origin instead of marking it verified'
         ->assertSessionMissing('otp_verified');
 });
 
-it('skips the otp for a device that was already trusted', function () {
+it('requires otp even for a device that was previously trusted', function () {
     $user = googleUser();
     $fingerprint = 'trusted-google-device';
 
@@ -210,13 +210,14 @@ it('skips the otp for a device that was already trusted', function () {
         ])
         ->assertOk()
         ->assertJson([
-            'otp_verified' => true,
-            'redirect' => '/Landing',
+            'otp_verified' => false,
+            'otp_required' => true,
+            'redirect' => '/authentication',
         ])
-        ->assertSessionHas('otp_verified', true);
+        ->assertSessionMissing('otp_verified');
 });
 
-it('registers a new device on google sign in but still requires the otp', function () {
+it('requires otp without registering a new trusted device', function () {
     $user = googleUser();
     $fingerprint = 'brand-new-google-device';
 
@@ -235,22 +236,22 @@ it('registers a new device on google sign in but still requires the otp', functi
         ->assertJson(['otp_required' => true])
         ->assertSessionMissing('otp_verified');
 
-    $this->assertDatabaseHas('trusted_devices', [
+    $this->assertDatabaseMissing('trusted_devices', [
         'user_id' => $user->id,
         'device_fingerprint' => hash('sha256', $fingerprint),
     ]);
 });
 
-it('allows the seeded admin password login to reach the admin api without an otp', function () {
+it('requires otp for the seeded admin password login', function () {
     $response = $this->withHeaders(FRONTEND_ORIGIN)
         ->postJson('/api/login', ['login' => 'admin', 'password' => 'umerch2026'])
         ->assertOk();
 
-    expect($response->json('redirect'))->toBe('/admin');
+    expect($response->json('redirect'))->toBe('/authentication');
 
     $this->withToken($response->json('token'))
         ->getJson('/api/admin/users')
-        ->assertOk();
+        ->assertStatus(403);
 });
 
 it('sends an admin password login through otp and returns them to the admin dashboard', function () {
