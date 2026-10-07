@@ -25,6 +25,7 @@ Route::post('/check-trusted-device', [AuthController::class, 'checkTrustedDevice
 // Google OAuth
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle']);
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
+Route::post('/google-login', [AuthController::class, 'googleLogin']);
 Route::post('/auth/exchange', [AuthController::class, 'exchangeGoogleCode']);
 
 // Public product listing

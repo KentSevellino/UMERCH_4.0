@@ -8,12 +8,19 @@ import { useAuth } from "@/context/AuthContext";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import { router } from "expo-router";
 import {
+    Alert,
     ScrollView,
     StyleSheet,
     View,
     useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+import {
+  getUserProfileDetails,
+  identifyRoleFromEmail,
+} from "@/services/userProfileStorage";
+import { useEffect, useState } from "react";
 
 export default function Profile() {
   const { width } = useWindowDimensions();
@@ -22,8 +29,28 @@ export default function Profile() {
 
   const styles = createStyles(scale, width);
 
+  const { user, logout } = useAuth();
   const { avatarUri, changeProfileImage } = useProfileImage();
-  const { logout } = useAuth();
+  const [nickname, setNickname] = useState("");
+  const role = identifyRoleFromEmail(user?.email);
+
+  const userKey = user?.id ?? user?.email ?? null;
+
+  useEffect(() => {
+    if (userKey) {
+      getUserProfileDetails(userKey).then((details) => {
+        setNickname(details.nickname || "");
+      });
+    } else {
+      setNickname("");
+    }
+  }, [userKey]);
+
+  const displayName =
+    nickname.trim() ||
+    user?.user_fullname ||
+    (user?.email ? user.email.split("@")[0] : "") ||
+    "User";
 
   const handleMenuPress = (id: string) => {
     switch (id) {
@@ -40,12 +67,25 @@ export default function Profile() {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } finally {
-      router.replace("/login");
-    }
+  const handleLogout = () => {
+    Alert.alert(
+      "Log Out",
+      "Are you sure you want to log out of your account?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Log Out",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await logout();
+            } finally {
+              router.replace("/login");
+            }
+          },
+        },
+      ],
+    );
   };
 
   return (
@@ -72,8 +112,8 @@ export default function Profile() {
             ================================================== */}
 
             <ProfileInfo
-              name="Kenny"
-              role="STUDENT"
+              name={displayName}
+              role={role}
               university="University of Mindanao"
               avatarUri={avatarUri}
               onChangeAvatar={changeProfileImage}

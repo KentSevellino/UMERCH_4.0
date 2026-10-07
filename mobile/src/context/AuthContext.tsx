@@ -6,7 +6,9 @@ import {
   signOut,
   submitOtp,
 } from "@/services/authService";
+import { clearCredentials } from "@/services/credentialStorage";
 import type { LoginResponse, User, VerifyOtpResponse } from "@/types/auth";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import {
   createContext,
   useCallback,
@@ -26,7 +28,10 @@ type AuthContextValue = {
   /** Destination the backend masked for the OTP email, shown on the code screen. */
   maskedEmail: string | null;
   login: (login: string, password: string) => Promise<LoginResponse>;
-  loginWithGoogle: (idToken: string) => Promise<LoginResponse>;
+  loginWithGoogle: (
+    idToken?: string,
+    accessToken?: string,
+  ) => Promise<LoginResponse>;
   verifyOtp: (otp: string) => Promise<VerifyOtpResponse>;
   resendOtp: () => Promise<void>;
   logout: () => Promise<void>;
@@ -83,21 +88,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return result;
   }, []);
 
-  const loginWithGoogle = useCallback(async (idToken: string) => {
-    const result = await signInWithGoogle(idToken);
+  const loginWithGoogle = useCallback(
+    async (idToken?: string, accessToken?: string) => {
+      const payload: { id_token?: string; access_token?: string } = {};
+      if (idToken) payload.id_token = idToken;
+      if (accessToken) payload.access_token = accessToken;
 
-    setUser(result.user);
+      const result = await signInWithGoogle(payload);
 
-    if (result.otp_required) {
-      setMaskedEmail(result.email ?? null);
-      setStatus("otpRequired");
+      setUser(result.user);
+
+      if (result.otp_required) {
+        setMaskedEmail(result.email ?? null);
+        setStatus("otpRequired");
+        return result;
+      }
+
+      setMaskedEmail(null);
+      setStatus("authenticated");
       return result;
-    }
-
-    setMaskedEmail(null);
-    setStatus("authenticated");
-    return result;
-  }, []);
+    },
+    [],
+  );
 
   const verifyOtp = useCallback(async (otp: string) => {
     const result = await submitOtp(otp);
@@ -114,7 +126,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
+    try {
+      await GoogleSignin.signOut();
+    } catch {
+      // Ignored if Google account wasn't used or device doesn't support play services
+    }
+
     await signOut();
+    await clearCredentials();
+
     setUser(null);
     setMaskedEmail(null);
     setStatus("signedOut");

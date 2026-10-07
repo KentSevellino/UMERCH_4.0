@@ -6,8 +6,10 @@ import {
     saveCredentials,
 } from "@/services/credentialStorage";
 import { Ionicons } from "@expo/vector-icons";
-import { makeRedirectUri } from "expo-auth-session";
-import * as Google from "expo-auth-session/providers/google";
+import {
+  GoogleSignin,
+  statusCodes,
+} from "@react-native-google-signin/google-signin";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -23,62 +25,31 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const DEFAULT_GOOGLE_CLIENT_ID =
+  "807615072659-0bavaq1nkcqi5og6lr46npgv180128hm.apps.googleusercontent.com";
+
 export default function Login() {
   const { login, loginWithGoogle } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [progressStatus, setProgressStatus] = useState<"loading" | "success">(
     "loading",
   );
-  const googleClientIds = {
-    android: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-    ios: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-    web: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-  };
-  const googleClientId =
-    Platform.OS === "android"
-      ? googleClientIds.android
-      : Platform.OS === "ios"
-        ? googleClientIds.ios
-        : googleClientIds.web;
-  const isGoogleConfigured = Boolean(googleClientId);
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId:
-      googleClientIds.android || "missing-google-android-client-id",
-    iosClientId: googleClientIds.ios || "missing-google-ios-client-id",
-    webClientId: googleClientIds.web || "missing-google-web-client-id",
-    scopes: ["openid", "profile", "email"],
-    redirectUri: makeRedirectUri({ scheme: "umerchapp", path: "oauth" }),
-  });
+
+  const webClientId =
+    process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ||
+    process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ||
+    DEFAULT_GOOGLE_CLIENT_ID;
 
   useEffect(() => {
-    if (response && response.type !== "success") {
-      setIsSubmitting(false);
-    }
-    if (response?.type !== "success") return;
-    const idToken =
-      response.authentication?.idToken ?? response.params?.id_token;
-    if (!idToken) {
-      Alert.alert(
-        "Google sign-in failed",
-        "Google did not return an ID token.",
-      );
-      return;
-    }
-
-    setIsSubmitting(true);
-    loginWithGoogle(idToken)
-      .then((result) => {
-        setProgressStatus("success");
-        setTimeout(() => {
-          setIsSubmitting(false);
-          router.replace(result.otp_required ? "/otp" : "/home");
-        }, 900);
-      })
-      .catch((error: Error) => {
-        setIsSubmitting(false);
-        Alert.alert("Google sign-in failed", error.message);
+    try {
+      GoogleSignin.configure({
+        webClientId: webClientId,
       });
-  }, [response, loginWithGoogle]);
+    } catch (e) {
+      console.warn("Failed to configure GoogleSignin:", e);
+    }
+  }, [webClientId]);
+
   const { width, height } = useWindowDimensions();
 
   const scale = Math.min(Math.max(width / 375, 0.9), 1.15);
@@ -122,18 +93,71 @@ export default function Login() {
     console.log("Forgot password");
   };
 
-  const handleGoogleLogin = () => {
-    if (!isGoogleConfigured || !request) {
-      Alert.alert(
-        "Google sign-in unavailable",
-        "Google sign-in is not configured yet.",
-      );
-      return;
+  const handleGoogleLogin = async () => {
+    try {
+      setProgressStatus("loading");
+      setIsSubmitting(true);
+
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+
+      // Clear any cached Google session so Google Play Services always prompts the account picker
+      try {
+        await GoogleSignin.signOut();
+      } catch {
+        // Safe to ignore if no user was signed in
+      }
+
+      const response = await GoogleSignin.signIn();
+
+      let idToken: string | null | undefined;
+      let accessToken: string | undefined;
+
+      if (response && "data" in response && response.data) {
+        idToken = response.data.idToken;
+      } else if (response && "idToken" in response) {
+        idToken = (response as any).idToken;
+      }
+
+      if (!idToken) {
+        const tokens = await GoogleSignin.getTokens();
+        idToken = tokens.idToken;
+        accessToken = tokens.accessToken;
+      }
+
+      if (!idToken && !accessToken) {
+        setIsSubmitting(false);
+        Alert.alert(
+          "Google sign-in failed",
+          "Google did not return an authentication token.",
+        );
+        return;
+      }
+
+      const result = await loginWithGoogle(idToken ?? undefined, accessToken);
+      setProgressStatus("success");
+      setTimeout(() => {
+        setIsSubmitting(false);
+        router.replace(result.otp_required ? "/otp" : "/home");
+      }, 900);
+    } catch (error: any) {
+      setIsSubmitting(false);
+      if (error?.code === statusCodes.SIGN_IN_CANCELLED) {
+        return;
+      }
+      if (error?.code === statusCodes.IN_PROGRESS) {
+        return;
+      }
+      if (error?.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert(
+          "Play Services Unavailable",
+          "Google Play Services is not available or needs to be updated.",
+        );
+        return;
+      }
+      Alert.alert("Google sign-in failed", error?.message || "An unknown error occurred.");
     }
-    setProgressStatus("loading");
-    setIsSubmitting(true);
-    void promptAsync();
   };
+
 
   return (
     <SafeAreaView style={styles.safeArea}>

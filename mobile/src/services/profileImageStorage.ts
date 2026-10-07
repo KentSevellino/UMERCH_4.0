@@ -2,7 +2,10 @@ import { Directory, File, Paths } from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 
 const PROFILE_DIRECTORY = "ProfileImages";
-const PROFILE_FILE_NAME = "profile-avatar.jpg";
+
+function sanitizeKey(key: string | number): string {
+  return String(key).replace(/[^a-zA-Z0-9_-]/g, "_");
+}
 
 function profileDirectory(): Directory {
   const directory = new Directory(Paths.document, PROFILE_DIRECTORY);
@@ -14,13 +17,17 @@ function profileDirectory(): Directory {
   return directory;
 }
 
-function profileFile(): File {
-  return new File(profileDirectory(), PROFILE_FILE_NAME);
+function profileFile(userKey: string | number = "default"): File {
+  const fileName = `profile-avatar-${sanitizeKey(userKey)}.jpg`;
+  return new File(profileDirectory(), fileName);
 }
 
-export async function loadProfileImage(): Promise<string | null> {
+export async function loadProfileImage(
+  userKey?: string | number | null,
+): Promise<string | null> {
+  if (!userKey) return null;
   try {
-    const file = profileFile();
+    const file = profileFile(userKey);
 
     return file.exists ? file.uri : null;
   } catch {
@@ -28,7 +35,10 @@ export async function loadProfileImage(): Promise<string | null> {
   }
 }
 
-export async function pickAndStoreProfileImage(): Promise<string | null> {
+export async function pickAndStoreProfileImage(
+  userKey?: string | number | null,
+): Promise<string | null> {
+  if (!userKey) return null;
   const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
   if (!permission.granted) {
@@ -50,7 +60,7 @@ export async function pickAndStoreProfileImage(): Promise<string | null> {
 
   try {
     const source = new File(picked.uri);
-    const destination = profileFile();
+    const destination = profileFile(userKey);
 
     await source.copy(destination, { overwrite: true });
 

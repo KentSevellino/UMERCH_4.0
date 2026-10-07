@@ -21,11 +21,16 @@ export async function signIn(
 }
 
 export async function signInWithGoogle(
-  idToken: string,
+  tokenOrPayload: string | { id_token?: string; access_token?: string },
 ): Promise<LoginResponse> {
+  const body =
+    typeof tokenOrPayload === "string"
+      ? { id_token: tokenOrPayload }
+      : tokenOrPayload;
+
   const result = await request<LoginResponse>("/google-login", {
     method: "POST",
-    body: { id_token: idToken },
+    body,
   });
 
   await setToken(result.token);

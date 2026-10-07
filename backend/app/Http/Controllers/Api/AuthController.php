@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -423,6 +424,119 @@ class AuthController extends Controller
      * Returns true only when the device was already trusted, so the current
      * sign-in still has to complete the OTP challenge.
      */
+    
+    public function googleLogin(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'id_token' => 'nullable|string',
+            'access_token' => 'nullable|string',
+            'device_fingerprint' => 'nullable|string',
+        ]);
+
+        if (empty($validated['id_token']) && empty($validated['access_token'])) {
+            return response()->json([
+                'message' => 'Google ID token or access token is required.',
+            ], 422);
+        }
+
+        $email = null;
+
+        if (! empty($validated['id_token'])) {
+            try {
+                $response = Http::get('https://oauth2.googleapis.com/tokeninfo', [
+                    'id_token' => $validated['id_token'],
+                ]);
+
+                if ($response->successful()) {
+                    $payload = $response->json();
+                    if (! empty($payload['email'])) {
+                        $email = $payload['email'];
+                    }
+                }
+            } catch (\Exception $e) {
+                // fall through
+            }
+        }
+
+        if (! $email && ! empty($validated['access_token'])) {
+            try {
+                $response = Http::withToken($validated['access_token'])
+                    ->get('https://www.googleapis.com/oauth2/v3/userinfo');
+
+                if ($response->successful()) {
+                    $payload = $response->json();
+                    if (! empty($payload['email'])) {
+                        $email = $payload['email'];
+                    }
+                }
+            } catch (\Exception $e) {
+                // fall through
+            }
+        }
+
+        if (! $email) {
+            return response()->json([
+                'message' => 'Invalid or expired Google token.',
+            ], 422);
+        }
+
+        $user = User::where('email', $email)->first();
+        if (! $user) {
+            return response()->json([
+                'message' => 'No account found with this Google email. Please register or contact an administrator.',
+            ], 422);
+        }
+
+        if (isset($user->status) && $user->status === 'inactive') {
+            return response()->json([
+                'message' => 'Your account has been deactivated. Please contact an administrator.',
+            ], 422);
+        }
+
+        if ($request->hasSession()) {
+            Auth::login($user);
+            $request->session()->regenerate();
+        }
+
+        ActivityLog::logLogin($user, $user->role === 'Admin' ? 'admin' : 'user');
+
+        $isTrustedDevice = $this->resolveTrustedDevice(
+            $request,
+            $user,
+            $validated['device_fingerprint'] ?? null
+        );
+
+        if ($isTrustedDevice) {
+            if ($request->hasSession()) {
+                session(['otp_verified' => true]);
+            }
+            $token = $user->createToken('auth-token', ['otp_verified']);
+
+            return response()->json([
+                'user' => $user,
+                'token' => $token->plainTextToken,
+                'otp_verified' => true,
+                'redirect' => $user->role === 'Admin' ? '/admin' : '/Landing',
+            ]);
+        }
+
+        $token = $user->createToken('auth-token', []);
+        $this->sendOtp(
+            $request,
+            $user,
+            $user->role === 'Admin' ? '/admin' : '/Landing',
+            $token->accessToken
+        );
+
+        return response()->json([
+            'user' => $user,
+            'token' => $token->plainTextToken,
+            'otp_required' => true,
+            'email' => $this->censorEmail($user->email),
+            'redirect' => '/authentication',
+        ]);
+    }
+
     private function resolveTrustedDevice(Request $request, User $user, ?string $fingerprint): bool
     {
         if (! $fingerprint) {

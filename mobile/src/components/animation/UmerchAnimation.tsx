@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -209,6 +210,7 @@ export default function UmerchAnimation() {
   };
 
   const handleSignIn = () => {
+    void SecureStore.setItemAsync("umerch.intro.seen", "true");
     router.replace("/login");
   };
 

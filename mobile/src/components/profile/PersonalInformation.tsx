@@ -1,9 +1,15 @@
 import { BottomNavbar } from "@/components/navigation/BottomNavbar";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import { ProfileInfo } from "@/components/profile/ProfileInfo";
+import { useAuth } from "@/context/AuthContext";
 import { useProfileImage } from "@/hooks/useProfileImage";
+import {
+  getUserProfileDetails,
+  identifyRoleFromEmail,
+  saveUserProfileDetails,
+} from "@/services/userProfileStorage";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     ScrollView,
     StyleSheet,
@@ -34,6 +40,10 @@ function EditableField({
 }: EditableFieldProps) {
   const [editing, setEditing] = useState(false);
   const [draftValue, setDraftValue] = useState(value);
+
+  useEffect(() => {
+    setDraftValue(value);
+  }, [value]);
 
   const handleEdit = () => {
     setDraftValue(value);
@@ -66,6 +76,8 @@ function EditableField({
           editable={editing}
           keyboardType={keyboardType}
           autoCapitalize="none"
+          placeholder={editing ? `Enter ${label.toLowerCase()}` : "Not set"}
+          placeholderTextColor="#A0AEC0"
           style={[styles.input, !editing && styles.inputDisabled]}
         />
         {!editing && (
@@ -98,10 +110,46 @@ function EditableField({
 export default function PersonalInformationScreen() {
   const { width } = useWindowDimensions();
   const scale = Math.min(Math.max(width / 390, 0.9), 1.12);
+  const { user } = useAuth();
   const { avatarUri, changeProfileImage } = useProfileImage();
-  const [email, setEmail] = useState("kenny.doe@umindanao.edu");
-  const [department, setDepartment] = useState("Computer Science");
-  const [nickname, setNickname] = useState("Kenny");
+
+  const userKey = user?.id ?? user?.email ?? "default";
+  const [email, setEmail] = useState(user?.email || "");
+  const [department, setDepartment] = useState("");
+  const [nickname, setNickname] = useState("");
+
+  const role = identifyRoleFromEmail(email || user?.email);
+
+  useEffect(() => {
+    setEmail(user?.email || "");
+
+    if (userKey) {
+      getUserProfileDetails(userKey).then((details) => {
+        setDepartment(details.department || "");
+        setNickname(details.nickname || "");
+      });
+    }
+  }, [userKey, user?.email]);
+
+  const handleSaveEmail = (newEmail: string) => {
+    setEmail(newEmail);
+  };
+
+  const handleSaveDepartment = async (newDept: string) => {
+    setDepartment(newDept);
+    await saveUserProfileDetails(userKey, { department: newDept });
+  };
+
+  const handleSaveNickname = async (newNick: string) => {
+    setNickname(newNick);
+    await saveUserProfileDetails(userKey, { nickname: newNick });
+  };
+
+  const displayName =
+    nickname.trim() ||
+    user?.user_fullname ||
+    (user?.email ? user.email.split("@")[0] : "") ||
+    "User";
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
@@ -113,8 +161,8 @@ export default function PersonalInformationScreen() {
           contentContainerStyle={styles.scrollContent}
         >
           <ProfileInfo
-            name={nickname}
-            role="STUDENT"
+            name={displayName}
+            role={role}
             university="University of Mindanao"
             avatarUri={avatarUri}
             onChangeAvatar={changeProfileImage}
@@ -132,21 +180,24 @@ export default function PersonalInformationScreen() {
               value={email}
               keyboardType="email-address"
               description="Your email address is used for notifications and account recovery."
-              onSave={setEmail}
+              onSave={handleSaveEmail}
             />
-            <EditableField
-              icon="business-outline"
-              label="Department"
-              value={department}
-              description="Your department helps us provide relevant updates and offers."
-              onSave={setDepartment}
-            />
+
+            {role !== "CUSTOMER" && (
+              <EditableField
+                icon="business-outline"
+                label="Department"
+                value={department}
+                description="Your department helps us provide relevant updates and offers."
+                onSave={handleSaveDepartment}
+              />
+            )}
             <EditableField
               icon="person-outline"
               label="Nickname"
               value={nickname}
               description="This will be shown on your profile and in the app."
-              onSave={setNickname}
+              onSave={handleSaveNickname}
             />
           </View>
 

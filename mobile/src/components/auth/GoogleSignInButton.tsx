@@ -24,7 +24,7 @@ export function GoogleSignInButton({ onPress }: GoogleSignInButtonProps) {
     >
       <Text style={styles.googleLogo}>G</Text>
 
-      <Text style={styles.googleText}>Continue with Google</Text>
+      <Text style={styles.googleText}>Sign in with Google</Text>
     </TouchableOpacity>
   );
 }
