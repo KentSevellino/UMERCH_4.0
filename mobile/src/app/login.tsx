@@ -7,9 +7,13 @@ import {
 } from "@/services/credentialStorage";
 import { Ionicons } from "@expo/vector-icons";
 import {
-  GoogleSignin,
-  statusCodes,
-} from "@react-native-google-signin/google-signin";
+  configureGoogleSignIn,
+  isGoogleSignInCancelled,
+  isGoogleSignInInProgress,
+  isGoogleSignInSupported,
+  isPlayServicesUnavailable,
+  performGoogleSignIn,
+} from "@/services/googleAuth";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -41,13 +45,7 @@ export default function Login() {
     DEFAULT_GOOGLE_CLIENT_ID;
 
   useEffect(() => {
-    try {
-      GoogleSignin.configure({
-        webClientId: webClientId,
-      });
-    } catch (e) {
-      console.warn("Failed to configure GoogleSignin:", e);
-    }
+    configureGoogleSignIn(webClientId);
   }, [webClientId]);
 
   const { width, height } = useWindowDimensions();
@@ -94,35 +92,19 @@ export default function Login() {
   };
 
   const handleGoogleLogin = async () => {
+    if (!isGoogleSignInSupported()) {
+      Alert.alert(
+        "Google Sign-In Unavailable",
+        "Google Sign-In requires a custom development build and is not supported in Expo Go.\n\nTo test Google Sign-In, run 'npm run android' (or 'npx expo run:android') to build the native client.",
+      );
+      return;
+    }
+
     try {
       setProgressStatus("loading");
       setIsSubmitting(true);
 
-      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-
-      // Clear any cached Google session so Google Play Services always prompts the account picker
-      try {
-        await GoogleSignin.signOut();
-      } catch {
-        // Safe to ignore if no user was signed in
-      }
-
-      const response = await GoogleSignin.signIn();
-
-      let idToken: string | null | undefined;
-      let accessToken: string | undefined;
-
-      if (response && "data" in response && response.data) {
-        idToken = response.data.idToken;
-      } else if (response && "idToken" in response) {
-        idToken = (response as any).idToken;
-      }
-
-      if (!idToken) {
-        const tokens = await GoogleSignin.getTokens();
-        idToken = tokens.idToken;
-        accessToken = tokens.accessToken;
-      }
+      const { idToken, accessToken } = await performGoogleSignIn();
 
       if (!idToken && !accessToken) {
         setIsSubmitting(false);
@@ -141,13 +123,10 @@ export default function Login() {
       }, 900);
     } catch (error: any) {
       setIsSubmitting(false);
-      if (error?.code === statusCodes.SIGN_IN_CANCELLED) {
+      if (isGoogleSignInCancelled(error) || isGoogleSignInInProgress(error)) {
         return;
       }
-      if (error?.code === statusCodes.IN_PROGRESS) {
-        return;
-      }
-      if (error?.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+      if (isPlayServicesUnavailable(error)) {
         Alert.alert(
           "Play Services Unavailable",
           "Google Play Services is not available or needs to be updated.",

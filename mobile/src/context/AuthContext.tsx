@@ -14,7 +14,7 @@ import type {
   User,
   VerifyOtpResponse,
 } from "@/types/auth";
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { signOutGoogle } from "@/services/googleAuth";
 import {
   createContext,
   useCallback,
@@ -140,7 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
-      await GoogleSignin.signOut();
+      await signOutGoogle();
     } catch {
       // Ignored if Google account wasn't used or device doesn't support play services
     }
