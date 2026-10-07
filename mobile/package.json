@@ -49,7 +49,7 @@
   },
   "scripts": {
     "start": "expo start",
-    "start:lan": "set REACT_NATIVE_PACKAGER_HOSTNAME=10.108.66.44 && expo start --lan",
+    "start:lan": "set REACT_NATIVE_PACKAGER_HOSTNAME=172.16.7.74 && expo start --lan",
     "kill:metro": "powershell -Command \"Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match 'expo.*start' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }\"",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
