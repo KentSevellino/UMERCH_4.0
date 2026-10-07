@@ -25,7 +25,7 @@
     "plugins": [
       "expo-router",
       [
-        "expo-splash-screen",
+        "expo-splash-screen", 
         {
           "backgroundColor": "#B00000",
           "image": "./assets/images/UM/umerch-logo.png",
