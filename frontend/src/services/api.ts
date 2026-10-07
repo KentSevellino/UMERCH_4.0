@@ -22,7 +22,8 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_user');
-      if (window.location.pathname !== '/login') {
+      localStorage.removeItem('otp_verified');
+      if (error.config?.url !== '/me' && window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
     }

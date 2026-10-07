@@ -1,13 +1,8 @@
-export const GOOGLE_ERRORS: Record<string, string> = {
-  no_account: 'No account found for this email. Please contact your admin.',
-  inactive: 'Your account has been deactivated. Please contact an administrator.',
-  google_failed: 'Google sign-in failed. Please try again.',
-  google_email: 'Your Google account did not provide an email address.',
-};
+import { SIGN_IN_MESSAGES, safeSignInErrorCode } from './signInErrors';
 
 export function oauthErrorFromUrl(): string {
   const oauthError = new URLSearchParams(window.location.search).get('error');
-  return oauthError ? (GOOGLE_ERRORS[oauthError] ?? oauthError) : '';
+  return oauthError ? SIGN_IN_MESSAGES[safeSignInErrorCode(oauthError)] : '';
 }
 
 export function rememberOauthOrigin(origin: 'landing' | 'login'): void {

@@ -1,7 +1,8 @@
 import { useRef, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import api from '../services/api';
+import PendingSignInActions from '../components/ui/PendingSignInActions';
+import { isAxiosError } from 'axios';
 import { censorEmail } from '../utils/censorEmail';
 
 interface AuthenticationPageProps {
@@ -12,7 +13,7 @@ interface AuthenticationPageProps {
 }
 
 export default function AuthenticationPage({ email: initialEmail, flash }: AuthenticationPageProps) {
-    const { user, setOtpVerified } = useAuth();
+    const { user, status, isAdmin, verifyOtp, resendOtp } = useAuth();
     const navigate = useNavigate();
     const inputLength = 6;
     const [values, setValues] = useState<string[]>(Array(inputLength).fill(''));
@@ -112,15 +113,12 @@ export default function AuthenticationPage({ email: initialEmail, flash }: Authe
         setOtpError('');
 
         try {
-            const response = await api.post('/verify-otp', { otp });
-            setOtpVerified(true);
-            navigate(response.data?.redirect || '/Landing');
-        } catch (error: any) {
-            const errorMsg = error.response?.data?.errors?.otp
-                ? Array.isArray(error.response.data.errors.otp)
-                    ? error.response.data.errors.otp[0]
-                    : error.response.data.errors.otp
-                : error.response?.data?.message || 'Verification failed';
+            const response = await verifyOtp(otp);
+            navigate(response.redirect || '/Landing', { replace: true });
+        } catch (error: unknown) {
+            const knownErrors = ['The OTP has expired. Please request a new one.', 'Too many failed attempts. Please request a new OTP.', 'Invalid OTP.'];
+            const message = isAxiosError(error) ? error.response?.data?.message : null;
+            const errorMsg = knownErrors.includes(message) ? message : 'Unable to verify your code. Please try again.';
             setOtpError(errorMsg);
             if (errorMsg.toLowerCase().includes('expired')) {
                 setExpiredError(true);
@@ -135,7 +133,7 @@ export default function AuthenticationPage({ email: initialEmail, flash }: Authe
         if (cooldown === 0) {
             setIsResending(true);
             try {
-                await api.post('/resend-otp');
+                await resendOtp();
                 setCooldown(60);
                 setSuccessMessage('OTP sent successfully');
                 setOtpError('');
@@ -143,15 +141,20 @@ export default function AuthenticationPage({ email: initialEmail, flash }: Authe
                 setValues(Array(inputLength).fill(''));
                 setTimeout(() => setSuccessMessage(''), 5000);
             } catch {
-                // Ignore errors for resend
+                setOtpError('Unable to send your verification code. Please try again.');
             } finally {
                 setIsResending(false);
             }
         }
     };
 
+    if (status === 'loading') return <p>Loading...</p>;
+    if (status === 'guest') return <Navigate to="/login" replace />;
+    if (status === 'verified') return <Navigate to={isAdmin ? '/admin' : '/Landing'} replace />;
+
     return (
         <div className="flex flex-col justify-center items-center h-screen">
+            <PendingSignInActions showResume={false} />
             <h1 className="text-[34px] font-medium">Verification</h1>
             <div className="text-[20px] py-2">
                 <p>A verification code has been sent to</p>

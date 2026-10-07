@@ -6,6 +6,7 @@ import CartIcon from '../../assets/images/CartIcon.svg';
 import AccountIcon from '../../assets/images/AccountIcon.svg';
 import RedAccountLogo from '../../assets/images/red-account-logo.svg';
 import LogoutModal from '../modals/LogoutModal';
+import PendingSignInActions from '../ui/PendingSignInActions';
 
 interface LandingNavProps {
   cartCount?: number;
@@ -14,7 +15,7 @@ interface LandingNavProps {
 
 export default function LandingNav({ cartCount = 0, onShowLogin }: LandingNavProps) {
   const location = useLocation();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, isPendingVerification } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -94,8 +95,9 @@ export default function LandingNav({ cartCount = 0, onShowLogin }: LandingNavPro
                   )}
                 </div>
               </>
-            ) : (
+            ) : !isPendingVerification && (
               <button
+                type="button"
                 onClick={onShowLogin}
                 className="font-bold text-[16px] leading-tight bg-transparent border-none cursor-pointer hover:text-[#FFB600]"
               >SIGN IN</button>
@@ -157,15 +159,17 @@ export default function LandingNav({ cartCount = 0, onShowLogin }: LandingNavPro
                 <Link to="/Products" className={`px-6 py-3 border-b border-[#9C0306] ${isActive('/Products') ? 'text-[#FFB600]' : ''}`} onClick={() => setMobileOpen(false)}>PRODUCTS</Link>
                 <Link to="/AboutUs" className={`px-6 py-3 border-b border-[#9C0306] ${isActive('/AboutUs') ? 'text-[#FFB600]' : ''}`} onClick={() => setMobileOpen(false)}>ABOUT US</Link>
                 <a href="#footer" className="px-6 py-3 border-b border-[#9C0306] cursor-pointer" onClick={(e) => { e.preventDefault(); setMobileOpen(false); document.getElementById('footer')?.scrollIntoView({ behavior: 'smooth' }); }}>CONTACT US</a>
-                <button
+                {!isPendingVerification && <button
+                  type="button"
                   onClick={() => { setMobileOpen(false); onShowLogin?.(); }}
                   className="px-6 py-3 text-left border-b border-[#9C0306]"
-                >SIGN IN</button>
+                >SIGN IN</button>}
               </>
             )}
           </div>
         )}
       </div>
+      <PendingSignInActions />
       <LogoutModal
         open={isLogoutModalOpen}
         onClose={() => setIsLogoutModalOpen(false)}

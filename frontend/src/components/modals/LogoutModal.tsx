@@ -9,14 +9,18 @@ interface LogoutModalProps {
 export default function LogoutModal({ open, onClose }: LogoutModalProps) {
   const { logout } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   if (!open) return null;
 
   const handleLogout = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsLoading(true);
+    setError('');
     try {
       await logout();
+    } catch {
+      setError('Unable to log out. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -39,6 +43,7 @@ export default function LogoutModal({ open, onClose }: LogoutModalProps) {
       >
         <div className="flex flex-col p-10 items-center justify-center">
           <h1 className="text-lg font-semibold text-black">Are you sure you want to Logout?</h1>
+          {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
           <div className="py-2 flex flex-col items-center" />
           <div className="flex flex-row gap-3 mt-5">
             <button

@@ -7,6 +7,7 @@ use App\Mail\OtpMail;
 use App\Models\ActivityLog;
 use App\Models\TrustedDevice;
 use App\Models\User;
+use App\Support\OtpAuthentication;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -90,24 +91,14 @@ class AuthController extends Controller
                 $adminUser->save();
             }
 
-            $tokenResult = $adminUser->createToken('auth-token', ['otp_verified']);
-
-            if ($request->hasSession()) {
-                Auth::login($adminUser, $credentials['remember'] ?? false);
-                $request->session()->regenerate();
-                $request->session()->put('otp_verified', true);
+            if ($adminUser->status === 'inactive') {
+                return response()->json(['message' => 'Your account has been deactivated. Please contact an administrator.'], 422);
             }
-
             if (file_exists($rateLimitFile)) {
                 @unlink($rateLimitFile);
             }
-            ActivityLog::logLogin($adminUser, 'admin');
 
-            return response()->json([
-                'user' => $adminUser,
-                'token' => $tokenResult->plainTextToken,
-                'redirect' => '/admin',
-            ]);
+            return $this->beginOtpLogin($request, $adminUser);
         }
 
         $field = filter_var($credentials['login'], FILTER_VALIDATE_EMAIL) ? 'email' : 'um_id';
@@ -131,51 +122,8 @@ class AuthController extends Controller
                 if (file_exists($rateLimitFile)) {
                     @unlink($rateLimitFile);
                 }
-                // The session guard is what a first party client authenticates
-                // with; a stateless client only ever holds the bearer token, so
-                // logging it into the web guard here would leave a phantom user
-                // on the guard for the rest of the process.
-                if ($request->hasSession()) {
-                    Auth::login($user, $credentials['remember'] ?? false);
-                    $request->session()->regenerate();
-                }
-                ActivityLog::logLogin($user, 'user');
 
-                $isTrustedDevice = $this->resolveTrustedDevice(
-                    $request,
-                    $user,
-                    $credentials['device_fingerprint'] ?? null
-                );
-
-                if ($isTrustedDevice) {
-                    if ($request->hasSession()) {
-                        session(['otp_verified' => true]);
-                    }
-                    $token = $user->createToken('auth-token', ['otp_verified']);
-
-                    return response()->json([
-                        'user' => $user,
-                        'token' => $token->plainTextToken,
-                        'otp_verified' => true,
-                        'redirect' => $user->role === 'Admin' ? '/admin' : '/Landing',
-                    ]);
-                }
-
-                $token = $user->createToken('auth-token', []);
-                $this->sendOtp(
-                    $request,
-                    $user,
-                    $user->role === 'Admin' ? '/admin' : '/Landing',
-                    $token->accessToken
-                );
-
-                return response()->json([
-                    'user' => $user,
-                    'token' => $token->plainTextToken,
-                    'otp_required' => true,
-                    'email' => $this->censorEmail($user->email),
-                    'redirect' => '/authentication',
-                ]);
+                return $this->beginOtpLogin($request, $user);
             }
         }
 
@@ -209,7 +157,7 @@ class AuthController extends Controller
             $redirect = $record['redirect'] ?? '/Landing';
             $this->markOtpVerified($request);
 
-            return response()->json(['message' => 'OTP verified successfully', 'redirect' => $redirect]);
+            return response()->json(['message' => 'OTP verified successfully', 'otp_verified' => true, 'redirect' => $redirect]);
         }
 
         $record['attempts'] = (int) ($record['attempts'] ?? 0) + 1;
@@ -225,7 +173,15 @@ class AuthController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        $this->sendOtp($request, $user, $this->currentOtpRedirect($request), $this->requestToken($request));
+        if (OtpAuthentication::verified($request)) {
+            return response()->json(['message' => 'Verification is already complete.'], 409);
+        }
+        if (! $this->requestToken($request)) {
+            return response()->json(['message' => 'Please sign in again.'], 401);
+        }
+        if (! $this->sendOtp($request, $user, $this->currentOtpRedirect($request), $this->requestToken($request))) {
+            return response()->json(['message' => 'Unable to send your verification code. Please try again.'], 503);
+        }
 
         return response()->json(['message' => 'OTP resent successfully', 'email' => $this->censorEmail($user->email)]);
     }
@@ -237,14 +193,8 @@ class AuthController extends Controller
             ActivityLog::logLogout($user, $user->role === 'Admin' ? 'admin' : 'user');
         }
 
-        $accessToken = $request->user()?->currentAccessToken();
-
-        // A stateful client that never presented a bearer token authenticates
-        // with a transient token, which has no row of its own to remove.
-        if ($accessToken instanceof PersonalAccessToken) {
-            Cache::forget($this->otpCacheKey($accessToken));
-            $accessToken->delete();
-        }
+        $this->forgetOtp($request);
+        $this->revokeLoginTokens($request);
 
         // `auth:sanctum` makes the request guard the default one, and Sanctum's
         // request guard has no logout of its own — only the session guard does.
@@ -263,7 +213,7 @@ class AuthController extends Controller
      */
     public function me(Request $request)
     {
-        return response()->json(['user' => $request->user()]);
+        return response()->json(['user' => $request->user(), 'otp_verified' => OtpAuthentication::verified($request)]);
     }
 
     public function updateProfile(Request $request)
@@ -275,12 +225,12 @@ class AuthController extends Controller
 
         $validated = $request->validate([
             'user_fullname' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|max:255|unique:users,email,' . $user->id,
+            'email' => 'sometimes|email|max:255|unique:users,email,'.$user->id,
             'password' => 'sometimes|string|min:6',
         ]);
 
         if (isset($validated['password'])) {
-            $validated['user_password'] = \Illuminate\Support\Facades\Hash::make($validated['password']);
+            $validated['user_password'] = Hash::make($validated['password']);
             unset($validated['password']);
         }
 
@@ -294,20 +244,9 @@ class AuthController extends Controller
 
     public function checkTrustedDevice(Request $request)
     {
-        $fingerprint = $request->validate([
+        $request->validate([
             'fingerprint' => 'required|string',
-        ])['fingerprint'];
-
-        $fingerprintHash = hash('sha256', $fingerprint);
-        $trustedDevice = TrustedDevice::where('device_fingerprint', $fingerprintHash)->with('user')->first();
-
-        if ($trustedDevice) {
-            return response()->json([
-                'trusted' => true,
-                'user_email' => $trustedDevice->user->email,
-                'device_name' => $trustedDevice->device_name,
-            ]);
-        }
+        ]);
 
         return response()->json(['trusted' => false]);
     }
@@ -410,47 +349,9 @@ class AuthController extends Controller
             ], 422);
         }
 
-        Auth::login($user);
-        $request->session()->regenerate();
-
-        $isTrustedDevice = $this->resolveTrustedDevice(
-            $request,
-            $user,
-            $request->input('device_fingerprint')
-        );
-
-        $token = $user->createToken('auth-token', []);
-        ActivityLog::logLogin($user, $user->role === 'Admin' ? 'admin' : 'user');
-
-        if ($isTrustedDevice) {
-            $request->session()->put('otp_verified', true);
-
-            return response()->json([
-                'user' => $user,
-                'token' => $token->plainTextToken,
-                'otp_verified' => true,
-                'redirect' => $payload['redirect'],
-            ]);
-        }
-
-        $this->sendOtp($request, $user, $payload['redirect'], $token->accessToken);
-
-        return response()->json([
-            'user' => $user,
-            'token' => $token->plainTextToken,
-            'otp_required' => true,
-            'email' => $this->censorEmail($user->email),
-            'redirect' => '/authentication',
-        ]);
+        return $this->beginOtpLogin($request, $user);
     }
 
-    /**
-     * Look up the trusted device for a raw fingerprint, registering it on first use.
-     *
-     * Returns true only when the device was already trusted, so the current
-     * sign-in still has to complete the OTP challenge.
-     */
-    
     public function googleLogin(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -519,127 +420,100 @@ class AuthController extends Controller
             ], 422);
         }
 
+        return $this->beginOtpLogin($request, $user);
+    }
+
+    private function beginOtpLogin(Request $request, User $user): JsonResponse
+    {
+        // A new sign-in cannot inherit an earlier account's grant or challenge.
+        $this->revokeLoginTokens($request);
         if ($request->hasSession()) {
-            Auth::login($user);
+            $request->session()->forget(['otp_verified', 'otp_verified_user_id', 'auth_token_id',
+                'otp', 'otp_expires', 'otp_attempts', 'otp_redirect', 'otp_user_id', 'otp_token_id']);
+            Auth::guard('web')->login($user);
             $request->session()->regenerate();
         }
 
-        ActivityLog::logLogin($user, $user->role === 'Admin' ? 'admin' : 'user');
-
-        $isTrustedDevice = $this->resolveTrustedDevice(
-            $request,
-            $user,
-            $validated['device_fingerprint'] ?? null
-        );
-
-        if ($isTrustedDevice) {
-            if ($request->hasSession()) {
-                session(['otp_verified' => true]);
-            }
-            $token = $user->createToken('auth-token', ['otp_verified']);
-
-            return response()->json([
-                'user' => $user,
-                'token' => $token->plainTextToken,
-                'otp_verified' => true,
-                'redirect' => $user->role === 'Admin' ? '/admin' : '/Landing',
-            ]);
+        $token = $user->createToken('auth-token', []);
+        if ($request->hasSession()) {
+            $request->session()->put('auth_token_id', $token->accessToken->id);
         }
 
-        $token = $user->createToken('auth-token', []);
-        $this->sendOtp(
-            $request,
-            $user,
-            $user->role === 'Admin' ? '/admin' : '/Landing',
-            $token->accessToken
-        );
+        $redirect = $user->role === 'Admin' ? '/admin' : '/Landing';
+        if (! $this->sendOtp($request, $user, $redirect, $token->accessToken)) {
+            Cache::forget($this->otpCacheKey($token->accessToken));
+            $token->accessToken->delete();
+            if ($request->hasSession()) {
+                Auth::guard('web')->logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+            }
+
+            return response()->json(['message' => 'Unable to send your verification code. Please try signing in again.'], 503);
+        }
+
+        ActivityLog::logLogin($user, $user->role === 'Admin' ? 'admin' : 'user');
 
         return response()->json([
             'user' => $user,
             'token' => $token->plainTextToken,
             'otp_required' => true,
+            'otp_verified' => false,
             'email' => $this->censorEmail($user->email),
             'redirect' => '/authentication',
         ]);
     }
 
-    private function resolveTrustedDevice(Request $request, User $user, ?string $fingerprint): bool
+    private function sendOtp(Request $request, User $user, string $redirect, ?PersonalAccessToken $accessToken = null): bool
     {
-        if (! $fingerprint) {
+        if (! $accessToken) {
             return false;
         }
-
-        $fingerprintHash = hash('sha256', $fingerprint);
-        $device = TrustedDevice::where('user_id', $user->id)
-            ->where('device_fingerprint', $fingerprintHash)
-            ->first();
-
-        if ($device) {
-            $device->update(['last_used_at' => now()]);
-
-            return true;
-        }
-
-        TrustedDevice::create([
-            'user_id' => $user->id,
-            'device_fingerprint' => $fingerprintHash,
-            'device_name' => $request->userAgent(),
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'last_used_at' => now(),
-        ]);
-
-        return false;
-    }
-
-    /**
-     * Store a one time code in the session and email it to the user.
-     * The destination to return to once the code is confirmed is kept too.
-     *
-     * First party (web) clients keep the challenge in the session. Stateless
-     * clients have no session, so the challenge is kept in the cache keyed to
-     * the Sanctum token that the login call just issued.
-     */
-    private function sendOtp(Request $request, User $user, string $redirect, ?PersonalAccessToken $accessToken = null): void
-    {
+        $this->forgetOtp($request);
         $otp = random_int(100000, 999999);
-
-        if ($request->hasSession()) {
-            $this->storeOtp($request, [
-                'otp' => $otp,
-                'expires' => now()->addMinutes(5)->getTimestamp(),
-                'attempts' => 0,
-                'redirect' => $redirect,
-            ]);
-        } elseif ($accessToken) {
-            $this->storeOtp($request, [
-                'otp' => $otp,
-                'expires' => now()->addMinutes(5)->getTimestamp(),
-                'attempts' => 0,
-                'redirect' => $redirect,
-                'user_id' => $user->id,
-            ], $accessToken);
-        } else {
-            return;
-        }
-
         try {
             Mail::to($user->email)->send(new OtpMail($otp, $user->user_fullname ?? 'User', $this->censorEmail($user->email)));
         } catch (\Throwable $e) {
             Log::warning('OTP mail failed', ['error' => $e->getMessage()]);
+
+            return false;
         }
+
+        $this->storeOtp($request, [
+            'otp' => $otp,
+            'expires' => now()->addMinutes(5)->getTimestamp(),
+            'attempts' => 0,
+            'redirect' => $redirect,
+            'user_id' => $user->id,
+            'token_id' => $accessToken->id,
+        ], $accessToken);
+
+        return true;
     }
 
-    /**
-     * The Sanctum token that authenticated the current request, if any.
-     * Stateful web requests also carry a bearer token, so this is not
-     * by itself a sign that the client is stateless.
-     */
     private function requestToken(Request $request): ?PersonalAccessToken
     {
-        $token = $request->user()?->currentAccessToken();
+        return OtpAuthentication::token($request);
+    }
 
-        return $token instanceof PersonalAccessToken ? $token : null;
+    private function revokeLoginTokens(Request $request): void
+    {
+        $tokens = [];
+        if ($request->bearerToken()) {
+            $tokens[] = PersonalAccessToken::findToken($request->bearerToken());
+        }
+        if ($request->hasSession() && $request->session()->has('auth_token_id')) {
+            $token = PersonalAccessToken::find($request->session()->get('auth_token_id'));
+            if ($token && (string) $token->tokenable_id === (string) Auth::guard('web')->id()) {
+                $tokens[] = $token;
+            }
+        }
+        foreach ($tokens as $token) {
+            if ($token) {
+                Cache::forget($this->otpCacheKey($token));
+                $token->delete();
+            }
+        }
     }
 
     private function otpCacheKey(PersonalAccessToken $token): string
@@ -649,64 +523,44 @@ class AuthController extends Controller
 
     private function readOtp(Request $request): ?array
     {
-        if ($request->hasSession()) {
-            $otp = session('otp');
-
-            if (! $otp) {
-                return null;
-            }
-
-            return [
-                'otp' => $otp,
-                'expires' => session('otp_expires'),
-                'attempts' => (int) session('otp_attempts', 0),
-                'redirect' => session('otp_redirect', '/Landing'),
-            ];
-        }
-
         $token = $this->requestToken($request);
         $record = $token ? Cache::get($this->otpCacheKey($token)) : null;
+        if (! is_array($record)
+            || (string) ($record['user_id'] ?? '') !== (string) $request->user()?->id
+            || (string) ($record['token_id'] ?? '') !== (string) $token?->id) {
+            return null;
+        }
 
-        return is_array($record) ? $record : null;
+        return $record;
     }
 
     private function storeOtp(Request $request, array $record, ?PersonalAccessToken $accessToken = null): void
     {
-        if ($request->hasSession()) {
-            session([
-                'otp' => $record['otp'],
-                'otp_expires' => $record['expires'],
-                'otp_attempts' => $record['attempts'],
-                'otp_redirect' => $record['redirect'],
-            ]);
-
-            return;
-        }
-
         $accessToken = $accessToken ?? $this->requestToken($request);
         if (! $accessToken) {
             return;
         }
-
-        $expires = $record['expires'];
-        $expiresAt = $expires instanceof \DateTimeInterface
-            ? $expires->getTimestamp()
-            : (is_numeric($expires) ? (int) $expires : (int) strtotime((string) $expires));
-
-        Cache::put($this->otpCacheKey($accessToken), $record, max(1, $expiresAt - time()));
+        Cache::put($this->otpCacheKey($accessToken), $record, max(1, $record['expires'] - time()));
+        if ($request->hasSession()) {
+            $request->session()->put([
+                'otp' => $record['otp'],
+                'otp_expires' => $record['expires'],
+                'otp_attempts' => $record['attempts'],
+                'otp_redirect' => $record['redirect'],
+                'otp_user_id' => $record['user_id'],
+                'otp_token_id' => $record['token_id'],
+            ]);
+        }
     }
 
     private function forgetOtp(Request $request): void
     {
-        if ($request->hasSession()) {
-            session()->forget(['otp', 'otp_expires', 'otp_attempts', 'otp_redirect']);
-
-            return;
-        }
-
         $token = $this->requestToken($request);
         if ($token) {
             Cache::forget($this->otpCacheKey($token));
+        }
+        if ($request->hasSession()) {
+            $request->session()->forget(['otp', 'otp_expires', 'otp_attempts', 'otp_redirect', 'otp_user_id', 'otp_token_id']);
         }
     }
 
@@ -738,7 +592,7 @@ class AuthController extends Controller
         $this->forgetOtp($request);
 
         if ($request->hasSession()) {
-            session(['otp_verified' => true]);
+            $request->session()->put(['otp_verified' => true, 'otp_verified_user_id' => $request->user()->id]);
         }
 
         $token = $this->requestToken($request);
@@ -751,7 +605,7 @@ class AuthController extends Controller
     {
         $record = $this->readOtp($request);
 
-        return is_array($record) ? ($record['redirect'] ?? '/Landing') : '/Landing';
+        return is_array($record) ? $record['redirect'] : ($request->user()?->role === 'Admin' ? '/admin' : '/Landing');
     }
 
     private function googleProvider(): AbstractProvider

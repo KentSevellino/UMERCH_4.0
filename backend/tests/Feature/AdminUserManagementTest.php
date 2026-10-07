@@ -35,6 +35,8 @@ function adminUserManagementCustomer(array $attributes = []): User
 }
 
 beforeEach(function () {
+    // Session verification belongs to a stateful browser request.
+    $this->withHeader('Origin', 'http://localhost:5173');
     $this->withSession(['otp_verified' => true]);
 });
 

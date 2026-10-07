@@ -2,23 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { takeOauthOrigin } from '../utils/oauthErrors';
-import { DeviceFingerprint } from '../utils/DeviceFingerprint';
-
-async function resolveFingerprint(): Promise<string | undefined> {
-  try {
-    const stored = DeviceFingerprint.getStoredFingerprint();
-    if (stored) {
-      return stored;
-    }
-
-    const generated = await DeviceFingerprint.generateFingerprint();
-    DeviceFingerprint.storeFingerprint(generated);
-
-    return generated;
-  } catch {
-    return undefined;
-  }
-}
+import { formatSignInError, safeSignInErrorCode } from '../utils/signInErrors';
 
 export default function AuthCallbackPage() {
   const [searchParams] = useSearchParams();
@@ -36,7 +20,7 @@ export default function AuthCallbackPage() {
     const home = origin === 'landing' ? '/Landing' : '/login';
 
     if (error) {
-      navigate(`${home}?error=${encodeURIComponent(error)}`, { replace: true });
+      navigate(`${home}?error=${safeSignInErrorCode(error)}`, { replace: true });
       return;
     }
     if (!code) {
@@ -44,13 +28,11 @@ export default function AuthCallbackPage() {
       return;
     }
 
-    resolveFingerprint()
-      .then((fingerprint) => loginWithGoogleCode(code, fingerprint))
+    loginWithGoogleCode(code)
       .then((result) => navigate(result.redirect || '/Landing', { replace: true }))
       .catch((err: unknown) => {
-        const data = (err as { response?: { data?: { message?: string } } })?.response?.data;
-        const message = data?.message || 'Google sign-in failed. Please try again.';
-        navigate(`${home}?error=${encodeURIComponent(message)}`, { replace: true });
+        const { code } = formatSignInError(err);
+        navigate(`${home}?error=${code === 'sign_in_failed' ? 'google_failed' : code}`, { replace: true });
       });
   }, [searchParams, loginWithGoogleCode, navigate]);
 

@@ -31,7 +31,7 @@ type SortOption = 'default' | 'name-asc' | 'name-desc' | 'price-low' | 'price-hi
 
 export default function ProductsView() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   const [ProductModalOpen, setProductModalOpen] = useState(false);
   const [AccessoriesModalOpen, setAccessoriesModalOpen] = useState(false);
@@ -64,7 +64,7 @@ export default function ProductsView() {
   };
 
   const openProductModalWith = (product: Product) => {
-    if (user) {
+    if (isAuthenticated) {
       setSelectedProduct(product);
       setProductModalOpen(true);
     } else {

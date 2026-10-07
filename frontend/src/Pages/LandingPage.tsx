@@ -15,8 +15,13 @@ import api from '../services/api';
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
+
+  const handleShowLogin = () => {
+    setShowLogin(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   useEffect(() => {
     try {
@@ -36,7 +41,7 @@ export default function LandingPage() {
         const pendingRaw = sessionStorage.getItem('pendingBuy');
         if (!pendingRaw) return;
         const pending = JSON.parse(pendingRaw);
-        if (!user) return;
+        if (!isAuthenticated) return;
 
         await api.post('/cart/add', pending);
         sessionStorage.removeItem('pendingBuy');
@@ -47,11 +52,11 @@ export default function LandingPage() {
     };
 
     tryProcessPendingBuy();
-  }, [user, navigate]);
+  }, [isAuthenticated, navigate]);
 
   return (
     <>
-      <LandingNav onShowLogin={() => setShowLogin(true)} />
+      <LandingNav onShowLogin={handleShowLogin} />
       <Knowledge showLogin={showLogin} onCloseLogin={() => setShowLogin(false)} />
       <Advertisement />
       <DiscountedProduct />

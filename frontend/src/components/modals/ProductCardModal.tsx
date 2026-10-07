@@ -41,7 +41,7 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [variantStocks, setVariantStocks] = useState<Record<string, number>>({});
-  const { user } = useAuth();
+  const { isAuthenticated, isPendingVerification } = useAuth();
 
   useEffect(() => {
     if (isOpen && product?.product_id) {
@@ -101,6 +101,10 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
   }, [isOpen, product?.product_id]);
 
   const handleAddToCart = async () => {
+    if (!isAuthenticated) {
+      window.location.href = isPendingVerification ? '/authentication' : '/Landing?popup=1';
+      return;
+    }
     if (!product?.product_id) {
       onShowToast('Product information missing', 'error');
       return;
@@ -133,7 +137,7 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
   };
 
   const handleBuyNow = async () => {
-    if (!user) {
+    if (!isAuthenticated) {
       try {
         const pending = {
           product_id: product!.product_id,
@@ -143,7 +147,7 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
         };
         sessionStorage.setItem('pendingBuy', JSON.stringify(pending));
       } catch (_e) {}
-      window.location.href = '/Landing?popup=1';
+      window.location.href = isPendingVerification ? '/authentication' : '/Landing?popup=1';
       return;
     }
 

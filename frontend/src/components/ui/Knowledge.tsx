@@ -4,11 +4,10 @@ import BackgroundImage from '../../assets/images/um5.jpg';
 import LoginLogo from '../../assets/images/UMERCH-LOGIN-LOGO.svg';
 import EmailIcon from '../../assets/images/email-icon.svg';
 import PasswordIcon from '../../assets/images/password-icon.svg';
-import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
-import { DeviceFingerprint } from '../../utils/DeviceFingerprint';
 import { oauthErrorFromUrl, rememberOauthOrigin } from '../../utils/oauthErrors';
 import GoogleGIcon from './GoogleGIcon';
+import { formatSignInError } from '../../utils/signInErrors';
 
 const googleAuthUrl = `${import.meta.env.VITE_API_URL || '/api'}/auth/google`;
 
@@ -20,8 +19,6 @@ interface KnowledgeProps {
 interface LoginData {
   login: string;
   password: string;
-  remember: boolean;
-  device_fingerprint: string | null;
 }
 
 interface LoginErrors {
@@ -29,13 +26,11 @@ interface LoginErrors {
 }
 
 export default function Knowledge({ showLogin, onCloseLogin }: KnowledgeProps) {
-  const { login } = useAuth();
+  const { login, isPendingVerification, isAuthenticated, isLoading } = useAuth();
 
   const [data, setData] = useState<LoginData>({
     login: '',
     password: '',
-    remember: false,
-    device_fingerprint: null,
   });
   const [errors, setErrors] = useState<LoginErrors>(() => {
     const initialError = oauthErrorFromUrl();
@@ -43,50 +38,7 @@ export default function Knowledge({ showLogin, onCloseLogin }: KnowledgeProps) {
   });
   const [processing, setProcessing] = useState(false);
   const [showError, setShowError] = useState(() => oauthErrorFromUrl() !== '');
-  const [checkingDevice, setCheckingDevice] = useState(false);
   const [lockoutCountdown, setLockoutCountdown] = useState(0);
-
-  // Initialize device fingerprint
-  useEffect(() => {
-    const initializeDeviceFingerprint = async () => {
-      try {
-        let fingerprint = DeviceFingerprint.getStoredFingerprint();
-
-        if (!fingerprint) {
-          fingerprint = await DeviceFingerprint.generateFingerprint();
-          DeviceFingerprint.storeFingerprint(fingerprint);
-        }
-
-        setData(prev => ({
-          ...prev,
-          device_fingerprint: fingerprint
-        }));
-
-        setCheckingDevice(true);
-        try {
-          const response = await api.post('/check-trusted-device', {
-            fingerprint: fingerprint
-          });
-
-          if (response.data.trusted) {
-            console.log('Trusted device detected for:', response.data.user_email);
-            setData(prev => ({
-              ...prev,
-              login: response.data.user_email
-            }));
-          }
-        } catch (err: any) {
-          console.log('Device check error (non-blocking):', err.message);
-        }
-      } catch (err: any) {
-        console.log('Fingerprint generation error:', err.message);
-      } finally {
-        setCheckingDevice(false);
-      }
-    };
-
-    initializeDeviceFingerprint();
-  }, []);
 
   useEffect(() => {
     if (lockoutCountdown > 0 && !showError) {
@@ -117,34 +69,18 @@ export default function Knowledge({ showLogin, onCloseLogin }: KnowledgeProps) {
     }
   }, [errors, lockoutCountdown]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setData(prev => ({
-      ...prev,
-      remember: e.target.checked
-    }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setProcessing(true);
     setErrors({});
 
     try {
-      const result = await login(data.login, data.password, data.device_fingerprint ?? undefined);
+      const result = await login(data.login, data.password);
       window.location.href = result.redirect || '/authentication';
-    } catch (error: any) {
-      if (error.response?.status === 429 && error.response?.data?.retry_after) {
-        setLockoutCountdown(error.response.data.retry_after);
-        setErrors({ login: error.response.data.errors?.login || 'Account locked.' });
-      } else if (error.response?.status === 419) {
-        setErrors({ general: 'Session expired. Please refresh and try again.' });
-      } else if (error.response?.data?.errors) {
-        setErrors(error.response.data.errors);
-      } else if (error.response?.data?.message) {
-        setErrors({ general: error.response.data.message });
-      } else {
-        setErrors({ general: 'Login failed. Please try again.' });
-      }
+    } catch (error: unknown) {
+      const safeError = formatSignInError(error);
+      setLockoutCountdown(safeError.retryAfter ?? 0);
+      setErrors({ general: safeError.message });
       setShowError(true);
     } finally {
       setProcessing(false);
@@ -177,7 +113,7 @@ export default function Knowledge({ showLogin, onCloseLogin }: KnowledgeProps) {
         </div>
 
         {/* Login Container */}
-        {showLogin && (
+        {showLogin && !isPendingVerification && !isAuthenticated && !isLoading && (
           <>
             {/* Mobile backdrop */}
             <div className="lg:hidden fixed inset-0 z-40 bg-black/50" onClick={onCloseLogin} />
@@ -246,20 +182,6 @@ export default function Knowledge({ showLogin, onCloseLogin }: KnowledgeProps) {
                             className="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6"
                           />
                         </div>
-                      </div>
-
-                      <div className="flex flex-row items-center w-full mt-4">
-                        <input
-                          type="checkbox"
-                          id="remember"
-                          name="remember"
-                          checked={data.remember}
-                          onChange={handleChange}
-                          className="form-checkbox w-5 text-[#9C0306] bg-white border-gray-300 rounded focus:ring-[#9C0306]"
-                        />
-                        <label htmlFor="remember" className="ml-2 text-white select-none cursor-pointer text-[14px]">
-                          Remember Me
-                        </label>
                       </div>
 
                       <div className='mt-6 w-full'>

@@ -46,16 +46,16 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth (no OTP required)
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
-    Route::get('/profile', [AuthController::class, 'me']);
-    Route::put('/profile', [AuthController::class, 'updateProfile']);
-    Route::patch('/profile', [AuthController::class, 'updateProfile']);
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
-    Route::get('/trusted-devices', [AuthController::class, 'getTrustedDevices']);
-    Route::delete('/trusted-devices/{deviceId}', [AuthController::class, 'forgetDevice']);
 
     // User routes (OTP required)
     Route::middleware('otp_verified')->group(function () {
+        Route::get('/profile', [AuthController::class, 'me']);
+        Route::put('/profile', [AuthController::class, 'updateProfile']);
+        Route::patch('/profile', [AuthController::class, 'updateProfile']);
+        Route::get('/trusted-devices', [AuthController::class, 'getTrustedDevices']);
+        Route::delete('/trusted-devices/{deviceId}', [AuthController::class, 'forgetDevice']);
 
         // Cart
         Route::post('/cart', [CartController::class, 'addToCart']);
@@ -130,4 +130,3 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/activity-logs/stats', [ActivityLogController::class, 'getStats']);
     });
 });
-
