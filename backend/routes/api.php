@@ -30,6 +30,7 @@ Route::post('/auth/exchange', [AuthController::class, 'exchangeGoogleCode']);
 
 // Public product listing
 Route::get('/products', [ProductController::class, 'userProducts']);
+Route::get('/products/{productId}', [ProductController::class, 'show']);
 
 // Public inventory API
 Route::get('/inventory', [InventoryApiController::class, 'index']);
@@ -45,6 +46,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth (no OTP required)
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    Route::get('/profile', [AuthController::class, 'me']);
+    Route::put('/profile', [AuthController::class, 'updateProfile']);
+    Route::patch('/profile', [AuthController::class, 'updateProfile']);
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
     Route::get('/trusted-devices', [AuthController::class, 'getTrustedDevices']);
@@ -54,6 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('otp_verified')->group(function () {
 
         // Cart
+        Route::post('/cart', [CartController::class, 'addToCart']);
         Route::post('/cart/add', [CartController::class, 'addToCart']);
         Route::get('/cart', [CartController::class, 'getCart']);
         Route::delete('/cart/{cartItemId}', [CartController::class, 'removeFromCart']);
@@ -61,6 +66,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/check-inventory', [CartController::class, 'checkInventory']);
 
         // Orders
+        Route::post('/orders', [OrderController::class, 'placeOrder']);
         Route::post('/orders/place', [OrderController::class, 'placeOrder']);
         Route::get('/orders', [OrderController::class, 'getUserOrders']);
         Route::post('/orders/{orderId}/upload-receipt', [OrderController::class, 'uploadReceipt']);
@@ -124,3 +130,4 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/activity-logs/stats', [ActivityLogController::class, 'getStats']);
     });
 });
+

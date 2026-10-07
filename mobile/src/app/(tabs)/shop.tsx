@@ -26,7 +26,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 |--------------------------------------------------------------------------
 */
 
-const CATEGORIES = ["All", "Jersey", "Bags", "Drinkware", "School Supplies"];
+const CATEGORIES = [
+  "All",
+  "Shirts",
+  "Bags",
+  "Drinkware",
+  "School Supplies",
+  "Others",
+];
 
 /*
 |--------------------------------------------------------------------------

@@ -39,17 +39,33 @@ export async function fetchCart(): Promise<ApiCartItem[]> {
 }
 
 export async function addToCart(input: AddToCartInput): Promise<void> {
-  await request("/cart/add", {
-    method: "POST",
-    token: await getToken(),
-    body: {
-      product_id: input.productId,
-      variant: input.variant,
-      quantity: input.quantity,
-      price: input.price,
-    },
-  });
+  const token = await getToken();
+  const body = {
+    product_id: input.productId,
+    variant: input.variant,
+    quantity: input.quantity,
+    price: input.price,
+  };
+
+  try {
+    await request("/cart", {
+      method: "POST",
+      token,
+      body,
+    });
+  } catch (err: any) {
+    if (err?.status === 404 || err?.status === 405) {
+      await request("/cart/add", {
+        method: "POST",
+        token,
+        body,
+      });
+      return;
+    }
+    throw err;
+  }
 }
+
 
 export async function updateCartQuantity(
   cartItemId: number,

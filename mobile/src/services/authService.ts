@@ -1,4 +1,10 @@
-import type { LoginResponse, User, VerifyOtpResponse } from "@/types/auth";
+import type {
+  LoginResponse,
+  UpdateProfileInput,
+  UpdateProfileResponse,
+  User,
+  VerifyOtpResponse,
+} from "@/types/auth";
 import { ApiError, request } from "./apiClient";
 import { getToken, setToken } from "./tokenStorage";
 
@@ -86,3 +92,20 @@ export async function fetchMe(): Promise<User | null> {
     throw error;
   }
 }
+
+/**
+ * Update authenticated user profile: PUT /api/profile
+ */
+export async function updateProfile(
+  data: UpdateProfileInput,
+): Promise<User> {
+  const token = await getToken();
+  const result = await request<UpdateProfileResponse>("/profile", {
+    method: "PUT",
+    token,
+    body: data,
+  });
+
+  return result.user;
+}
+

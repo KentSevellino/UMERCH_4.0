@@ -38,14 +38,14 @@ export type CategoryTaxonomy = {
 
 export const HOME_TAXONOMY: CategoryTaxonomy = {
   shirts: "Shirts",
-  bags: "Accessories",
-  drinkware: "Bottles",
-  school: "Others",
+  bags: "Bags",
+  drinkware: "Drinkware",
+  school: "School Supplies",
   other: "Others",
 };
 
 export const SHOP_TAXONOMY: CategoryTaxonomy = {
-  shirts: "Jersey",
+  shirts: "Shirts",
   bags: "Bags",
   drinkware: "Drinkware",
   school: "School Supplies",
@@ -137,3 +137,8 @@ export function mapToProduct(
 export function fetchProducts(): Promise<ApiProduct[]> {
   return request<ApiProduct[]>("/products");
 }
+
+export function fetchProductById(id: number | string): Promise<ApiProduct> {
+  return request<ApiProduct>(`/products/${id}`);
+}
+

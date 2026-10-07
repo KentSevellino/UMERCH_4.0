@@ -59,25 +59,40 @@ export type OrderCardData = {
 };
 
 export async function placeOrder(input: PlaceOrderInput): Promise<number> {
-  const result = await request<{ orderId: number }>("/orders/place", {
-    method: "POST",
-    token: await getToken(),
-    body: {
-      payment_method: input.paymentMethod ?? "cashier",
-      fulfillment_method: input.fulfillmentMethod,
-      campus: input.campus ?? null,
-      cart_items: input.cartItems.map((item) => ({
-        cart_item_id: item.cartItemId ?? null,
-        product_id: item.productId,
-        variant: item.variant,
-        quantity: item.quantity,
-        price: item.price,
-      })),
-    },
-  });
+  const token = await getToken();
+  const body = {
+    payment_method: input.paymentMethod ?? "cashier",
+    fulfillment_method: input.fulfillmentMethod,
+    campus: input.campus ?? null,
+    cart_items: input.cartItems.map((item) => ({
+      cart_item_id: item.cartItemId ?? null,
+      product_id: item.productId,
+      variant: item.variant,
+      quantity: item.quantity,
+      price: item.price,
+    })),
+  };
 
-  return result.orderId;
+  try {
+    const result = await request<{ orderId: number }>("/orders", {
+      method: "POST",
+      token,
+      body,
+    });
+    return result.orderId;
+  } catch (err: any) {
+    if (err?.status === 404 || err?.status === 405) {
+      const fallbackResult = await request<{ orderId: number }>("/orders/place", {
+        method: "POST",
+        token,
+        body,
+      });
+      return fallbackResult.orderId;
+    }
+    throw err;
+  }
 }
+
 
 export async function fetchOrders(): Promise<ApiOrder[]> {
   const rows = await request<ApiOrder[]>("/orders", {

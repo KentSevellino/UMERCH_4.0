@@ -27,7 +27,7 @@ export class ApiError extends Error {
   }
 }
 
-type RequestOptions = {
+export type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
   token?: string | null;
@@ -99,3 +99,37 @@ export async function request<T>(
 
   return data as T;
 }
+
+/**
+ * Convenient REST helpers for standard HTTP verbs:
+ * - GET: retrieve data
+ * - POST: create/send data
+ * - PUT/PATCH: update data
+ * - DELETE: remove data
+ */
+export const api = {
+  get: <T>(path: string, options?: Omit<RequestOptions, "method" | "body">) =>
+    request<T>(path, { ...options, method: "GET" }),
+
+  post: <T>(
+    path: string,
+    body?: unknown,
+    options?: Omit<RequestOptions, "method" | "body">,
+  ) => request<T>(path, { ...options, method: "POST", body }),
+
+  put: <T>(
+    path: string,
+    body?: unknown,
+    options?: Omit<RequestOptions, "method" | "body">,
+  ) => request<T>(path, { ...options, method: "PUT", body }),
+
+  patch: <T>(
+    path: string,
+    body?: unknown,
+    options?: Omit<RequestOptions, "method" | "body">,
+  ) => request<T>(path, { ...options, method: "PATCH", body }),
+
+  delete: <T>(path: string, options?: Omit<RequestOptions, "method" | "body">) =>
+    request<T>(path, { ...options, method: "DELETE" }),
+};
+

@@ -5,9 +5,15 @@ import {
   signInWithGoogle,
   signOut,
   submitOtp,
+  updateProfile as apiUpdateProfile,
 } from "@/services/authService";
 import { clearCredentials } from "@/services/credentialStorage";
-import type { LoginResponse, User, VerifyOtpResponse } from "@/types/auth";
+import type {
+  LoginResponse,
+  UpdateProfileInput,
+  User,
+  VerifyOtpResponse,
+} from "@/types/auth";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import {
   createContext,
@@ -34,6 +40,7 @@ type AuthContextValue = {
   ) => Promise<LoginResponse>;
   verifyOtp: (otp: string) => Promise<VerifyOtpResponse>;
   resendOtp: () => Promise<void>;
+  updateUserProfile: (data: UpdateProfileInput) => Promise<User>;
   logout: () => Promise<void>;
 };
 
@@ -125,6 +132,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setMaskedEmail(result.email ?? null);
   }, []);
 
+  const updateUserProfile = useCallback(async (data: UpdateProfileInput) => {
+    const updated = await apiUpdateProfile(data);
+    setUser(updated);
+    return updated;
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await GoogleSignin.signOut();
@@ -149,6 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loginWithGoogle,
       verifyOtp,
       resendOtp: handleResendOtp,
+      updateUserProfile,
       logout,
     }),
     [
@@ -159,6 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loginWithGoogle,
       verifyOtp,
       handleResendOtp,
+      updateUserProfile,
       logout,
     ],
   );

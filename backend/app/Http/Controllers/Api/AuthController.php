@@ -266,6 +266,32 @@ class AuthController extends Controller
         return response()->json(['user' => $request->user()]);
     }
 
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+        if (! $user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        $validated = $request->validate([
+            'user_fullname' => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|max:255|unique:users,email,' . $user->id,
+            'password' => 'sometimes|string|min:6',
+        ]);
+
+        if (isset($validated['password'])) {
+            $validated['user_password'] = \Illuminate\Support\Facades\Hash::make($validated['password']);
+            unset($validated['password']);
+        }
+
+        $user->update($validated);
+
+        return response()->json([
+            'message' => 'Profile updated successfully',
+            'user' => $user->fresh(),
+        ]);
+    }
+
     public function checkTrustedDevice(Request $request)
     {
         $fingerprint = $request->validate([

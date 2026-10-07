@@ -21,3 +21,17 @@ export type VerifyOtpResponse = {
   message: string;
   redirect?: string;
 };
+
+export type UpdateProfileInput = {
+  user_fullname?: string;
+  email?: string;
+  password?: string;
+  department?: string;
+  nickname?: string;
+};
+
+export type UpdateProfileResponse = {
+  message: string;
+  user: User;
+};
+

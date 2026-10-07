@@ -110,7 +110,7 @@ function EditableField({
 export default function PersonalInformationScreen() {
   const { width } = useWindowDimensions();
   const scale = Math.min(Math.max(width / 390, 0.9), 1.12);
-  const { user } = useAuth();
+  const { user, updateUserProfile } = useAuth();
   const { avatarUri, changeProfileImage } = useProfileImage();
 
   const userKey = user?.id ?? user?.email ?? "default";
@@ -131,18 +131,33 @@ export default function PersonalInformationScreen() {
     }
   }, [userKey, user?.email]);
 
-  const handleSaveEmail = (newEmail: string) => {
+  const handleSaveEmail = async (newEmail: string) => {
     setEmail(newEmail);
+    try {
+      await updateUserProfile({ email: newEmail });
+    } catch {
+      // Local optimistic update remains
+    }
   };
 
   const handleSaveDepartment = async (newDept: string) => {
     setDepartment(newDept);
     await saveUserProfileDetails(userKey, { department: newDept });
+    try {
+      await updateUserProfile({ department: newDept });
+    } catch {
+      // Storage fallback
+    }
   };
 
   const handleSaveNickname = async (newNick: string) => {
     setNickname(newNick);
     await saveUserProfileDetails(userKey, { nickname: newNick });
+    try {
+      await updateUserProfile({ nickname: newNick });
+    } catch {
+      // Storage fallback
+    }
   };
 
   const displayName =

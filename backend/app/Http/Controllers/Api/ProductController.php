@@ -52,6 +52,43 @@ class ProductController extends Controller
         return response()->json($products);
     }
 
+    public function show($productId)
+    {
+        $product = Products::where('status', 'active')
+            ->where('product_id', $productId)
+            ->first();
+
+        if (! $product) {
+            $product = Products::where('product_id', $productId)->first();
+        }
+
+        if (! $product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+
+        $group = Products::where('product_name', $product->product_name)->get();
+        $totalStock = $group->sum(fn ($p) => $p->inventory->sum('quantity') ?? $p->product_stock);
+        $imageUrl = $product->product_image;
+
+        if ($imageUrl && ! filter_var($imageUrl, FILTER_VALIDATE_URL)) {
+            $imageUrl = url(Storage::disk('public')->url($imageUrl));
+        }
+
+        return response()->json([
+            'product_id' => $product->product_id,
+            'product_name' => $product->product_name,
+            'product_image' => $product->product_image,
+            'image_url' => $imageUrl,
+            'product_description' => $product->product_description,
+            'product_price' => $product->product_price,
+            'product_stock' => $totalStock,
+            'variant' => $product->variant,
+            'variant_type' => $product->variant_type,
+            'status' => $product->status,
+            'inventory' => $group->flatMap(fn ($p) => $p->inventory),
+        ]);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -210,3 +247,4 @@ class ProductController extends Controller
         return response()->json(['message' => 'Product restored successfully']);
     }
 }
+

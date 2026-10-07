@@ -6,7 +6,6 @@ import {
     Alert,
     KeyboardAvoidingView,
     Platform,
-    SafeAreaView,
     StyleSheet,
     Text,
     TextInput,
@@ -14,6 +13,7 @@ import {
     View,
     useWindowDimensions,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN = 60;
