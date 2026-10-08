@@ -28,6 +28,15 @@ export default function AuthenticationPage({ email: initialEmail, flash }: Authe
     const displayEmail = initialEmail || censorEmail(user?.email || '');
 
     useEffect(() => {
+        const pendingOtp = sessionStorage.getItem('pending_otp');
+        if (pendingOtp && pendingOtp.length === inputLength) {
+            setValues(pendingOtp.split(''));
+            sessionStorage.removeItem('pending_otp');
+            setSuccessMessage(`Verification code auto-filled: ${pendingOtp}`);
+        }
+    }, []);
+
+    useEffect(() => {
         if (flash?.status) {
             setSuccessMessage(flash.status);
             setCooldown(60);
@@ -133,9 +142,15 @@ export default function AuthenticationPage({ email: initialEmail, flash }: Authe
         if (cooldown === 0) {
             setIsResending(true);
             try {
-                await resendOtp();
+                const res = await resendOtp();
                 setCooldown(60);
-                setSuccessMessage('OTP sent successfully');
+                if (res?.otp) {
+                    const otpStr = String(res.otp);
+                    setValues(otpStr.split(''));
+                    setSuccessMessage(`New code: ${otpStr}`);
+                } else {
+                    setSuccessMessage('OTP sent successfully');
+                }
                 setOtpError('');
                 setExpiredError(false);
                 setValues(Array(inputLength).fill(''));

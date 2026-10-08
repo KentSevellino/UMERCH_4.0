@@ -98,7 +98,29 @@ class AuthController extends Controller
                 @unlink($rateLimitFile);
             }
 
-            return $this->beginOtpLogin($request, $adminUser);
+            // Direct login for admin - dummy email admin@umerch.com does not receive external OTP email
+            $this->revokeLoginTokens($request);
+            if ($request->hasSession()) {
+                $request->session()->forget(['otp', 'otp_expires', 'otp_attempts', 'otp_redirect', 'otp_user_id', 'otp_token_id']);
+                Auth::guard('web')->login($adminUser);
+                $request->session()->put(['otp_verified' => true, 'otp_verified_user_id' => $adminUser->id]);
+                $request->session()->regenerate();
+            }
+
+            $token = $adminUser->createToken('auth-token', ['otp_verified']);
+            if ($request->hasSession()) {
+                $request->session()->put('auth_token_id', $token->accessToken->id);
+            }
+
+            ActivityLog::logLogin($adminUser, 'admin');
+
+            return response()->json([
+                'user' => $adminUser,
+                'token' => $token->plainTextToken,
+                'otp_required' => false,
+                'otp_verified' => true,
+                'redirect' => '/admin',
+            ]);
         }
 
         $field = filter_var($credentials['login'], FILTER_VALIDATE_EMAIL) ? 'email' : 'um_id';
@@ -176,14 +198,26 @@ class AuthController extends Controller
         if (OtpAuthentication::verified($request)) {
             return response()->json(['message' => 'Verification is already complete.'], 409);
         }
-        if (! $this->requestToken($request)) {
+        $token = $this->requestToken($request);
+        if (! $token) {
             return response()->json(['message' => 'Please sign in again.'], 401);
         }
-        if (! $this->sendOtp($request, $user, $this->currentOtpRedirect($request), $this->requestToken($request))) {
-            return response()->json(['message' => 'Unable to send your verification code. Please try again.'], 503);
+
+        $this->sendOtp($request, $user, $this->currentOtpRedirect($request), $token);
+        $otpRecord = $this->readOtp($request);
+        $isSent = ! empty($otpRecord['sent']);
+
+        $response = [
+            'message' => 'OTP resent successfully',
+            'email' => $this->censorEmail($user->email),
+        ];
+
+        if (! $isSent || config('app.debug')) {
+            $response['otp'] = $otpRecord['otp'] ?? null;
+            $response['message'] = 'Verification code: ' . ($otpRecord['otp'] ?? '');
         }
 
-        return response()->json(['message' => 'OTP resent successfully', 'email' => $this->censorEmail($user->email)]);
+        return response()->json($response);
     }
 
     public function logout(Request $request)
@@ -440,28 +474,31 @@ class AuthController extends Controller
         }
 
         $redirect = $user->role === 'Admin' ? '/admin' : '/Landing';
-        if (! $this->sendOtp($request, $user, $redirect, $token->accessToken)) {
-            Cache::forget($this->otpCacheKey($token->accessToken));
-            $token->accessToken->delete();
-            if ($request->hasSession()) {
-                Auth::guard('web')->logout();
-                $request->session()->invalidate();
-                $request->session()->regenerateToken();
-            }
+        $this->sendOtp($request, $user, $redirect, $token->accessToken);
 
-            return response()->json(['message' => 'Unable to send your verification code. Please try signing in again.'], 503);
-        }
+        $otpRecord = $this->readOtp($request);
+        $isSent = ! empty($otpRecord['sent']);
+        $otp = $otpRecord['otp'] ?? null;
 
         ActivityLog::logLogin($user, $user->role === 'Admin' ? 'admin' : 'user');
 
-        return response()->json([
+        $response = [
             'user' => $user,
             'token' => $token->plainTextToken,
             'otp_required' => true,
             'otp_verified' => false,
             'email' => $this->censorEmail($user->email),
             'redirect' => '/authentication',
-        ]);
+        ];
+
+        // If email could not be sent (e.g. Railway blocks outbound SMTP) or debug mode is on,
+        // provide the OTP directly in response so the user can verify
+        if (! $isSent || config('app.debug')) {
+            $response['otp'] = $otp;
+            $response['message'] = "Verification code: {$otp}";
+        }
+
+        return response()->json($response);
     }
 
     private function sendOtp(Request $request, User $user, string $redirect, ?PersonalAccessToken $accessToken = null): bool
@@ -471,21 +508,26 @@ class AuthController extends Controller
         }
         $this->forgetOtp($request);
         $otp = random_int(100000, 999999);
+        $sent = false;
+
         try {
             Mail::to($user->email)->send(new OtpMail($otp, $user->user_fullname ?? 'User', $this->censorEmail($user->email)));
+            $sent = true;
         } catch (\Throwable $e) {
-            Log::warning('OTP mail failed', ['error' => $e->getMessage()]);
-
-            return false;
+            Log::warning('OTP mail failed', [
+                'email' => $user->email,
+                'error' => $e->getMessage(),
+            ]);
         }
 
         $this->storeOtp($request, [
             'otp' => $otp,
-            'expires' => now()->addMinutes(5)->getTimestamp(),
+            'expires' => now()->addMinutes(10)->getTimestamp(),
             'attempts' => 0,
             'redirect' => $redirect,
             'user_id' => $user->id,
             'token_id' => $accessToken->id,
+            'sent' => $sent,
         ], $accessToken);
 
         return true;

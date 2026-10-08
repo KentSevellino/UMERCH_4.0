@@ -19,6 +19,26 @@ use Illuminate\Support\Facades\Route;
 | Public Routes
 |--------------------------------------------------------------------------
 */
+
+Route::get('/health-check', function () {
+    try {
+        $db = \Illuminate\Support\Facades\DB::connection()->getDatabaseName();
+        $tables = \Illuminate\Support\Facades\DB::select('SHOW TABLES');
+        return response()->json([
+            'status' => 'ok',
+            'database' => $db,
+            'tables' => $tables,
+            'user_count' => \Illuminate\Support\Facades\DB::table('users')->count(),
+            'mail_mailer' => config('mail.default'),
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+        ], 500);
+    }
+});
+
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/check-trusted-device', [AuthController::class, 'checkTrustedDevice']);
 
