@@ -203,9 +203,9 @@ class AuthController extends Controller
             return response()->json(['message' => 'Please sign in again.'], 401);
         }
 
-        $this->sendOtp($request, $user, $this->currentOtpRedirect($request), $token);
-        $otpRecord = $this->readOtp($request);
-        $isSent = ! empty($otpRecord['sent']);
+        $otpResult = $this->sendOtp($request, $user, $this->currentOtpRedirect($request), $token);
+        $isSent = $otpResult['sent'];
+        $otp = $otpResult['otp'];
 
         $response = [
             'message' => 'OTP resent successfully',
@@ -213,8 +213,8 @@ class AuthController extends Controller
         ];
 
         if (! $isSent || config('app.debug')) {
-            $response['otp'] = $otpRecord['otp'] ?? null;
-            $response['message'] = 'Verification code: ' . ($otpRecord['otp'] ?? '');
+            $response['otp'] = $otp;
+            $response['message'] = "Verification code: {$otp}";
         }
 
         return response()->json($response);
@@ -474,11 +474,9 @@ class AuthController extends Controller
         }
 
         $redirect = $user->role === 'Admin' ? '/admin' : '/Landing';
-        $this->sendOtp($request, $user, $redirect, $token->accessToken);
-
-        $otpRecord = $this->readOtp($request);
-        $isSent = ! empty($otpRecord['sent']);
-        $otp = $otpRecord['otp'] ?? null;
+        $otpResult = $this->sendOtp($request, $user, $redirect, $token->accessToken);
+        $isSent = $otpResult['sent'];
+        $otp = $otpResult['otp'];
 
         ActivityLog::logLogin($user, $user->role === 'Admin' ? 'admin' : 'user');
 
@@ -501,10 +499,10 @@ class AuthController extends Controller
         return response()->json($response);
     }
 
-    private function sendOtp(Request $request, User $user, string $redirect, ?PersonalAccessToken $accessToken = null): bool
+    private function sendOtp(Request $request, User $user, string $redirect, ?PersonalAccessToken $accessToken = null): array
     {
         if (! $accessToken) {
-            return false;
+            return ['sent' => false, 'otp' => null];
         }
         $this->forgetOtp($request);
         $otp = random_int(100000, 999999);
@@ -530,7 +528,7 @@ class AuthController extends Controller
             'sent' => $sent,
         ], $accessToken);
 
-        return true;
+        return ['sent' => $sent, 'otp' => $otp];
     }
 
     private function requestToken(Request $request): ?PersonalAccessToken

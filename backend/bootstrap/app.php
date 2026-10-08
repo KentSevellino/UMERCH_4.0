@@ -37,6 +37,11 @@ return Application::configure(basePath: dirname(__DIR__))
         );
         $exceptions->render(function (\Throwable $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
+                if ($e instanceof \Illuminate\Validation\ValidationException ||
+                    $e instanceof \Illuminate\Auth\AuthenticationException ||
+                    $e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface) {
+                    return null;
+                }
                 return response()->json([
                     'message' => $e->getMessage(),
                     'exception' => get_class($e),
