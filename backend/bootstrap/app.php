@@ -29,10 +29,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->redirectGuestsTo(null);
 
-        $middleware->statefulApi();
+        $middleware->validateCsrfTokens(except: ['api/*', '*api*']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
     })->create();
+
