@@ -28,15 +28,6 @@ export default function AuthenticationPage({ email: initialEmail, flash }: Authe
     const displayEmail = initialEmail || censorEmail(user?.email || '');
 
     useEffect(() => {
-        const pendingOtp = sessionStorage.getItem('pending_otp');
-        if (pendingOtp && pendingOtp.length === inputLength) {
-            setValues(pendingOtp.split(''));
-            sessionStorage.removeItem('pending_otp');
-            setSuccessMessage(`Verification code auto-filled: ${pendingOtp}`);
-        }
-    }, []);
-
-    useEffect(() => {
         if (flash?.status) {
             setSuccessMessage(flash.status);
             setCooldown(60);
@@ -142,17 +133,12 @@ export default function AuthenticationPage({ email: initialEmail, flash }: Authe
         if (cooldown === 0) {
             setIsResending(true);
             try {
-                const res = await resendOtp();
+                await resendOtp();
                 setCooldown(60);
-                if (res?.otp) {
-                    const otpStr = String(res.otp);
-                    setValues(otpStr.split(''));
-                    setSuccessMessage(`New code: ${otpStr}`);
-                } else {
-                    setSuccessMessage('OTP sent successfully');
-                }
+                setSuccessMessage('OTP sent successfully');
                 setOtpError('');
                 setExpiredError(false);
+                setValues(Array(inputLength).fill(''));
                 setTimeout(() => setSuccessMessage(''), 5000);
             } catch {
                 setOtpError('Unable to send your verification code. Please try again.');

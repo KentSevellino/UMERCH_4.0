@@ -96,9 +96,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { data } = await api.post('/login', { login: loginStr, password });
       saveLogin(data);
-      if (data?.otp) {
-        sessionStorage.setItem('pending_otp', String(data.otp));
-      }
       return data;
     } catch (error) {
       saveLogin(null);
@@ -136,11 +133,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return data;
   }, []);
 
-  const resendOtp = useCallback(async (): Promise<{ email: string; otp?: string | number }> => {
+  const resendOtp = useCallback(async (): Promise<{ email: string }> => {
     const { data } = await api.post('/resend-otp');
-    if (data?.otp) {
-      sessionStorage.setItem('pending_otp', String(data.otp));
-    }
     return data;
   }, []);
 

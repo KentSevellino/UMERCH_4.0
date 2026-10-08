@@ -204,20 +204,14 @@ class AuthController extends Controller
         }
 
         $otpResult = $this->sendOtp($request, $user, $this->currentOtpRedirect($request), $token);
-        $isSent = $otpResult['sent'];
-        $otp = $otpResult['otp'];
-
-        $response = [
-            'message' => 'OTP resent successfully',
-            'email' => $this->censorEmail($user->email),
-        ];
-
-        if (! $isSent || config('app.debug')) {
-            $response['otp'] = $otp;
-            $response['message'] = "Verification code: {$otp}";
+        if (! $otpResult['sent']) {
+            return response()->json(['message' => 'Unable to send your verification code. Please try again.'], 503);
         }
 
-        return response()->json($response);
+        return response()->json([
+            'message' => 'OTP resent successfully',
+            'email' => $this->censorEmail($user->email),
+        ]);
     }
 
     public function logout(Request $request)
@@ -475,28 +469,29 @@ class AuthController extends Controller
 
         $redirect = $user->role === 'Admin' ? '/admin' : '/Landing';
         $otpResult = $this->sendOtp($request, $user, $redirect, $token->accessToken);
-        $isSent = $otpResult['sent'];
-        $otp = $otpResult['otp'];
+
+        if (! $otpResult['sent']) {
+            Cache::forget($this->otpCacheKey($token->accessToken));
+            $token->accessToken->delete();
+            if ($request->hasSession()) {
+                Auth::guard('web')->logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+            }
+
+            return response()->json(['message' => 'Unable to send your verification code. Please try signing in again.'], 503);
+        }
 
         ActivityLog::logLogin($user, $user->role === 'Admin' ? 'admin' : 'user');
 
-        $response = [
+        return response()->json([
             'user' => $user,
             'token' => $token->plainTextToken,
             'otp_required' => true,
             'otp_verified' => false,
             'email' => $this->censorEmail($user->email),
             'redirect' => '/authentication',
-        ];
-
-        // If email could not be sent (e.g. Railway blocks outbound SMTP) or debug mode is on,
-        // provide the OTP directly in response so the user can verify
-        if (! $isSent || config('app.debug')) {
-            $response['otp'] = $otp;
-            $response['message'] = "Verification code: {$otp}";
-        }
-
-        return response()->json($response);
+        ]);
     }
 
     private function sendOtp(Request $request, User $user, string $redirect, ?PersonalAccessToken $accessToken = null): array
