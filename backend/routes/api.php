@@ -24,28 +24,12 @@ Route::get('/health-check', function () {
     try {
         $db = \Illuminate\Support\Facades\DB::connection()->getDatabaseName();
         $tables = \Illuminate\Support\Facades\DB::select('SHOW TABLES');
-        $mailTest = null;
-        try {
-            \Illuminate\Support\Facades\Mail::raw('Test OTP verification email', function ($m) {
-                $m->to('kentsevellino11@gmail.com')->subject('UMerch Test');
-            });
-            $mailTest = 'sent';
-        } catch (\Throwable $me) {
-            $mailTest = $me->getMessage();
-        }
         return response()->json([
             'status' => 'ok',
             'database' => $db,
             'tables' => $tables,
             'user_count' => \Illuminate\Support\Facades\DB::table('users')->count(),
             'mail_mailer' => config('mail.default'),
-            'mail_host' => config('mail.mailers.smtp.host'),
-            'mail_port' => config('mail.mailers.smtp.port'),
-            'mail_scheme' => config('mail.mailers.smtp.scheme'),
-            'mail_from' => config('mail.from.address'),
-            'mail_username' => config('mail.mailers.smtp.username') ? 'set' : 'not_set',
-            'mail_password' => config('mail.mailers.smtp.password') ? 'set' : 'not_set',
-            'mail_test' => $mailTest,
         ]);
     } catch (\Throwable $e) {
         return response()->json([
