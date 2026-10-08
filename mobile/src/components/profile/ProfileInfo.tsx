@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useEffect, useState } from "react";
 import {
   Image,
   StyleSheet,
@@ -24,6 +25,11 @@ export function ProfileInfo({
   onChangeAvatar,
 }: ProfileInfoProps) {
   const { width } = useWindowDimensions();
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    setHasError(false);
+  }, [avatarUri]);
 
   const scale = Math.min(Math.max(width / 390, 0.9), 1.12);
 
@@ -40,11 +46,12 @@ export function ProfileInfo({
         disabled={!onChangeAvatar}
       >
         <View style={styles.avatar}>
-          {avatarUri ? (
+          {avatarUri && !hasError ? (
             <Image
               source={{ uri: avatarUri }}
               style={styles.avatarImage}
               resizeMode="cover"
+              onError={() => setHasError(true)}
             />
           ) : (
             <Ionicons name="person" size={Math.round(52 * scale)} color="#FFFFFF" />
