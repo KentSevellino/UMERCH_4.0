@@ -153,7 +153,6 @@ export default function AuthenticationPage({ email: initialEmail, flash }: Authe
                 }
                 setOtpError('');
                 setExpiredError(false);
-                setValues(Array(inputLength).fill(''));
                 setTimeout(() => setSuccessMessage(''), 5000);
             } catch {
                 setOtpError('Unable to send your verification code. Please try again.');
