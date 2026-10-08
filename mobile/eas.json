@@ -11,9 +11,9 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://hanging-became-offer-story.trycloudflare.com/api"
+        "EXPO_PUBLIC_API_URL": "https://yearbook-corncob-thinness.ngrok-free.dev/api"
       }
     },
     "production": {}
   }
-}
+}     
