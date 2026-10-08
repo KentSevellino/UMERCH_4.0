@@ -11,7 +11,7 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://yearbook-corncob-thinness.ngrok-free.dev/api",
+        "EXPO_PUBLIC_API_URL": "https://umerch-40-production.up.railway.app/api",
         "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "807615072659-0bavaq1nkcqi5og6lr46npgv180128hm.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "807615072659-0bavaq1nkcqi5og6lr46npgv180128hm.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "807615072659-0bavaq1nkcqi5og6lr46npgv180128hm.apps.googleusercontent.com"
@@ -19,7 +19,7 @@
     },
     "production": {
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://yearbook-corncob-thinness.ngrok-free.dev/api",
+        "EXPO_PUBLIC_API_URL": "https://umerch-40-production.up.railway.app/api",
         "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "807615072659-0bavaq1nkcqi5og6lr46npgv180128hm.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "807615072659-0bavaq1nkcqi5og6lr46npgv180128hm.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "807615072659-0bavaq1nkcqi5og6lr46npgv180128hm.apps.googleusercontent.com"
