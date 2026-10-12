@@ -205,7 +205,10 @@ class AuthController extends Controller
 
         $otpResult = $this->sendOtp($request, $user, $this->currentOtpRedirect($request), $token);
         if (! $otpResult['sent']) {
-            return response()->json(['message' => 'Unable to send your verification code. Please try again.'], 503);
+            return response()->json([
+                'message' => 'Unable to send your verification code. Please try again.',
+                'error' => $otpResult['error'] ?? null,
+            ], 503);
         }
 
         return response()->json([
@@ -473,7 +476,10 @@ class AuthController extends Controller
                 $request->session()->regenerateToken();
             }
 
-            return response()->json(['message' => 'Unable to send your verification code. Please try signing in again.'], 503);
+            return response()->json([
+                'message' => 'Unable to send your verification code. Please try signing in again.',
+                'error' => $otpResult['error'] ?? null,
+            ], 503);
         }
 
         ActivityLog::logLogin($user, $user->role === 'Admin' ? 'admin' : 'user');
@@ -496,11 +502,13 @@ class AuthController extends Controller
         $this->forgetOtp($request);
         $otp = random_int(100000, 999999);
         $sent = false;
+        $error = null;
 
         try {
             Mail::to($user->email)->send(new OtpMail($otp, $user->user_fullname ?? 'User', $this->censorEmail($user->email)));
             $sent = true;
         } catch (\Throwable $e) {
+            $error = $e->getMessage();
             Log::warning('OTP mail failed', [
                 'email' => $user->email,
                 'error' => $e->getMessage(),
@@ -517,7 +525,7 @@ class AuthController extends Controller
             'sent' => $sent,
         ], $accessToken);
 
-        return ['sent' => $sent, 'otp' => $otp];
+        return ['sent' => $sent, 'otp' => $otp, 'error' => $error];
     }
 
     private function requestToken(Request $request): ?PersonalAccessToken
