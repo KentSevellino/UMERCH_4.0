@@ -371,12 +371,6 @@ class AuthController extends Controller
             ], 422);
         }
 
-        if (! $request->hasSession()) {
-            return response()->json([
-                'message' => 'Your browser session could not be started. Please try signing in again.',
-            ], 422);
-        }
-
         return $this->beginOtpLogin($request, $user);
     }
 
