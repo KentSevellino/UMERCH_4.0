@@ -1,8 +1,16 @@
-# Ignore dependencies and build artifacts
-node_modules/
-.expo/
-dist/
-web-build/
+# .easignore
+# Used by EAS Build instead of .gitignore when present.
+# Do NOT use trailing slashes for directories: that breaks matching of the
+# directory entry itself (e.g. `.git/` won't match `.git`).
+
+# Git metadata
+.git
+
+# Dependencies and build artifacts
+node_modules
+.expo
+dist
+web-build
 expo-env.d.ts
 
 # Native credentials
@@ -14,7 +22,7 @@ expo-env.d.ts
 *.mobileprovision
 
 # Metro & debug
-.metro-health-check*
+metro-health-check*
 npm-debug.*
 yarn-debug.*
 yarn-error.*
@@ -23,15 +31,14 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# Typescript & env
+# TypeScript & env
 *.tsbuildinfo
 .env*.local
 
-# Monorepo / Backend
-../backend/
-backend/
+# Monorepo siblings (when this folder is the git root)
+../backend
+backend
 
 # Native directories (managed workflow)
-/ios
-/android
-
+ios
+android
