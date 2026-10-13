@@ -68,9 +68,9 @@ export async function request<T>(
       body: body === undefined ? undefined : isFormData ? (body as any) : JSON.stringify(body),
     });
   } catch (err: any) {
+    const detail = err?.message ? ` (${err.message})` : "";
     throw new ApiError(
-      err?.message ||
-        `Could not reach the server at ${API_URL}. Start the backend and set EXPO_PUBLIC_API_URL for this device.`,
+      `Could not reach the server at ${API_URL}${detail}. Check your connection and EXPO_PUBLIC_API_URL for this device.`,
       0,
     );
   }
