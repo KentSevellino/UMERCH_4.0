@@ -33,7 +33,7 @@ const developers: Developer[] = [
         photo: null,
     },
     {
-        name: 'John Vincent Oclarit',
+        name: 'Jan Vincent Oclarit',
         role: 'Founder of UMERCH',
         photo: null,
     },
